@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="180" viewBox="0 0 760 180">
+  <rect width="760" height="180" rx="20" fill="#f0f4ee"/>
+  <g fill="#ffffff" stroke="#8ba594" stroke-width="1.5">
+    <rect x="35" y="55" width="190" height="70" rx="12"/>
+    <rect x="285" y="55" width="190" height="70" rx="12"/>
+    <rect x="535" y="55" width="190" height="70" rx="12"/>
+  </g>
+  <g fill="none" stroke="#387866" stroke-width="2">
+    <path d="M225 90H280m-8-6 8 6-8 6"/>
+    <path d="M475 90H530m-8-6 8 6-8 6"/>
+  </g>
+  <g fill="#285b49" font-family="sans-serif" font-size="18" text-anchor="middle">
+    <text x="130" y="97">本地文件</text>
+    <text x="380" y="97">图片与公式</text>
+    <text x="630" y="97">清楚阅读</text>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+Offline Markdown runtime
+========================
+
+These files are vendored from the official npm releases listed in vendor/manifest.json.
+The manifest records exact versions, npm package integrity and each script's SHA-256.
+They are included in the application; the reader never fetches code from a CDN.
+
+Marked 18.1.1 — https://github.com/markedjs/marked — MIT
+  vendor/marked-LICENSE.txt
+Mermaid 11.17.2 — https://github.com/mermaid-js/mermaid — MIT
+  vendor/mermaid-LICENSE.txt
+  Bundled dependency copyright / license notices remain at the end of mermaid.min.js.
+highlight.js / @highlightjs/cdn-assets 11.12.0 — https://github.com/highlightjs/highlight.js — BSD-3-Clause
+  vendor/highlightjs-cdn-assets-LICENSE.txt
+DOMPurify 3.4.17 — https://github.com/cure53/DOMPurify — Apache-2.0 OR MPL-2.0
+  vendor/dompurify-LICENSE.txt; vendor/dompurify-LICENSE-MPL.txt
+  Mermaid's bundle also includes DOMPurify 3.4.12; its upstream notice is preserved.
+KaTeX 0.19.0 — https://github.com/KaTeX/KaTeX — MIT
+  vendor/katex-LICENSE.txt
+  The engine, stylesheet and unmodified fonts are included under vendor/katex/.
+
+Mermaid 11 is used for compatibility with the macOS 14 / Safari 17 baseline.
+Swift and JavaScript glue, the reader stylesheet and sample documents are Luma code.

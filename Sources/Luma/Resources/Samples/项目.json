@@ -1,0 +1,12 @@
+{
+  "name": "Luma · 澄览",
+  "version": "0.8.0",
+  "platform": "macOS",
+  "localFirst": true,
+  "workspace": {
+    "tabs": true,
+    "manualSave": true,
+    "formats": ["Markdown", "PDF", "Images", "JSON", "CSV", "Text"]
+  },
+  "next": null
+}
