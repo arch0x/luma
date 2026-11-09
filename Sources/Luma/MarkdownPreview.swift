@@ -34,61 +34,38 @@ struct MarkdownPreview: View {
     let imageRoot: URL
     let previewWidth: Double
     let typography: MarkdownTypography
+    let state: MarkdownRenderState
+    let workspace: Workspace
+    @Binding var showingInformation: Bool
     let onOpen: ([URL]) -> Void
     @Environment(\.colorScheme) private var colorScheme
-    @ViewState private var state = MarkdownRenderState()
-    @ViewState private var compactOutline = false
-    @ViewState private var showBookmarks = false
-
-    private var outlineVisible: Bool { tab.markdownOutlineVisible ?? (state.headings.count >= 3) }
+    @ViewState private var sectionPeek = MarkdownSectionPeek()
+    @ViewState private var showOutlineList = false
 
     var body: some View {
-        GeometryReader { geometry in
-            let wide = geometry.size.width >= 760
-            VStack(spacing: 0) {
-                HStack(spacing: 9) {
-                    Button {
-                        if wide { tab.markdownOutlineVisible = !outlineVisible }
-                        else { compactOutline.toggle() }
-                    } label: {
-                        Label("目录", systemImage: "list.bullet.indent")
-                            .foregroundStyle(wide && outlineVisible ? LumaTheme.accent : .secondary)
-                    }
-                    .buttonStyle(.plain).help(wide ? "显示或隐藏目录大纲" : "打开目录大纲")
-                    .disabled(state.headings.isEmpty || state.loading || state.error != nil)
-                    .popover(isPresented: $compactOutline, arrowEdge: .bottom) {
-                        MarkdownOutlineView(state: state, tab: tab) { compactOutline = false }
-                            .frame(width: 270, height: min(520, max(240, geometry.size.height - 60)))
-                    }
-                    Text(state.headings.isEmpty ? "暂无标题" : "\(state.headings.count) 个标题")
-                        .foregroundStyle(.tertiary)
-                    Spacer()
-                    if let session = tab.readingSession {
-                        Button { showBookmarks.toggle() } label: {
-                            Label(session.bookmarks.isEmpty ? "书签" : "书签 \(session.bookmarks.count)", systemImage: "bookmark")
-                        }
-                        .buttonStyle(.plain).foregroundStyle(.secondary)
-                        .disabled(state.loading || state.error != nil)
-                        .popover(isPresented: $showBookmarks, arrowEdge: .bottom) {
-                            MarkdownBookmarksView(session: session, adding: state.addingBookmark,
-                                                  onAdd: { tab.markdownBookmarkRequest += 1 },
-                                                  onSelect: { state.navigate(to: $0); showBookmarks = false })
+        HStack(spacing: 0) {
+            DocumentReaderRail(tab: tab, workspace: workspace, showingInformation: $showingInformation,
+                               navigationHeight: MarkdownSectionRail.contentHeight(for: state)) {
+                if state.error == nil {
+                    MarkdownSectionRail(state: state, peek: sectionPeek)
+                    .contextMenu {
+                        if !state.headings.isEmpty {
+                            Button("打开层级目录") {
+                                sectionPeek.dismiss()
+                                showOutlineList = true
+                            }
                         }
                     }
-                    Button { state.navigate() } label: { Label("返回顶部", systemImage: "arrow.up.to.line") }
-                        .buttonStyle(.plain).foregroundStyle(.secondary)
-                        .disabled(state.loading || state.error != nil)
-                }.font(.system(size: 11)).padding(.horizontal, 20).frame(height: 35)
-                Divider().opacity(0.5)
-                HStack(spacing: 0) {
-                    reader
-                    if wide && outlineVisible && !state.headings.isEmpty && state.error == nil {
-                        Divider()
-                        MarkdownOutlineView(state: state, tab: tab).frame(width: 220)
+                    .popover(isPresented: $showOutlineList, arrowEdge: .trailing) {
+                        MarkdownOutlineView(state: state, tab: tab) { showOutlineList = false }
+                            .frame(width: 274, height: 370)
                     }
-                }
-            }.onChange(of: wide) { _, _ in compactOutline = false }
+                } else { Spacer(minLength: 0) }
+            }
+            reader
         }
+        .markdownSectionPreview(tab: tab, state: state, peek: sectionPeek, suppressed: showingInformation)
+        .onChange(of: state.headings.map(\.id)) { _, _ in sectionPeek.dismiss() }
     }
 
     private var reader: some View {
@@ -96,13 +73,14 @@ struct MarkdownPreview: View {
             MarkdownWebView(source: source, tab: tab, imageRoot: imageRoot, previewWidth: previewWidth, typography: typography, dark: colorScheme == .dark, state: state, navigationRequest: state.navigationRequest, findRequest: tab.markdownFind.request, bookmarkRequest: tab.markdownBookmarkRequest, onOpen: onOpen)
                 .id(imageRoot)
                 .opacity(state.error == nil && (!state.loading || !state.metrics.isEmpty) ? 1 : 0)
-            if state.loading { ProgressView("正在排版…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 9)) }
+            if state.loading { ProgressView("正在排版…").padding().background(LumaTheme.chrome, in: RoundedRectangle(cornerRadius: 8)) }
             if let error = state.error {
                 VStack(spacing: 16) {
                     Image(systemName: "text.document").font(.largeTitle).foregroundStyle(.secondary)
                     Text("Markdown 预览暂时不可用").font(.headline)
                     Text(error).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 420)
                     Button("查看源码") { tab.showSource = true }
+                        .buttonStyle(LumaButtonStyle(emphasis: .secondary))
                 }.padding(30)
             }
         }
@@ -113,7 +91,7 @@ struct MarkdownPreview: View {
 enum MarkdownResources {
     static let entryURL = URL(string: "luma-preview://reader/index.html")!
     static let allowedFiles: Set<String> = [
-        "index.html", "preview.css", "preview.js", "search.js", "reading.js", "json.js", "vendor/marked.umd.js", "vendor/purify.min.js",
+        "index.html", "preview.css", "preview.js", "search.js", "reading.js", "json.js", "languages.js", "vendor/marked.umd.js", "vendor/purify.min.js",
         "vendor/highlight.min.js", "vendor/swift.min.js", "vendor/rust.min.js", "vendor/typescript.min.js", "vendor/mermaid.min.js",
         "vendor/katex/katex.min.js", "vendor/katex/katex.min.css"
     ]
@@ -284,12 +262,16 @@ struct MarkdownWebView: NSViewRepresentable {
                 state.loading = true; state.error = nil
                 do {
                     let result = try await webView.callAsyncJavaScript(
-                        "return await window.luma.render(source, options);",
+                        "try { return await window.luma.render(source, options); } catch (error) { return {renderError: String(error.message || error).slice(0, 600)}; }",
                         arguments: ["source": source, "options": ["dark": dark, "offset": offset, "width": width, "typography": typography.javascriptValue, "location": location ?? [:], "codeLanguage": codeLanguage?.identifier ?? "", "codeTitle": codeLanguage?.title ?? ""]],
                         in: nil, contentWorld: .page
                     )
                     guard !Task.isCancelled, current == revision else { return }
                     if let values = result as? [String: Any] {
+                        if let message = values["renderError"] as? String {
+                            state.loading = false; state.error = message; rendering = false
+                            return
+                        }
                         state.metrics = values.compactMapValues { ($0 as? NSNumber)?.intValue }
                     }
                     state.loading = false
@@ -361,6 +343,7 @@ struct MarkdownWebView: NSViewRepresentable {
             guard loaded, !rendering, tab.markdownBookmarkRequest != tab.markdownBookmarkHandledRequest,
                   let session = tab.readingSession, let webView else { return }
             let request = tab.markdownBookmarkRequest
+            let headingID = tab.markdownBookmarkHeadingID
             guard bookmarkInFlightRequest != request else { return }
             bookmarkTask?.cancel()
             bookmarkInFlightRequest = request
@@ -374,12 +357,14 @@ struct MarkdownWebView: NSViewRepresentable {
                     }
                 }
                 do {
-                    let result = try await webView.callAsyncJavaScript("return window.luma.getReadingPosition();", arguments: [:], in: nil, contentWorld: .page)
-                    guard !Task.isCancelled, tab.markdownCaptureID == captureID, tab.markdownBookmarkRequest == request,
-                          let values = result as? [String: Any], let position = MarkdownReadingLocation(message: values) else { return }
-                    tab.rememberReadingPosition(position)
-                    session.addBookmark(at: position, title: values["title"] as? String ?? tab.title)
+                    let result = try await webView.callAsyncJavaScript(
+                        "return headingID ? window.luma.getHeadingReadingPosition(headingID) : window.luma.getReadingPosition();",
+                        arguments: ["headingID": headingID as Any? ?? NSNull()], in: nil, contentWorld: .page)
+                    guard !Task.isCancelled, tab.markdownCaptureID == captureID, tab.markdownBookmarkRequest == request else { return }
                     tab.markdownBookmarkHandledRequest = request
+                    guard let values = result as? [String: Any], let position = MarkdownReadingLocation(message: values) else { return }
+                    if headingID == nil { tab.rememberReadingPosition(position) }
+                    session.addBookmark(at: position, title: values["title"] as? String ?? tab.title, chapterStart: headingID != nil)
                 } catch { }
             }
         }
@@ -433,7 +418,9 @@ struct MarkdownWebView: NSViewRepresentable {
                 state.headings = values.compactMap { value in
                     guard let id = value["id"] as? String, !id.isEmpty, id.count <= 200,
                           let title = value["title"] as? String, let level = value["level"] as? Int, (1...6).contains(level) else { return nil }
-                    return MarkdownHeading(id: id, title: String(title.prefix(240)), level: level)
+                    let summary = value["summary"] as? String ?? ""
+                    return MarkdownHeading(id: id, title: String(title.prefix(240)), level: level,
+                                           summary: String(summary.prefix(161)))
                 }
                 state.outlineTruncated = body["truncated"] as? Bool ?? false
                 tab.markdownCollapsedHeadings.formIntersection(Set(state.headings.map(\.id)))

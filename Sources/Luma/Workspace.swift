@@ -5,6 +5,7 @@ import ReaderCore
 enum LoadedContent {
     case text(String)
     case markdown(String)
+    case svg(String)
     case json(String, JSONNode)
     case table(String, CSVDocument)
     case native
@@ -12,7 +13,7 @@ enum LoadedContent {
 
     var source: String? {
         switch self {
-        case .text(let text), .markdown(let text), .json(let text, _), .table(let text, _): text
+        case .text(let text), .markdown(let text), .svg(let text), .json(let text, _), .table(let text, _): text
         default: nil
         }
     }
@@ -36,11 +37,12 @@ enum LoadState {
     private(set) var readingSession: MarkdownReadingSession?
     var markdownBookmarkRequest = 0
     var markdownBookmarkHandledRequest = 0
+    @ObservationIgnored private(set) var markdownBookmarkHeadingID: String?
     @ObservationIgnored var markdownCaptureID: UUID?
     @ObservationIgnored var captureMarkdownPosition: (() async -> Void)?
-    var markdownOutlineVisible: Bool?
     var markdownCollapsedHeadings: Set<String> = []
     let markdownFind = MarkdownFindState()
+    let markdownRenderState = MarkdownRenderState()
     var pdfPage = 0
     var zoom = 1.0
     var sourceQuery = ""
@@ -60,6 +62,10 @@ enum LoadState {
     var previewTask: Task<Void, Never>?
     var closeTask: Task<Void, Never>?
     @ObservationIgnored var editor: SourceEditor?
+    @ObservationIgnored var didEdit: ((DocumentTab) -> Void)?
+    @ObservationIgnored var autoSaveTask: Task<Void, Never>?
+    @ObservationIgnored var autoSaveGeneration = UUID()
+    var autoSaveError: String?
     private let previewService = FileService()
 
     var isDirty: Bool { draft != nil && draft != savedText }
@@ -82,6 +88,7 @@ enum LoadState {
         draft = text
         editRevision += 1
         updatePreview()
+        didEdit?(self)
     }
 
     func updatePreview() {
@@ -109,6 +116,7 @@ enum LoadState {
         switch payload {
         case .text(let text): state = .ready(.text(text))
         case .markdown(let text): state = .ready(.markdown(text))
+        case .svg(let text): state = .ready(.svg(text))
         case .json(let text, let root): state = .ready(.json(text, root))
         case .table(let text, let table): state = .ready(.table(text, table))
         case .invalidStructured(let text, let error): state = .ready(.text(text)); previewError = error
@@ -118,9 +126,11 @@ enum LoadState {
 
     func acceptDisk(_ snapshot: TextFileSnapshot) {
         previewTask?.cancel()
+        if kind == .unsupported { kind = .text }
         diskSnapshot = snapshot
         draft = snapshot.text; savedText = snapshot.text
         externalChange = false
+        autoSaveError = nil
         editRevision += 1
         editor?.replaceFromDisk(snapshot.text)
     }
@@ -128,6 +138,7 @@ enum LoadState {
     func discardEdits() {
         guard let savedText else { return }
         draft = savedText
+        autoSaveError = nil
         editRevision += 1
         editor?.replaceFromDisk(savedText)
         updatePreview()
@@ -154,6 +165,11 @@ enum LoadState {
         }
     }
 
+    func requestReadingBookmark(headingID: String? = nil) {
+        markdownBookmarkHeadingID = headingID
+        markdownBookmarkRequest += 1
+    }
+
     func rememberReadingPosition(_ location: MarkdownReadingLocation) {
         markdownLocation = location
         markdownOffset = location.offset
@@ -166,14 +182,22 @@ actor FileService {
     func children(of url: URL) throws -> [FileEntry] { try FileReader.children(of: url) }
 
     func read(_ url: URL, kind: DocumentKind) throws -> ReadFileResult {
-        if !kind.hasSource { return ReadFileResult(payload: .native, snapshot: nil) }
-        let snapshot = try TextFileStore.read(at: url)
+        if !kind.hasSource && kind != .unsupported { return ReadFileResult(payload: .native, snapshot: nil) }
+        if kind == .unsupported && !PlainTextFallback.permits(url) {
+            return ReadFileResult(payload: .native, snapshot: nil)
+        }
+        // Recheck on reload too: a previously detected text file may have been replaced by binary data.
+        let detectingPlainText = DocumentKind(url: url) == .unsupported || url.pathExtension.isEmpty
+        let snapshot = try TextFileStore.read(at: url, detectingPlainText: detectingPlainText)
         return ReadFileResult(payload: parse(snapshot.text, kind: kind, delimiter: url.pathExtension.lowercased() == "tsv" ? "\t" : ","), snapshot: snapshot)
     }
 
     func parse(_ text: String, kind: DocumentKind, delimiter: Character = ",") -> FilePayload {
         switch kind {
         case .markdown: return .markdown(text)
+        case .svg:
+            do { try SVGDocument.validate(text); return .svg(text) }
+            catch { return .invalidStructured(text, error.localizedDescription) }
         case .json:
             do { return .json(text, try JSONNode.parse(text)) }
             catch { return .invalidStructured(text, error.localizedDescription) }
@@ -240,7 +264,7 @@ actor FileService {
 }
 
 enum FilePayload: Sendable {
-    case text(String), markdown(String), json(String, JSONNode), table(String, CSVDocument)
+    case text(String), markdown(String), svg(String), json(String, JSONNode), table(String, CSVDocument)
     case invalidStructured(String, String), native
 }
 
@@ -255,7 +279,9 @@ struct ReadFileResult: Sendable {
     var directoryErrors: [URL: String] = [:]
     var loadingDirectories: Set<URL> = []
     var expanded: Set<URL> = []
-    var tabs: [DocumentTab] = [] { didSet { persistSession() } }
+    var tabs: [DocumentTab] = [] {
+        didSet { updateAutoSaveBindings(previous: oldValue); persistSession() }
+    }
     var activeID: URL? { didSet { persistSession() } }
     var query = ""
     var searchResults: [FileEntry] = []
@@ -274,6 +300,20 @@ struct ReadFileResult: Sendable {
     var appearance: AppAppearance {
         didSet { preferences.set(appearance.rawValue, forKey: "appearance") }
     }
+    var autoSaveEnabled: Bool {
+        didSet {
+            preferences.set(autoSaveEnabled, forKey: "autoSaveEnabled")
+            guard autoSaveEnabled != oldValue else { return }
+            for tab in tabs {
+                cancelAutoSave(tab)
+                if autoSaveEnabled {
+                    if notice == tab.autoSaveError { notice = nil }
+                    tab.autoSaveError = nil
+                    scheduleAutoSave(tab)
+                }
+            }
+        }
+    }
     var editorFontSize: Double {
         didSet {
             preferences.set(editorFontSize, forKey: "editorFontSize")
@@ -291,9 +331,13 @@ struct ReadFileResult: Sendable {
     }
     var showFind = false
     var findFocusRequest = 0
+    var libraryFindFocusRequest = 0
+    @ObservationIgnored weak var libraryRegion: NSView?
+    @ObservationIgnored private var mouseSelectedLibrary: Bool?
     let files: FileService
     let readingHistory: MarkdownReadingHistory
     private let preferences: UserDefaults
+    @ObservationIgnored private let autoSaveDelay: Duration
     private var searchTask: Task<Void, Never>?
     private var pendingDirectoryRefreshes: Set<URL> = []
     private var directoryGeneration = 0
@@ -328,6 +372,41 @@ struct ReadFileResult: Sendable {
         findFocusRequest += 1
     }
 
+    func recordFindFocus(from event: NSEvent, in window: NSWindow) {
+        if event.type == .keyDown {
+            if event.keyCode == 48 && event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
+                mouseSelectedLibrary = nil
+            }
+            return
+        }
+        guard window.contentLayoutRect.contains(event.locationInWindow) else { return }
+        mouseSelectedLibrary = libraryBounds(in: window)?.contains(event.locationInWindow) ?? false
+    }
+
+    func openFocusedFind(in window: NSWindow? = NSApp.keyWindow) {
+        var findInLibrary = false
+        if let window, let bounds = libraryBounds(in: window) {
+            if let mouseSelectedLibrary {
+                findInLibrary = mouseSelectedLibrary
+            } else if let responder = window.firstResponder as? NSView {
+                let field = (responder as? NSTextView)?.delegate as? NSView ?? responder
+                let frame = field.convert(field.bounds, to: nil)
+                findInLibrary = bounds.contains(NSPoint(x: frame.midX, y: frame.midY))
+            }
+        }
+        if findInLibrary || !canFind {
+            libraryFindFocusRequest += 1
+        } else {
+            openFind()
+        }
+    }
+
+    private func libraryBounds(in window: NSWindow) -> NSRect? {
+        guard let libraryRegion, libraryRegion.window === window,
+              !libraryRegion.isHiddenOrHasHiddenAncestor, !libraryRegion.visibleRect.isEmpty else { return nil }
+        return libraryRegion.convert(libraryRegion.visibleRect, to: nil)
+    }
+
     func advanceFind(_ direction: Int) {
         guard let tab = activeTab else { return }
         if tab.kind == .markdown && !tab.showSource { tab.markdownFind.move(direction) }
@@ -339,19 +418,21 @@ struct ReadFileResult: Sendable {
             .max { $0.path.count < $1.path.count } ?? document.deletingLastPathComponent()
     }
 
-    init(preferences: UserDefaults = .standard) {
+    init(preferences: UserDefaults = .standard, autoSaveDelay: Duration = .seconds(1)) {
         let service = FileService()
         files = service
         recycleItem = { url in _ = try await service.moveToTrash(at: url) }
         renameItem = { url, name in try await service.renameItem(at: url, to: name) }
         moveItem = { url, folder in try await service.moveItem(at: url, into: folder) }
         self.preferences = preferences
+        self.autoSaveDelay = autoSaveDelay
+        autoSaveEnabled = preferences.object(forKey: "autoSaveEnabled") as? Bool ?? false
         readingHistory = MarkdownReadingHistory(preferences: preferences)
         appearance = AppAppearance(rawValue: preferences.string(forKey: "appearance") ?? "") ?? .system
         editorFontSize = EditorTypography.validFontSize(preferences.double(forKey: "editorFontSize"))
-        previewFullWidth = preferences.object(forKey: "previewFullWidth") as? Bool ?? true
+        previewFullWidth = preferences.object(forKey: "previewFullWidth") as? Bool ?? false
         let savedWidth = preferences.double(forKey: "previewMaxWidth")
-        previewMaxWidth = savedWidth.isFinite && (640...1_600).contains(savedWidth) ? savedWidth : 1_100
+        previewMaxWidth = savedWidth.isFinite && (640...1_600).contains(savedWidth) ? savedWidth : 840
         let typography = MarkdownTypography(
             font: MarkdownFont(rawValue: preferences.string(forKey: "markdownFont") ?? "") ?? .system,
             fontSize: preferences.double(forKey: "markdownFontSize"),
@@ -440,7 +521,7 @@ struct ReadFileResult: Sendable {
 
     func addReadingBookmark() {
         guard let tab = activeTab, tab.kind == .markdown, !tab.showSource else { return }
-        tab.markdownBookmarkRequest += 1
+        tab.requestReadingBookmark()
     }
 
     @discardableResult func createFile(named name: String, in folder: URL) async throws -> URL {
@@ -538,6 +619,7 @@ struct ReadFileResult: Sendable {
     }
 
     private func readFromDisk(_ tab: DocumentTab) {
+        cancelAutoSave(tab)
         let previous = tab.state
         tab.loadTask?.cancel()
         tab.previewTask?.cancel()
@@ -567,7 +649,7 @@ struct ReadFileResult: Sendable {
     }
 
     func close(_ id: URL) {
-        guard let tab = tabs.first(where: { $0.id == id }), !tab.isSaving, !tab.isRenaming else { return }
+        guard canCloseTabs, let tab = tabs.first(where: { $0.id == id }), !tab.isSaving, !tab.isRenaming else { return }
         if !tab.isDirty { removeTab(id); return }
         guard closingTabs.insert(id).inserted else { return }
         tab.closeTask = Task {
@@ -577,14 +659,76 @@ struct ReadFileResult: Sendable {
         }
     }
 
-    private func removeTab(_ id: URL) {
+    var canCloseTabs: Bool { !reviewingUnsaved && !askingUnsaved && closingTabs.isEmpty && !isMutatingFiles }
+
+    func tabIDs(toClose scope: TabCloseScope, relativeTo id: URL) -> [URL] {
+        guard let index = tabs.firstIndex(where: { $0.id == id }) else { return [] }
+        switch scope {
+        case .current: return [id]
+        case .others: return tabs.filter { $0.id != id }.map(\.id)
+        case .left: return tabs.prefix(index).map(\.id)
+        case .right: return tabs.dropFirst(index + 1).map(\.id)
+        case .all: return tabs.map(\.id)
+        }
+    }
+
+    @discardableResult func closeTabs(_ ids: [URL]) async -> Bool {
+        guard canCloseTabs else { return false }
+        let idSet = Set(ids)
+        let targets = tabs.filter { idSet.contains($0.id) }
+        let originalIDs = targets.map(\.id)
+        guard !targets.isEmpty else { return true }
+        guard targets.allSatisfy({ !$0.isSaving && !$0.isLoading && !$0.isRenaming && $0.editor?.textView.hasMarkedText() != true }) else {
+            notice = "请先完成当前输入或文档读写，再关闭标签页。"
+            return false
+        }
+        reviewingUnsaved = true
+        defer {
+            reviewingUnsaved = false
+            for tab in targets where tabs.contains(where: { $0 === tab }) { scheduleAutoSave(tab) }
+        }
+        var reviewed: [(tab: DocumentTab, id: URL, revision: Int, discard: Bool)] = []
+        for (tab, id) in zip(targets, originalIDs) {
+            switch await resolveUnsaved(tab) {
+            case .cancel: return false
+            case .save: reviewed.append((tab, id, tab.editRevision, false))
+            case .discard: reviewed.append((tab, id, tab.editRevision, true))
+            }
+        }
+        for tab in targets { await tab.captureMarkdownPosition?() }
+        readingHistory.flush()
+        guard reviewed.allSatisfy({ item in
+            tabs.contains(where: { $0 === item.tab }) && item.tab.id == item.id &&
+            !item.tab.isSaving && !item.tab.isLoading && !item.tab.isRenaming &&
+            item.tab.editor?.textView.hasMarkedText() != true &&
+            (!item.tab.isDirty || (item.discard && item.tab.editRevision == item.revision))
+        }) else {
+            notice = "检查保存期间文档又有变化，已取消关闭，请检查最新修改。"
+            return false
+        }
+        let previous = tabs
+        let activeIndex = previous.firstIndex { $0.id == activeID }
+        let survivors = previous.filter { !idSet.contains($0.id) }
+        let nextActive: URL?
+        if let activeID, survivors.contains(where: { $0.id == activeID }) { nextActive = activeID }
+        else if let activeIndex {
+            nextActive = previous.dropFirst(activeIndex).first { !idSet.contains($0.id) }?.id ?? survivors.last?.id
+        } else { nextActive = survivors.first?.id }
+        for item in reviewed { removeTab(item.id, capturePosition: false) }
+        activeID = nextActive
+        return true
+    }
+
+    private func removeTab(_ id: URL, capturePosition: Bool = true) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         let tab = tabs[index]
-        let capture = UUID()
-        pendingCaptures[capture] = Task {
-            defer { pendingCaptures[capture] = nil }
-            await tab.captureMarkdownPosition?()
-            readingHistory.flush()
+        if capturePosition {
+            let capture = UUID()
+            pendingCaptures[capture] = Task {
+                defer { pendingCaptures[capture] = nil }
+                await tab.captureMarkdownPosition?()
+                readingHistory.flush()
+            }
         }
         tabs[index].loadTask?.cancel()
         tab.previewTask?.cancel()
@@ -754,12 +898,37 @@ struct ReadFileResult: Sendable {
     func undo() { activeTab?.editor?.textView.breakUndoCoalescing(); activeTab?.editor?.textView.undoManager?.undo() }
     func redo() { activeTab?.editor?.textView.breakUndoCoalescing(); activeTab?.editor?.textView.undoManager?.redo() }
 
-    @discardableResult func save(_ tab: DocumentTab) async -> Bool {
+    func performUndoShortcut(redo: Bool = false, in window: NSWindow? = NSApp.keyWindow) {
+        guard let window else { return }
+        let editor = activeTab?.editor?.textView
+        let textView = window.firstResponder as? NSTextView ?? (editor?.window === window ? editor : nil)
+        guard let textView, let manager = textView.undoManager else { return }
+        textView.breakUndoCoalescing()
+        if redo {
+            if manager.canRedo { manager.redo() }
+        } else if manager.canUndo {
+            manager.undo()
+        }
+    }
+
+    @discardableResult func save(_ tab: DocumentTab, automatically: Bool = false) async -> Bool {
+        if !automatically { cancelAutoSave(tab) }
+        if automatically {
+            guard autoSaveEnabled, tab.autoSaveError == nil, tabs.contains(where: { $0 === tab }) else { return false }
+            if tab.externalChange {
+                pauseAutoSave(tab, reason: "磁盘版本已改变，请按 ⌘S 处理冲突。")
+                return false
+            }
+        }
         guard let text = tab.draft, let snapshot = tab.diskSnapshot, !tab.isSaving, !tab.isLoading, !tab.isRenaming else { return false }
         if !tab.isDirty && !tab.externalChange { return true }
         tab.editor?.textView.breakUndoCoalescing()
         tab.isSaving = true
-        defer { tab.isSaving = false }
+        var didSave = false
+        defer {
+            tab.isSaving = false
+            if didSave && tab.isDirty { scheduleAutoSave(tab) }
+        }
         var expected = snapshot.version
         while true {
             do {
@@ -767,10 +936,16 @@ struct ReadFileResult: Sendable {
                 tab.diskSnapshot = saved
                 tab.savedText = text
                 tab.externalChange = false
-                notice = nil
+                if !automatically || notice == tab.autoSaveError { notice = nil }
+                tab.autoSaveError = nil
+                didSave = true
                 return true
             } catch TextFileWriteError.changed(let current) {
                 tab.externalChange = true
+                if automatically {
+                    pauseAutoSave(tab, reason: "磁盘版本已改变，请按 ⌘S 处理冲突。")
+                    return false
+                }
                 switch await chooseConflict(tab) {
                 case .cancel: return false
                 case .reload:
@@ -780,13 +955,15 @@ struct ReadFileResult: Sendable {
                 case .overwrite: expected = current
                 }
             } catch {
-                notice = "无法保存 \(tab.title)：\(error.localizedDescription) 编辑内容仍保留。"
+                if automatically { pauseAutoSave(tab, reason: error.localizedDescription) }
+                else { notice = "无法保存 \(tab.title)：\(error.localizedDescription) 编辑内容仍保留。" }
                 return false
             }
         }
     }
 
     func resolveUnsaved(_ tab: DocumentTab) async -> UnsavedChoice {
+        cancelAutoSave(tab)
         guard !tab.isSaving, !tab.isRenaming else { return .cancel }
         guard tab.isDirty else { return .discard }
         guard !askingUnsaved else { return .cancel }
@@ -795,7 +972,9 @@ struct ReadFileResult: Sendable {
         switch await chooseUnsaved(tab) {
         case .save: return await save(tab) && !tab.isDirty ? .save : .cancel
         case .discard: return .discard
-        case .cancel: return .cancel
+        case .cancel:
+            scheduleAutoSave(tab)
+            return .cancel
         }
     }
 
@@ -881,10 +1060,78 @@ struct ReadFileResult: Sendable {
             let support = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             let parent = support.appendingPathComponent("Luma", isDirectory: true)
             try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-            let editable = parent.appendingPathComponent("Samples-0.8", isDirectory: true)
-            if !FileManager.default.fileExists(atPath: editable.path) { try FileManager.default.copyItem(at: folder, to: editable) }
-            addFolder(editable)
-            open([editable.appendingPathComponent("欢迎.md")])
+            let editable = parent.appendingPathComponent(SampleWorkspace.folderName, isDirectory: true)
+            try installAndOpenSamples(from: folder, at: editable)
         } catch { notice = "无法创建可编辑的示例工作区：\(error.localizedDescription)" }
+    }
+
+    func installAndOpenSamples(from source: URL, at editable: URL) throws {
+        try SampleWorkspace.install(from: source, to: editable)
+        let normalized = editable.resolvingSymlinksInPath().standardizedFileURL
+        let path = WorkspacePath.normalized(normalized)
+        if let existing = roots.first(where: { WorkspacePath.normalized($0) == path }) {
+            expanded.insert(existing)
+            for directory in Set(directories.keys).union(expanded).union([existing])
+                where WorkspacePath.contains(path, WorkspacePath.normalized(directory)) {
+                loadDirectory(directory, refresh: true)
+            }
+            if !query.isEmpty { search() }
+        } else { addFolder(normalized) }
+        open([normalized.appendingPathComponent("欢迎.md")])
+    }
+}
+
+private extension Workspace {
+    func updateAutoSaveBindings(previous: [DocumentTab]) {
+        let currentIDs = Set(tabs.map(ObjectIdentifier.init))
+        let previousIDs = Set(previous.map(ObjectIdentifier.init))
+        for tab in previous where !currentIDs.contains(ObjectIdentifier(tab)) {
+            cancelAutoSave(tab)
+            tab.didEdit = nil
+        }
+        for tab in tabs where !previousIDs.contains(ObjectIdentifier(tab)) {
+            tab.didEdit = { [weak self] tab in self?.scheduleAutoSave(tab) }
+            scheduleAutoSave(tab)
+        }
+    }
+
+    func cancelAutoSave(_ tab: DocumentTab) {
+        tab.autoSaveGeneration = UUID()
+        tab.autoSaveTask?.cancel()
+        tab.autoSaveTask = nil
+    }
+
+    func scheduleAutoSave(_ tab: DocumentTab) {
+        cancelAutoSave(tab)
+        guard autoSaveEnabled, tabs.contains(where: { $0 === tab }) else { return }
+        guard tab.isDirty else {
+            if notice == tab.autoSaveError { notice = nil }
+            tab.autoSaveError = nil
+            return
+        }
+        guard tab.canEdit, tab.diskSnapshot != nil, tab.autoSaveError == nil else { return }
+        let generation = tab.autoSaveGeneration
+        let delay = autoSaveDelay
+        tab.autoSaveTask = Task { [weak self, weak tab] in
+            do { try await Task.sleep(for: delay) } catch { return }
+            guard let self, let tab, !Task.isCancelled, tab.autoSaveGeneration == generation else { return }
+            defer {
+                if tab.autoSaveGeneration == generation { tab.autoSaveTask = nil }
+            }
+            guard autoSaveEnabled, tabs.contains(where: { $0 === tab }), tab.isDirty, tab.autoSaveError == nil else { return }
+            // A save/discard decision and a marked IME composition must finish before writing.
+            if reviewingUnsaved || askingUnsaved || isMutatingFiles || tab.isLoading || tab.isRenaming || tab.isSaving ||
+                tab.closeTask != nil || tab.editor?.textView.hasMarkedText() == true {
+                scheduleAutoSave(tab)
+                return
+            }
+            _ = await save(tab, automatically: true)
+        }
+    }
+
+    func pauseAutoSave(_ tab: DocumentTab, reason: String) {
+        let message = "\(tab.title) 自动保存已暂停：\(reason) 未保存的修改仍保留。"
+        tab.autoSaveError = message
+        notice = message
     }
 }

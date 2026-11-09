@@ -13,17 +13,18 @@ struct SidebarRowLabel: View {
             Group {
                 if entry.isDirectory {
                     Image(systemName: expanded ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 8, weight: .semibold)).foregroundStyle(.tertiary)
+                        .font(.system(size: 8, weight: .semibold)).foregroundStyle(LumaTheme.muted)
                 } else { Color.clear }
             }.frame(width: 10)
             Image(systemName: entry.isDirectory ? "folder" : entry.kind.symbol)
-                .font(.system(size: 12)).foregroundStyle(entry.isDirectory ? LumaTheme.accent : .secondary).frame(width: 15)
-            Text(entry.name).font(.system(size: 12, weight: depth == 0 ? .medium : .regular)).foregroundStyle(colorScheme == .dark ? Color(white: 0.90) : Color(white: 0.12))
+                .font(.system(size: 12)).foregroundStyle(entry.isDirectory || selected ? LumaTheme.accent : LumaTheme.muted).frame(width: 15)
+            Text(entry.name).font(.system(size: 12, weight: depth == 0 || selected ? .medium : .regular))
+                .foregroundStyle(LumaTheme.ink)
                 .lineLimit(1).truncationMode(.middle)
             Spacer(minLength: 0)
         }
         .padding(.leading, CGFloat(min(depth, 16)) * 12 + 6).padding(.trailing, 8).frame(height: 30)
-        .background(selected ? LumaTheme.accent.opacity(0.11) : .clear, in: RoundedRectangle(cornerRadius: 6))
+        .background(selected ? LumaTheme.selected : .clear, in: RoundedRectangle(cornerRadius: LumaTheme.controlRadius))
         .environment(\.colorScheme, colorScheme)
     }
 }
@@ -70,6 +71,7 @@ final class SidebarRowView: NSView, NSDraggingSource {
         label.frame = bounds
         label.autoresizingMask = [.width, .height]
         addSubview(label)
+        focusRingType = .exterior
         registerForDraggedTypes([Self.pasteboardType])
         setAccessibilityElement(true)
         setAccessibilityRole(.button)
@@ -88,6 +90,11 @@ final class SidebarRowView: NSView, NSDraggingSource {
             LumaTheme.nativeAccent.withAlphaComponent(0.14).setFill(); path.fill()
             LumaTheme.nativeAccent.withAlphaComponent(0.7).setStroke(); path.lineWidth = 1; path.stroke()
         }
+    }
+
+    override var focusRingMaskBounds: NSRect { bounds.insetBy(dx: 2, dy: 2) }
+    override func drawFocusRingMask() {
+        NSBezierPath(roundedRect: focusRingMaskBounds, xRadius: 5, yRadius: 5).fill()
     }
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()

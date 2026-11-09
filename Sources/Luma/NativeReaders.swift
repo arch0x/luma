@@ -34,7 +34,7 @@ private struct PDFCanvas: NSViewRepresentable {
         view.autoScales = true
         view.displayMode = .singlePageContinuous
         view.displayDirection = .vertical
-        view.backgroundColor = .underPageBackgroundColor
+        view.backgroundColor = LumaTheme.nativePaper
         view.document = document
         if let page = document.page(at: tab.pdfPage) { view.go(to: page) }
         context.coordinator.view = view
@@ -127,15 +127,19 @@ struct ImageReader: View {
                             .padding(32)
                             .frame(minWidth: geometry.size.width, minHeight: geometry.size.height)
                     }
-                }.background(Color(nsColor: .underPageBackgroundColor).opacity(0.4))
-                HStack(spacing: 16) {
+                }.background(LumaTheme.paper)
+                LumaRule()
+                HStack(spacing: 6) {
                     Text("\(Int(image.size.width)) × \(Int(image.size.height)) · 最高 4096px 预览")
-                        .font(.system(size: 10)).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(LumaTheme.muted).lineLimit(1)
                     Spacer()
-                    Button { tab.zoom = max(0.25, tab.zoom / 1.25) } label: { Image(systemName: "minus.magnifyingglass") }.help("缩小")
-                    Button("适合窗口") { tab.zoom = 1 }.font(.caption)
-                    Button { tab.zoom = min(8, tab.zoom * 1.25) } label: { Image(systemName: "plus.magnifyingglass") }.help("放大")
-                }.buttonStyle(.plain).padding(14)
+                    Button { tab.zoom = max(0.25, tab.zoom / 1.25) } label: { Image(systemName: "minus.magnifyingglass") }
+                        .help("缩小").accessibilityLabel("缩小")
+                    Button("适合窗口") { tab.zoom = 1 }
+                    Button { tab.zoom = min(8, tab.zoom * 1.25) } label: { Image(systemName: "plus.magnifyingglass") }
+                        .help("放大").accessibilityLabel("放大")
+                }.buttonStyle(LumaButtonStyle()).padding(.horizontal, 12).padding(.vertical, 4)
+                    .background(LumaTheme.chrome)
             } else if let error {
                 FilePlaceholder(symbol: "photo", title: "无法读取图片", message: error, url: tab.url)
             } else { ProgressView("正在打开图片…").frame(maxWidth: .infinity, maxHeight: .infinity) }

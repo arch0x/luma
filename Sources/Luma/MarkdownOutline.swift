@@ -4,6 +4,14 @@ struct MarkdownHeading: Identifiable, Equatable, Sendable {
     let id: String
     let title: String
     let level: Int
+    let summary: String
+
+    init(id: String, title: String, level: Int, summary: String = "") {
+        self.id = id
+        self.title = title
+        self.level = level
+        self.summary = summary
+    }
 }
 
 struct MarkdownOutlineItem: Identifiable, Equatable, Sendable {
@@ -41,7 +49,7 @@ struct MarkdownOutlineView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("文档大纲").font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
+                Text("文档大纲").font(.system(size: 11, weight: .semibold)).foregroundStyle(LumaTheme.muted)
                 Spacer()
                 Menu {
                     Button("全部展开") { tab.markdownCollapsedHeadings.removeAll() }
@@ -64,7 +72,7 @@ struct MarkdownOutlineView: View {
                                         Image(systemName: tab.markdownCollapsedHeadings.contains(item.id) ? "chevron.right" : "chevron.down")
                                             .font(.system(size: 8, weight: .semibold)).frame(width: 16, height: 25)
                                     }
-                                    .buttonStyle(.plain).foregroundStyle(.secondary)
+                                    .buttonStyle(.plain).foregroundStyle(LumaTheme.muted)
                                     .accessibilityLabel("\(tab.markdownCollapsedHeadings.contains(item.id) ? "展开" : "折叠") \(item.heading.title)")
                                 } else { Color.clear.frame(width: 16, height: 25) }
                                 Button {
@@ -72,8 +80,8 @@ struct MarkdownOutlineView: View {
                                     onNavigate()
                                 } label: {
                                     Text(item.heading.title)
-                                        .font(.system(size: 11, weight: item.id == visibleActiveID ? .semibold : .regular))
-                                        .foregroundStyle(item.id == visibleActiveID ? LumaTheme.accent : .secondary)
+                                        .font(.system(size: 12, weight: item.id == visibleActiveID ? .semibold : .regular))
+                                        .foregroundStyle(item.id == visibleActiveID ? LumaTheme.accent : LumaTheme.ink)
                                         .lineLimit(2).multilineTextAlignment(.leading)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.vertical, 6).contentShape(Rectangle())
@@ -81,7 +89,14 @@ struct MarkdownOutlineView: View {
                                     .accessibilityValue(item.id == visibleActiveID ? "当前章节" : "H\(item.heading.level)")
                             }
                             .padding(.leading, CGFloat(item.depth) * 10 + 3).padding(.trailing, 8)
-                            .background(item.id == visibleActiveID ? LumaTheme.accent.opacity(0.09) : .clear, in: RoundedRectangle(cornerRadius: 5))
+                            .background(item.id == visibleActiveID ? LumaTheme.selected : .clear,
+                                        in: RoundedRectangle(cornerRadius: LumaTheme.controlRadius))
+                            .overlay(alignment: .leading) {
+                                if item.id == visibleActiveID {
+                                    Capsule().fill(LumaTheme.accent).frame(width: 2).padding(.vertical, 5)
+                                        .allowsHitTesting(false)
+                                }
+                            }
                             .id(item.id)
                         }
                     }.padding(.horizontal, 8).padding(.bottom, 16)
@@ -95,7 +110,7 @@ struct MarkdownOutlineView: View {
         .tint(LumaTheme.accent)
         .accentColor(LumaTheme.accent)
         .disabled(state.loading)
-        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+        .background(LumaTheme.chrome)
         .accessibilityElement(children: .contain).accessibilityLabel("文档大纲")
     }
 }

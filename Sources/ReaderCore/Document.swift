@@ -1,21 +1,62 @@
 import Foundation
 
 public enum DocumentKind: String, Sendable, CaseIterable {
-    case markdown, pdf, image, json, table, text, unsupported
+    case markdown, pdf, image, svg, json, table, text, unsupported
+
+    public static let extensionsByKind: [DocumentKind: [String]] = [
+        .markdown: ["md", "markdown", "mdown"],
+        .pdf: ["pdf"],
+        .svg: ["svg"],
+        .image: ["png", "jpg", "jpeg", "gif", "heic", "heif", "tiff", "tif", "bmp", "webp", "icns"],
+        .json: ["json", "geojson"],
+        .table: ["csv", "tsv"],
+        .text: ["txt", "log", "swift", "rs", "js", "jsx", "ts", "tsx", "py", "rb", "go",
+                "c", "h", "cpp", "hpp", "m", "mm", "java", "kt", "sh", "zsh", "bash",
+                "yaml", "yml", "toml", "xml", "html", "css", "scss", "sql", "ini", "conf",
+                "gitignore", "env", "plist", "lock", "rst", "jsonc", "jsonl", "ndjson",
+                "vue", "svelte", "less", "diff", "patch", "htm", "xhtml", "xcconfig",
+                "config", "properties", "editorconfig", "bashrc", "zshrc", "fish",
+                "cjs", "mjs", "cts", "mts", "cxx", "cc", "hxx", "hh", "cs", "kts",
+                "php", "lua", "pl", "r", "graphql", "gql", "mk", "dockerfile", "dockerignore"]
+    ]
+    private static let kindsByExtension = Dictionary(uniqueKeysWithValues:
+        extensionsByKind.flatMap { kind, extensions in extensions.map { ($0, kind) } })
 
     public init(url: URL) {
-        self = switch url.pathExtension.lowercased() {
-        case "md", "markdown", "mdown": .markdown
-        case "pdf": .pdf
-        case "png", "jpg", "jpeg", "gif", "heic", "heif", "tiff", "tif", "bmp", "webp", "icns": .image
-        case "json", "geojson": .json
-        case "csv", "tsv": .table
-        case "txt", "log", "swift", "rs", "js", "jsx", "ts", "tsx", "py", "rb", "go",
-             "c", "h", "cpp", "hpp", "m", "mm", "java", "kt", "sh", "zsh", "bash",
-             "yaml", "yml", "toml", "xml", "html", "css", "scss", "sql", "ini", "conf",
-             "gitignore", "env", "plist", "lock", "rst": .text
-        default: url.pathExtension.isEmpty ? .text : .unsupported
-        }
+        self = Self.isDockerfile(url) || Self.isMakefile(url) || Self.isDockerignore(url) || Self.isEnvironment(url)
+            ? .text : Self.kindsByExtension[url.pathExtension.lowercased()] ?? (url.pathExtension.isEmpty ? .text : .unsupported)
+    }
+
+    public static func isDockerfile(_ url: URL) -> Bool {
+        let name = url.lastPathComponent.lowercased()
+        let ext = url.pathExtension.lowercased()
+        if name == "dockerfile" || ext == "dockerfile" { return true }
+        guard name.hasPrefix("dockerfile."), ext != "dockerignore" else { return false }
+        // A Dockerfile.md guide or Dockerfile.png image keeps its explicit format.
+        return kindsByExtension[ext].map { $0 == .text } ?? true
+    }
+
+    public static func isMakefile(_ url: URL) -> Bool {
+        let name = url.lastPathComponent.lowercased()
+        let ext = url.pathExtension.lowercased()
+        if name == "makefile" || name == "gnumakefile" || ext == "mk" { return true }
+        guard name.hasPrefix("makefile.") else { return false }
+        return kindsByExtension[ext].map { $0 == .text } ?? true
+    }
+
+    public static func isDockerignore(_ url: URL) -> Bool {
+        url.lastPathComponent.lowercased() == ".dockerignore" || url.pathExtension.lowercased() == "dockerignore"
+    }
+
+    public static func isGitignore(_ url: URL) -> Bool {
+        url.lastPathComponent.lowercased() == ".gitignore" || url.pathExtension.lowercased() == "gitignore"
+    }
+
+    public static func isEnvironment(_ url: URL) -> Bool {
+        let name = url.lastPathComponent.lowercased()
+        if name == ".env" || url.pathExtension.lowercased() == "env" { return true }
+        guard name.hasPrefix(".env.") else { return false }
+        return kindsByExtension[url.pathExtension.lowercased()].map { $0 == .text } ?? true
     }
 
     public var label: String {
@@ -23,9 +64,10 @@ public enum DocumentKind: String, Sendable, CaseIterable {
         case .markdown: "Markdown"
         case .pdf: "PDF"
         case .image: "图片"
+        case .svg: "SVG"
         case .json: "JSON"
         case .table: "表格"
-        case .text: "文本"
+        case .text: "纯文本"
         case .unsupported: "文件"
         }
     }
@@ -35,6 +77,7 @@ public enum DocumentKind: String, Sendable, CaseIterable {
         case .markdown: "text.document"
         case .pdf: "doc.richtext"
         case .image: "photo"
+        case .svg: "photo"
         case .json: "curlybraces"
         case .table: "tablecells"
         case .text: "chevron.left.forwardslash.chevron.right"
@@ -42,7 +85,7 @@ public enum DocumentKind: String, Sendable, CaseIterable {
         }
     }
 
-    public var hasSource: Bool { [.markdown, .json, .table, .text].contains(self) }
+    public var hasSource: Bool { [.markdown, .svg, .json, .table, .text].contains(self) }
 }
 
 public enum ReaderError: LocalizedError {

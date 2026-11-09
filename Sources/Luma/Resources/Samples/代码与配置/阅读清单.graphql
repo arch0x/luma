@@ -1,0 +1,7 @@
+query ReadingList($limit: Int = 10) {
+  documents(limit: $limit, status: READING) {
+    id
+    title
+    progress
+  }
+}

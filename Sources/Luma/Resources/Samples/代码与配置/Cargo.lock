@@ -1,0 +1,6 @@
+# 依赖锁定文本示例。
+version = 4
+
+[[package]]
+name = "reading-notes"
+version = "1.0.0"

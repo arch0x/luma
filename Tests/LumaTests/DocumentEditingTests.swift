@@ -84,9 +84,15 @@ import ReaderCore
         workspace.activeID = tab.id
         tab.showSource = true
         #expect(tab.sourceEditor() === editor)
-        workspace.undo()
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 500, height: 350),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        defer { window.close() }
+        window.contentView = editor.scrollView
+        #expect(window.makeFirstResponder(editor.textView))
+        workspace.performUndoShortcut(in: window)
         #expect(tab.draft == "original 🙂" && !tab.isDirty && tab.canRedo)
-        workspace.redo()
+        workspace.performUndoShortcut(redo: true, in: window)
         #expect(tab.draft == "original 🙂 edited" && tab.isDirty)
         #expect(await workspace.save(tab))
         workspace.undo()

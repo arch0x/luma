@@ -5,42 +5,24 @@ import ReaderCore
 struct DocumentView: View {
     @Bindable var tab: DocumentTab
     @Bindable var workspace: Workspace
-    @FocusState private var findFocused: Bool
+    @ViewState private var findFocused = false
+    @ViewState private var showingInformation = false
+    private var reading: MarkdownRenderState { tab.markdownRenderState }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                Text(tab.url.deletingLastPathComponent().lastPathComponent).foregroundStyle(.tertiary)
-                Image(systemName: "chevron.right").font(.system(size: 8)).foregroundStyle(.quaternary)
-                Text(tab.title).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
-                if tab.isDirty { Text("未保存").foregroundStyle(LumaTheme.accent) }
-                Spacer()
-                if tab.canEdit && (tab.isDirty || tab.externalChange || tab.isSaving) {
-                    Button(tab.isSaving ? "正在保存…" : "保存", action: workspace.saveActive)
-                        .disabled(tab.isSaving || tab.isLoading || tab.isRenaming)
-                        .help("保存到原文件 ⌘S")
-                        .accessibilityLabel("保存到原文件")
-                }
-                if tab.hasPreview {
-                    Picker("文档视图", selection: $tab.showSource) {
-                        Text("预览").tag(false)
-                        Text("源码").tag(true)
-                    }.pickerStyle(.segmented).labelsHidden().frame(width: 118).controlSize(.small)
-                        .help("切换预览与源码编辑")
-                }
-                Text(tab.formatLabel)
-                    .font(.system(size: 9, weight: .medium, design: .monospaced)).foregroundStyle(.secondary)
-                    .padding(.horizontal, 7).padding(.vertical, 4)
-                    .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 4))
-            }.font(.system(size: 11)).padding(.horizontal, 22).frame(height: 48)
-            Divider().opacity(0.5)
+        document
+    }
 
+    private var document: some View {
+        VStack(spacing: 0) {
             if tab.externalChange {
                 HStack {
                     Label("磁盘文件已被其他程序修改或删除", systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(LumaTheme.warning)
                     Spacer()
-                    Button("重新载入") { Task { await workspace.reload(tab) } }.disabled(tab.isSaving)
-                }.font(.caption).padding(10).background(Color.orange.opacity(0.1))
+                    Button("重新载入") { Task { await workspace.reload(tab) } }
+                        .buttonStyle(LumaButtonStyle(emphasis: .secondary)).disabled(tab.isSaving)
+                }.font(.caption).padding(10).background(LumaTheme.warningSurface)
             }
 
             if workspace.showFind && (tab.kind.hasSource || tab.kind == .pdf) {
@@ -50,45 +32,47 @@ struct DocumentView: View {
                         workspace.showFind = false
                     }
                 } else {
-                    HStack(spacing: 10) {
-                        Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                        TextField(tab.kind == .pdf ? "在 PDF 中查找" : "在源码中查找", text: $tab.sourceQuery)
-                            .textFieldStyle(.plain).focused($findFocused)
-                            .onSubmit { tab.findRequest += 1 }
-                            .onChange(of: tab.sourceQuery) { _, _ in tab.findRequest += 1 }
-                        Button { tab.findRequest += 1 } label: { Image(systemName: "chevron.down") }.help("下一个匹配 ↩")
+                    HStack(spacing: 6) {
+                        HStack(spacing: 7) {
+                            Image(systemName: "magnifyingglass").foregroundStyle(LumaTheme.muted)
+                                .accessibilityHidden(true)
+                            SearchTextField(text: $tab.sourceQuery,
+                                            placeholder: tab.kind == .pdf ? "在 PDF 中查找" : "在源码中查找",
+                                            accessibilityLabel: "正文搜索", focusRequest: workspace.findFocusRequest,
+                                            onFocusChange: { findFocused = $0 },
+                                            onSubmit: { _ in tab.findRequest += 1 },
+                                            onCancel: { workspace.showFind = false })
+                                .onChange(of: tab.sourceQuery) { _, _ in tab.findRequest += 1 }
+                        }.lumaField(focused: findFocused)
+                        Button { tab.findRequest += 1 } label: { Image(systemName: "chevron.down") }
+                            .help("下一个匹配 ↩").accessibilityLabel("下一个匹配")
                         Button {
                             workspace.showFind = false
                             tab.sourceQuery = ""
                         } label: { Image(systemName: "xmark") }.accessibilityLabel("关闭查找")
-                    }.font(.system(size: 12)).buttonStyle(.plain).padding(.horizontal, 22).frame(height: 38)
-                    .background(.quaternary.opacity(0.25))
-                    .onAppear { findFocused = true }
-                    .onChange(of: workspace.findFocusRequest) { _, _ in findFocused = true }
+                    }.font(.system(size: 12)).buttonStyle(LumaButtonStyle())
+                    .padding(.horizontal, 16).padding(.vertical, 6)
+                    .background(LumaTheme.chrome)
                     .onExitCommand { workspace.showFind = false }
                 }
-                Divider()
+                LumaRule()
             }
 
-            Group {
-                switch tab.state {
-                case .loading:
-                    ProgressView("正在读取…").frame(maxWidth: .infinity, maxHeight: .infinity)
-                case .ready(let content): reader(content)
+            HStack(spacing: 0) {
+                if !hasMarkdownPreviewRail {
+                    DocumentReaderRail(tab: tab, workspace: workspace, showingInformation: $showingInformation) {
+                        Spacer(minLength: 0)
+                    }
                 }
+                Group {
+                    switch tab.state {
+                    case .loading:
+                        ProgressView("正在读取…").frame(maxWidth: .infinity, maxHeight: .infinity)
+                    case .ready(let content): reader(content)
+                    }
+                }.frame(maxWidth: .infinity, maxHeight: .infinity)
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            Divider().opacity(0.5)
-            HStack(spacing: 6) {
-                Circle().fill(LumaTheme.accent.opacity(0.6)).frame(width: 4, height: 4)
-                Text(tab.isSaving ? "正在保存…" : tab.canEdit ? (tab.isDirty ? "未保存 · ⌘S 保存" : "已保存") : "只读")
-                if let text = tab.draft {
-                    Text("·").foregroundStyle(.quaternary)
-                    Text("\(text.utf8.count.formatted()) 字节 · UTF-8")
-                }
-                Spacer()
-                Text(tab.url.path).lineLimit(1).truncationMode(.middle)
-            }.font(.system(size: 10)).foregroundStyle(.tertiary).padding(.horizontal, 18).frame(height: 28)
         }
         .onAppear {
             if workspace.showFind && tab.kind.hasSource && tab.kind != .markdown { tab.showSource = true }
@@ -99,6 +83,7 @@ struct DocumentView: View {
             if !showing { tab.sourceQuery = ""; tab.markdownFind.clear() }
         }
         .onChange(of: tab.showSource) { _, source in
+            showingInformation = false
             if tab.kind == .markdown {
                 let query = source ? tab.markdownFind.query : tab.sourceQuery
                 tab.markdownFind.clear(); tab.sourceQuery = ""
@@ -109,6 +94,11 @@ struct DocumentView: View {
                 }
             } else if !source { workspace.showFind = false }
         }
+    }
+
+    private var hasMarkdownPreviewRail: Bool {
+        if case .ready(.markdown) = tab.state { return !tab.showSource && !tab.previewPending && tab.previewError == nil }
+        return false
     }
 
     @ViewBuilder private func reader(_ content: LoadedContent) -> some View {
@@ -123,10 +113,15 @@ struct DocumentView: View {
                 Text(error).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 Text("源码和未保存的修改仍保留，可以继续编辑或保存。").font(.caption).foregroundStyle(.secondary)
                 Button("返回源码编辑") { tab.showSource = true }
+                    .buttonStyle(LumaButtonStyle(emphasis: .secondary))
             }.padding(32).frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             switch content {
-            case .markdown(let source): MarkdownPreview(source: source, tab: tab, imageRoot: workspace.imageRoot(for: tab.url), previewWidth: workspace.markdownPreviewWidth, typography: workspace.markdownTypography, onOpen: workspace.open)
+            case .markdown(let source):
+                MarkdownPreview(source: source, tab: tab, imageRoot: workspace.imageRoot(for: tab.url),
+                                previewWidth: workspace.markdownPreviewWidth, typography: workspace.markdownTypography,
+                                state: reading, workspace: workspace, showingInformation: $showingInformation, onOpen: workspace.open)
+            case .svg(let source): SVGReader(source: source, tab: tab)
             case .json(let source, _): CodePreview(source: tab.draft ?? source, tab: tab)
             case .table(_, let table): TableReader(table: table)
             case .text(let text):
@@ -141,11 +136,69 @@ struct DocumentView: View {
                 case .pdf: PDFReader(tab: tab)
                 case .image: ImageReader(tab: tab)
                 default:
-                    FilePlaceholder(symbol: "doc", title: "这个格式还在路上", message: "当前版本还不支持此文件的预览。", url: tab.url)
+                    FilePlaceholder(symbol: "doc", title: "暂不支持此格式", message: "此文件无法作为纯文本预览。请在默认应用中打开。", url: tab.url)
                 }
             }
         }
     }
+}
+
+/// The workspace owns the window toolbar so document changes cannot remove its actions.
+struct DocumentToolbar: View {
+    static let width: CGFloat = 3 * 36 + DocumentModeSwitch.width + 3 * 4
+    @Bindable var tab: DocumentTab
+    @Bindable var workspace: Workspace
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Group {
+                if tab.canEdit && (tab.isDirty || tab.externalChange || tab.isSaving) {
+                    Button(action: workspace.saveActive) {
+                        Image(systemName: "square.and.arrow.down")
+                    }
+                    .buttonStyle(LumaButtonStyle(emphasis: .primary))
+                    .disabled(tab.isSaving || tab.isLoading || tab.isRenaming)
+                    .help("保存到原文件 ⌘S").accessibilityLabel("保存到原文件")
+                } else {
+                    Color.clear.accessibilityHidden(true)
+                }
+            }
+            .frame(width: 36, height: 38)
+
+            Group {
+                if workspace.canFind {
+                    Button(action: workspace.openFind) {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .buttonStyle(LumaButtonStyle(selected: workspace.showFind))
+                    .help("查找 ⌘F").accessibilityLabel("查找")
+                } else {
+                    Color.clear.accessibilityHidden(true)
+                }
+            }
+            .frame(width: 36, height: 38)
+
+            Group {
+                if tab.hasPreview {
+                    DocumentModeSwitch(showSource: $tab.showSource)
+                } else {
+                    Color.clear.accessibilityHidden(true)
+                }
+            }
+            .frame(width: DocumentModeSwitch.width, height: 38)
+
+            Button(action: workspace.refresh) { Image(systemName: "arrow.clockwise") }
+                .buttonStyle(LumaButtonStyle())
+                .frame(width: 36, height: 38)
+                .help("刷新目录与当前文件 ⌘R")
+                .accessibilityLabel("刷新目录与当前文件")
+        }
+        // Three icon slots, the mode switch, and three gaps stay anchored to the right edge.
+        .frame(width: Self.width, height: 38, alignment: .trailing)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("文档工具栏")
+    }
+
 }
 
 struct FilePlaceholder: View {
@@ -163,7 +216,7 @@ struct FilePlaceholder: View {
             HStack {
                 if let retry { Button("重试", action: retry) }
                 Button("在默认应用中打开") { NSWorkspace.shared.open(url) }
-            }.padding(.top, 6)
+            }.buttonStyle(LumaButtonStyle(emphasis: .secondary)).padding(.top, 6)
         }.padding(36).frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
@@ -203,7 +256,7 @@ private struct TableReader: View {
             }
         }
         .frame(minHeight: 38)
-        .background(header ? Color(nsColor: .controlBackgroundColor) : index.isMultiple(of: 2) ? Color.primary.opacity(0.025) : Color(nsColor: .textBackgroundColor))
-        .overlay(alignment: .bottom) { Divider().opacity(0.4) }
+        .background(header || index.isMultiple(of: 2) ? LumaTheme.chrome : LumaTheme.paper)
+        .overlay(alignment: .bottom) { LumaRule() }
     }
 }

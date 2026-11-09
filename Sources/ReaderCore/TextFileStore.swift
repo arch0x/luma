@@ -52,8 +52,11 @@ public enum TextFileStore {
         return data
     }
 
-    public static func read(at url: URL) throws -> TextFileSnapshot {
-        try TextFileSnapshot(data: bytes(at: url))
+    public static func read(at url: URL, detectingPlainText: Bool = false) throws -> TextFileSnapshot {
+        if detectingPlainText, !PlainTextFallback.permits(url) { throw ReaderError.binary }
+        let data = try bytes(at: url)
+        if detectingPlainText { try PlainTextFallback.validate(data) }
+        return try TextFileSnapshot(data: data)
     }
 
     public static func version(at url: URL) throws -> DiskVersion {

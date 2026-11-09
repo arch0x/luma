@@ -49,7 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var body: some Scene {
         Window("Luma · 澄览", id: "workspace") {
             WorkspaceView(workspace: workspace)
-                .frame(minWidth: 860, minHeight: 560)
+                .frame(minWidth: 690, minHeight: 480)
                 .preferredColorScheme(workspace.appearance.colorScheme)
                 .onAppear {
                     delegate.onOpen = { workspace.open($0) }
@@ -63,11 +63,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
         }
         .defaultSize(width: 1180, height: 780)
-        .windowToolbarStyle(.unified)
+        .windowToolbarStyle(.unified(showsTitle: false))
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("打开文件…", action: workspace.chooseFiles).keyboardShortcut("o")
-                Button("添加文件夹…", action: workspace.chooseFolder).keyboardShortcut("o", modifiers: [.command, .shift])
+                Button("打开文件夹…", action: workspace.chooseFolder).keyboardShortcut("o", modifiers: [.command, .shift])
                 Divider()
                 Button("打开示例工作区", action: workspace.openSamples)
             }
@@ -80,10 +80,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     .keyboardShortcut("d")
                     .disabled(workspace.activeTab.map { $0.kind != .markdown || $0.showSource } ?? true)
             }
+            CommandGroup(replacing: .undoRedo) {
+                Button("撤销") { workspace.performUndoShortcut() }
+                    .keyboardShortcut("z")
+                Button("重做") { workspace.performUndoShortcut(redo: true) }
+                    .keyboardShortcut("z", modifiers: [.command, .shift])
+            }
             CommandGroup(replacing: .textEditing) {
-                Button("查找…", action: workspace.openFind)
+                Button("查找…") { workspace.openFocusedFind() }
                     .keyboardShortcut("f")
-                    .disabled(!workspace.canFind)
                 Button("查找下一个") { workspace.advanceFind(1) }.keyboardShortcut("g").disabled(!workspace.canFindNext)
                 Button("查找上一个") { workspace.advanceFind(-1) }.keyboardShortcut("g", modifiers: [.command, .shift]).disabled(!workspace.canFindPrevious)
             }
@@ -113,22 +118,51 @@ private struct SettingsView: View {
     @Bindable var workspace: Workspace
 
     var body: some View {
-        Form {
-            AppearancePicker(selection: $workspace.appearance)
-                .pickerStyle(.segmented)
-            Section("编辑模式") {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("字号")
-                        Spacer()
-                        Text("\(Int(workspace.editorFontSize)) pt").monospacedDigit().foregroundStyle(.secondary)
-                    }
-                    Slider(value: $workspace.editorFontSize, in: EditorTypography.fontSizeRange, step: 1)
-                        .accessibilityLabel("编辑模式字号")
+        TabView {
+            Form {
+                Section("窗口外观") {
+                    AppearancePicker(selection: $workspace.appearance)
+                        .pickerStyle(.segmented)
                 }
-                Text("适用于所有文件的源码编辑区，即时生效并自动保留。预览字号独立设置。")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
+                Section("关于 Luma") {
+                    LabeledContent("版本", value: "0.8.4")
+                    Text("文件在本机读取。支持 ⌘S 保存，可在「编辑模式」中开启自动保存。")
+                        .font(.caption).foregroundStyle(LumaTheme.muted)
+                }
+            }.tabItem { Label("外观", systemImage: "circle.lefthalf.filled") }
+
+            readingSettings
+                .tabItem { Label("阅读", systemImage: "book") }
+
+            Form {
+                Section("文件保存") {
+                    Toggle("自动保存", isOn: $workspace.autoSaveEnabled)
+                    Text("停止输入约 1 秒后保存所有已打开文本文件的修改。遇到外部冲突或保存失败时暂停，保留草稿供手动处理。")
+                        .font(.caption).foregroundStyle(LumaTheme.muted)
+                }
+                Section("源码排版") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("字号")
+                            Spacer()
+                            Text("\(Int(workspace.editorFontSize)) pt").monospacedDigit().foregroundStyle(.secondary)
+                        }
+                        Slider(value: $workspace.editorFontSize, in: EditorTypography.fontSizeRange, step: 1)
+                            .accessibilityLabel("编辑模式字号")
+                    }
+                    Text("适用于所有文件的源码编辑区，即时生效并自动保留。")
+                        .font(.caption).foregroundStyle(LumaTheme.muted)
+                }
+            }.tabItem { Label("编辑模式", systemImage: "chevron.left.forwardslash.chevron.right") }
+        }
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .padding(14).frame(width: 490, height: 445)
+        .background(LumaTheme.chrome)
+    }
+
+    private var readingSettings: some View {
+        Form {
             Section("Markdown 阅读") {
                 Picker("正文字体", selection: $workspace.markdownFont) {
                     ForEach(MarkdownFont.allCases) { font in Text(font.title).tag(font) }
@@ -164,11 +198,6 @@ private struct SettingsView: View {
                 Text("排版修改即时生效并自动保留。代码保留等宽字体，公式保留数学字体。关闭铺满后可调整正文宽度。")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            LabeledContent("版本", value: "0.8.4 · 本地编辑版")
-            Text("文件在本机读取。源码支持编辑，按 ⌘S 手动保存到原文件。")
-                .font(.caption).foregroundStyle(.secondary)
         }
-        .formStyle(.grouped)
-        .padding().frame(width: 460, height: 600)
     }
 }

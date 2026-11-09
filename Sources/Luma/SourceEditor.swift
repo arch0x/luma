@@ -29,7 +29,7 @@ final class SourceEditor: NSObject, NSTextViewDelegate {
         scrollView.horizontalScrollElasticity = .none
         scrollView.autohidesScrollers = true
         scrollView.drawsBackground = true
-        scrollView.backgroundColor = .textBackgroundColor
+        scrollView.backgroundColor = LumaTheme.nativePaper
         textView.isEditable = true
         textView.isSelectable = true
         textView.isRichText = false
@@ -46,8 +46,8 @@ final class SourceEditor: NSObject, NSTextViewDelegate {
         textView.textContainerInset = NSSize(width: 26, height: 26)
         let font = NSFont.monospacedSystemFont(ofSize: EditorTypography.defaultFontSize, weight: .regular)
         textView.font = font
-        textView.textColor = .textColor
-        textView.backgroundColor = .textBackgroundColor
+        textView.textColor = LumaTheme.nativeInk
+        textView.backgroundColor = LumaTheme.nativePaper
         LumaTheme.apply(to: textView)
         textView.isAutomaticLinkDetectionEnabled = false
         textView.isAutomaticQuoteSubstitutionEnabled = false
@@ -61,7 +61,7 @@ final class SourceEditor: NSObject, NSTextViewDelegate {
         paragraph.lineBreakMode = .byCharWrapping
         textView.defaultParagraphStyle = paragraph
         textView.typingAttributes = [.font: font,
-                                     .foregroundColor: NSColor.textColor, .paragraphStyle: paragraph]
+                                     .foregroundColor: LumaTheme.nativeInk, .paragraphStyle: paragraph]
         textView.delegate = self
         scrollView.documentView = textView
         replaceFromDisk(tab.draft ?? "")

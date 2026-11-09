@@ -2,6 +2,7 @@ import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 import WebKit
+import ReaderCore
 
 enum MarkdownImageError: LocalizedError {
     case outsideWorkspace, unsupported, tooLarge, budget
@@ -87,10 +88,8 @@ actor MarkdownImageLoader {
 
         let payload: MarkdownImagePayload
         if svg {
-            guard let text = String(data: data, encoding: .utf8),
-                  text.range(of: "<svg", options: .caseInsensitive) != nil,
-                  text.range(of: "<!DOCTYPE", options: .caseInsensitive) == nil,
-                  text.range(of: "<!ENTITY", options: .caseInsensitive) == nil else { throw MarkdownImageError.unsupported }
+            guard let text = String(data: data, encoding: .utf8) else { throw MarkdownImageError.unsupported }
+            try SVGDocument.validate(text)
             // SVG is served only as an image, with a separate deny-all resource policy.
             payload = MarkdownImagePayload(data: data, mime: "image/svg+xml")
         } else {

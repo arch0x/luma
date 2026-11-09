@@ -1,0 +1,7 @@
+workspace = "我的本地阅读空间"
+appearance = "system"
+
+[reading]
+font_size = 15
+line_height = 1.85
+max_width = 840

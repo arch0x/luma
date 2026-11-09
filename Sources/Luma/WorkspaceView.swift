@@ -6,13 +6,15 @@ struct WorkspaceView: View {
     @Bindable var workspace: Workspace
     @ViewState private var visibility = NavigationSplitViewVisibility.all
     @ViewState private var dropTarget = false
+    @ViewState private var tabViewportWidth: CGFloat = 120
+    @ViewState private var searchFocused = false
 
     var body: some View {
         NavigationSplitView(columnVisibility: $visibility) {
-            sidebar.navigationSplitViewColumnWidth(min: 205, ideal: 245, max: 380)
+            sidebar
+                .navigationSplitViewColumnWidth(min: 185, ideal: 232, max: 360)
         } detail: {
             VStack(spacing: 0) {
-                if !workspace.tabs.isEmpty { tabBar; Divider() }
                 if let tab = workspace.activeTab {
                     DocumentView(tab: tab, workspace: workspace).id(tab.id)
                 } else {
@@ -24,13 +26,13 @@ struct WorkspaceView: View {
                         Text(notice).font(.caption).lineLimit(3)
                         Spacer()
                         Button { workspace.notice = nil } label: { Image(systemName: "xmark") }
-                            .buttonStyle(.plain).accessibilityLabel("关闭提示")
+                            .buttonStyle(LumaButtonStyle()).accessibilityLabel("关闭提示")
                     }
-                    .padding(12).background(.quaternary)
+                    .padding(.horizontal, 12).padding(.vertical, 6).background(LumaTheme.chrome)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(nsColor: .textBackgroundColor))
+            .background(LumaTheme.paper)
             .overlay {
                 if dropTarget {
                     RoundedRectangle(cornerRadius: 12).strokeBorder(LumaTheme.accent, style: StrokeStyle(lineWidth: 2, dash: [8]))
@@ -40,6 +42,7 @@ struct WorkspaceView: View {
         }
         .tint(LumaTheme.accent)
         .accentColor(LumaTheme.accent)
+        .foregroundStyle(LumaTheme.ink)
         .sheet(item: $workspace.newItemRequest) { request in
             NewItemSheet(folder: request.folder, kind: request.kind, workspace: workspace)
         }
@@ -61,22 +64,34 @@ struct WorkspaceView: View {
         }
         .toolbar {
             ToolbarItemGroup(placement: .navigation) {
-                Button(action: workspace.chooseFolder) { Image(systemName: "folder.badge.plus") }
-                    .help("添加文件夹 ⇧⌘O")
-                Button(action: workspace.chooseFiles) { Image(systemName: "doc.badge.plus") }
-                    .help("打开文件 ⌘O")
-            }
-            ToolbarItemGroup(placement: .primaryAction) {
-                if let tab = workspace.activeTab {
-                    Button { NSWorkspace.shared.activateFileViewerSelecting([tab.url]) } label: {
-                        Image(systemName: "folder")
-                    }.help("在 Finder 中显示")
+                if visibility == .detailOnly {
+                    openFileButton
+                    openFolderButton
                 }
-                Button(action: workspace.refresh) { Image(systemName: "arrow.clockwise") }
-                    .help("刷新目录与当前文件 ⌘R")
-                    .accessibilityLabel("刷新目录与当前文件")
+            }
+            ToolbarItem(id: "openDocumentTabs", placement: .navigation) {
+                if !workspace.tabs.isEmpty { openDocumentTabs }
+            }
+            ToolbarItem(id: "documentActions", placement: .primaryAction) {
+                Group {
+                    if let tab = workspace.activeTab {
+                        DocumentToolbar(tab: tab, workspace: workspace)
+                            .fixedSize()
+                            .layoutPriority(1)
+                    } else {
+                        Button(action: workspace.refresh) { Image(systemName: "arrow.clockwise") }
+                            .buttonStyle(LumaButtonStyle())
+                            .frame(width: 36, height: 38)
+                            .help("刷新目录与当前文件 ⌘R")
+                            .accessibilityLabel("刷新目录与当前文件")
+                    }
+                }
+                .background(WorkspaceToolbarAlignment(onTabViewportWidth: { width in
+                    if abs(tabViewportWidth - width) > 0.5 { tabViewportWidth = width }
+                }).frame(width: 0, height: 0))
             }
         }
+        .toolbarBackground(.hidden, for: .windowToolbar)
         .dropDestination(for: URL.self) { urls, _ in
             let files = urls.filter(\.isFileURL)
             guard !files.isEmpty else { return false }
@@ -84,66 +99,84 @@ struct WorkspaceView: View {
             return true
         } isTargeted: { dropTarget = $0 }
         .onChange(of: workspace.query) { _, _ in workspace.search() }
+        .onChange(of: workspace.libraryFindFocusRequest) { _, _ in
+            visibility = .all
+        }
         .onChange(of: workspace.roots) { _, _ in if !workspace.query.isEmpty { workspace.search() } }
         .onChange(of: workspace.activeID) { _, _ in Task { await workspace.checkExternalChanges() } }
     }
 
     private var sidebar: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 10) {
-                BrandMark(size: 28)
-                Text("Luma").font(.system(size: 19, weight: .semibold, design: .rounded))
-                Spacer()
-                Text("澄览").font(.caption).foregroundStyle(.secondary)
-            }.padding(.horizontal, 18).padding(.top, 20).padding(.bottom, 22)
+            HStack(spacing: 8) {
+                Text("资料库").font(.system(size: 14, weight: .semibold))
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 0)
+                HStack(spacing: 2) {
+                    openFileButton
+                    openFolderButton
+                }.buttonStyle(LumaButtonStyle())
+            }.padding(.horizontal, 12).padding(.vertical, 8)
 
             HStack(spacing: 6) {
-                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("搜索文件名", text: $workspace.query).textFieldStyle(.plain)
-                    .accessibilityLabel("搜索工作区文件名")
+                Image(systemName: "magnifyingglass").foregroundStyle(LumaTheme.muted).accessibilityHidden(true)
+                SearchTextField(text: $workspace.query, placeholder: "搜索文件名",
+                                accessibilityLabel: "搜索工作区文件名", focusRequest: workspace.libraryFindFocusRequest,
+                                focusOnAppear: false, onFocusChange: { searchFocused = $0 })
                 if !workspace.query.isEmpty {
-                    Button { workspace.query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }
-                        .buttonStyle(.plain).accessibilityLabel("清除搜索")
+                    Button { workspace.query = ""; workspace.libraryFindFocusRequest += 1 } label: { Image(systemName: "xmark.circle.fill") }
+                        .buttonStyle(.plain).foregroundStyle(LumaTheme.muted).accessibilityLabel("清除搜索")
                 }
             }
-            .padding(8).background(.quaternary.opacity(0.45), in: RoundedRectangle(cornerRadius: 7))
-            .padding(.horizontal, 12).padding(.bottom, 16)
+            .font(.system(size: 12)).lumaField(focused: searchFocused)
+            .padding(.horizontal, 12).padding(.bottom, 14)
 
-            HStack {
-                Text(workspace.query.isEmpty ? "工作区" : "搜索结果")
-                    .font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
-                Spacer()
-                if workspace.searching { ProgressView().controlSize(.mini) }
-                else { Text(workspace.query.isEmpty ? "\(workspace.roots.count)" : "\(workspace.searchResults.count)").font(.caption2).foregroundStyle(.tertiary) }
-            }.padding(.horizontal, 18).padding(.bottom, 8)
-
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
-                    if !workspace.query.isEmpty {
-                        searchResults
-                    } else if workspace.roots.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("把常用文件夹放在这里，\n文件就能触手可及。")
-                                .font(.callout).foregroundStyle(.secondary).lineSpacing(5)
-                            Button("添加文件夹…", action: workspace.chooseFolder).controlSize(.small)
-                        }.padding(18)
-                    } else {
-                        ForEach(workspace.roots, id: \.self) { root in
-                            FileTreeRow(entry: FileEntry(url: root, isDirectory: true), depth: 0, workspace: workspace)
-                        }
+            VStack(spacing: 0) {
+                if workspace.query.isEmpty {
+                    sidebarHeading("文件夹", count: workspace.roots.count)
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 2) {
+                            if workspace.roots.isEmpty {
+                                Text("打开文件夹后，它会出现在这里。")
+                                    .font(.caption).foregroundStyle(LumaTheme.muted)
+                                    .padding(.horizontal, 8).padding(.vertical, 5)
+                            } else {
+                                ForEach(workspace.roots, id: \.self) { root in
+                                    FileTreeRow(entry: FileEntry(url: root, isDirectory: true), depth: 0, workspace: workspace)
+                                }
+                            }
+                        }.padding(.horizontal, 8).padding(.bottom, 8)
                     }
-                }.padding(.horizontal, 8)
+                } else {
+                    sidebarHeading("搜索结果", count: workspace.searchResults.count)
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 2) {
+                            searchResults
+                        }.padding(.horizontal, 8)
+                    }
+                }
             }
-            Spacer(minLength: 0)
-            Divider().padding(.horizontal, 14)
+            LumaRule()
             HStack {
                 Image(systemName: "internaldrive").font(.caption)
-                Text("本地文件 · 手动保存").font(.system(size: 10))
+                Text(workspace.autoSaveEnabled ? "本地文件 · 自动保存" : "本地文件 · 手动保存").font(.system(size: 11))
                 Spacer()
-                SettingsLink { Image(systemName: "gearshape") }.buttonStyle(.plain).help("设置 ⌘,")
-            }.foregroundStyle(.secondary).padding(16)
+                SettingsLink { Image(systemName: "gearshape") }
+                    .buttonStyle(LumaButtonStyle()).help("设置 ⌘,").accessibilityLabel("设置")
+            }.foregroundStyle(LumaTheme.muted).padding(.horizontal, 12).padding(.vertical, 5)
         }
-        .background(Color(nsColor: .controlBackgroundColor).opacity(0.45))
+        .background(LumaTheme.chrome)
+        .background(WorkspaceLibraryRegion(workspace: workspace).allowsHitTesting(false))
+    }
+
+    private var openFileButton: some View {
+        Button(action: workspace.chooseFiles) { Image(systemName: "doc.badge.plus") }
+            .accessibilityLabel("打开文件").help("打开文件 ⌘O")
+    }
+
+    private var openFolderButton: some View {
+        Button(action: workspace.chooseFolder) { Image(systemName: "folder.badge.plus") }
+            .accessibilityLabel("打开文件夹").help("打开文件夹 ⇧⌘O")
     }
 
     @ViewBuilder private var searchResults: some View {
@@ -159,7 +192,7 @@ struct WorkspaceView: View {
                     Label(entry.name, systemImage: entry.kind.symbol).lineLimit(1)
                     Text(entry.url.deletingLastPathComponent().path).font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                 }.frame(maxWidth: .infinity, alignment: .leading).padding(8)
-            }.buttonStyle(.plain).help(entry.url.path)
+            }.buttonStyle(LumaButtonStyle(selected: workspace.activeID == entry.url)).help(entry.url.path)
                 .contextMenu { FileItemContextMenu(entry: entry, workspace: workspace) }
         }
         if workspace.searchResults.count == 200 {
@@ -168,40 +201,76 @@ struct WorkspaceView: View {
         }
     }
 
-    private var tabBar: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
-                    ForEach(workspace.tabs) { tab in
-                        HStack(spacing: 7) {
-                            Button { workspace.activeID = tab.id } label: {
-                                HStack(spacing: 7) {
-                                    Image(systemName: tab.kind.symbol).foregroundStyle(tab.id == workspace.activeID ? LumaTheme.accent : .secondary)
-                                    Text(tab.title).lineLimit(1).truncationMode(.middle)
-                                    if tab.isDirty { Circle().fill(LumaTheme.accent).frame(width: 6, height: 6).accessibilityLabel("未保存") }
-                                }.contentShape(Rectangle())
-                            }.buttonStyle(.plain)
-                            Button { workspace.close(tab.id) } label: {
-                                Image(systemName: "xmark").font(.system(size: 9, weight: .medium))
-                                    .foregroundStyle(.secondary).frame(width: 18, height: 20).contentShape(Rectangle())
-                            }.buttonStyle(.plain).help("关闭 \(tab.title)").accessibilityLabel("关闭 \(tab.title)")
-                        }
-                        .font(.system(size: 12))
-                        .padding(.leading, 14).padding(.trailing, 7).frame(height: 40)
-                        .background(tab.id == workspace.activeID ? Color(nsColor: .textBackgroundColor) : Color.clear)
-                        .overlay(alignment: .bottom) { if tab.id == workspace.activeID { LumaTheme.accent.frame(height: 2) } }
-                        .overlay(alignment: .trailing) { Divider().padding(.vertical, 10) }
-                        .id(tab.id).help(tab.url.path)
-                        .contextMenu {
-                            Button("在 Finder 中显示") { NSWorkspace.shared.activateFileViewerSelecting([tab.url]) }
-                            Button("关闭标签页") { workspace.close(tab.id) }
-                        }
-                    }
-                }
+    private func sidebarHeading(_ title: String, count: Int) -> some View {
+        HStack {
+            Text(title).font(.system(size: 11, weight: .semibold))
+                .accessibilityAddTraits(.isHeader)
+            Spacer()
+            if workspace.searching && !workspace.query.isEmpty {
+                ProgressView().controlSize(.mini)
+            } else {
+                Text(count.formatted()).font(.caption.monospacedDigit())
             }
-            .onChange(of: workspace.activeID) { _, value in if let value { proxy.scrollTo(value) } }
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .foregroundStyle(LumaTheme.muted)
+        .padding(.horizontal, 8).padding(.vertical, 5)
+    }
+
+    private var openDocumentTabs: some View {
+        ScrollViewReader { scroll in
+            ScrollView(.horizontal) {
+                HStack(spacing: 4) {
+                    ForEach(workspace.tabs) { tab in
+                        openDocumentTab(tab).id(tab.id)
+                    }
+                }.padding(.horizontal, 3)
+            }
+            .scrollIndicators(.hidden)
+            .onChange(of: workspace.activeID, initial: true) { _, id in
+                if let id { scroll.scrollTo(id) }
+            }
+            .onChange(of: tabViewportWidth) { _, _ in
+                if let id = workspace.activeID { scroll.scrollTo(id) }
+            }
+        }
+        .frame(minWidth: 0, idealWidth: tabViewportWidth, maxWidth: tabViewportWidth, alignment: .leading)
+        .frame(height: 31)
+        .background(WorkspaceTabViewport())
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("已打开的文件")
+    }
+
+    private func openDocumentTab(_ tab: DocumentTab) -> some View {
+        let active = tab.id == workspace.activeID
+        return HStack(spacing: 1) {
+            Button { workspace.activeID = tab.id } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: tab.kind.symbol)
+                        .foregroundStyle(active ? LumaTheme.accent : LumaTheme.muted)
+                    Text(tab.title).lineLimit(1).truncationMode(.middle)
+                    if tab.isDirty {
+                        Circle().fill(LumaTheme.warning).frame(width: 5, height: 5)
+                            .accessibilityLabel("未保存")
+                    }
+                }.frame(maxWidth: 108, alignment: .leading)
+            }
+            .buttonStyle(LumaButtonStyle())
+            .accessibilityAddTraits(active ? .isSelected : [])
+            Button { workspace.close(tab.id) } label: {
+                Image(systemName: "xmark").imageScale(.small)
+            }
+            .buttonStyle(LumaButtonStyle()).help("关闭 \(tab.title)").accessibilityLabel("关闭 \(tab.title)")
+        }
+        .background(active ? LumaTheme.selected : .clear, in: RoundedRectangle(cornerRadius: LumaTheme.controlRadius))
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) {
+            if active {
+                Capsule().fill(LumaTheme.accent).frame(width: 19, height: 2)
+                    .allowsHitTesting(false)
+            }
+        }
+        .help(tab.url.path)
+        .background(DocumentTabContextMenu(tab: tab, workspace: workspace))
     }
 }
 
@@ -255,26 +324,5 @@ private struct FileTreeRow: View {
                 } else { ProgressView().controlSize(.mini).padding(.leading, 30).padding(.vertical, 5) }
             }
         }
-    }
-}
-
-struct BrandMark: View {
-    var size: CGFloat
-    private static let logo: NSImage = {
-        guard let url = Bundle.module.url(forResource: "AppIcon", withExtension: "png", subdirectory: "Brand"),
-              let image = NSImage(contentsOf: url) else {
-            preconditionFailure("Missing bundled Luma logo: Brand/AppIcon.png")
-        }
-        return image
-    }()
-
-    var body: some View {
-        Image(nsImage: Self.logo)
-            .renderingMode(.original)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .frame(width: size, height: size)
-            .accessibilityHidden(true)
     }
 }

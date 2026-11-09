@@ -1,0 +1,11 @@
+$accent: #3a6095;
+$paper: #fcfcfa;
+$ink: #1a202b;
+
+.reading-card {
+  padding: 2rem;
+  color: $ink;
+  background: $paper;
+
+  &__title { color: $accent; }
+}

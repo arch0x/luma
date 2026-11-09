@@ -1,0 +1,28 @@
+// 变量、嵌套规则与深色外观。
+@accent: #3a6095;
+@paper: #fcfcfa;
+@ink: #1a202b;
+
+.reading-card {
+  max-width: 32rem;
+  padding: 2rem;
+  color: @ink;
+  background: @paper;
+  border: 1px solid fade(@accent, 24%);
+  border-radius: 1rem;
+
+  &__format {
+    color: @accent;
+    font-size: 0.875rem;
+  }
+
+  h1 {
+    margin: 0.75rem 0;
+    font-weight: 600;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    color: @paper;
+    background: @ink;
+  }
+}

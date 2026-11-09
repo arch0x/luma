@@ -51,34 +51,29 @@ struct MarkdownFindBar: View {
     @Bindable var search: MarkdownFindState
     let focusRequest: Int
     let onClose: () -> Void
-    @FocusState private var focused: Bool
+    @ViewState private var focused = false
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-            TextField("在 Markdown 正文中查找", text: Binding(get: { search.query }, set: search.setQuery))
-                .textFieldStyle(.plain).focused($focused)
-                .accessibilityLabel("Markdown 正文搜索")
-                .onSubmit { search.move(1) }
-                .onKeyPress(keys: [.return], phases: .down) { press in
-                    guard press.modifiers.contains(.shift) else { return .ignored }
-                    search.move(-1)
-                    return .handled
-                }
-            Text(search.status).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary)
+        HStack(spacing: 5) {
+            HStack(spacing: 7) {
+                Image(systemName: "magnifyingglass").foregroundStyle(LumaTheme.muted).accessibilityHidden(true)
+                SearchTextField(text: Binding(get: { search.query }, set: search.setQuery),
+                                placeholder: "在 Markdown 正文中查找", accessibilityLabel: "Markdown 正文搜索",
+                                focusRequest: focusRequest, onFocusChange: { focused = $0 },
+                                onSubmit: { search.move($0 ? -1 : 1) }, onCancel: onClose)
+            }.lumaField(focused: focused)
+            Text(search.status).font(.system(size: 11).monospacedDigit()).foregroundStyle(LumaTheme.muted)
                 .lineLimit(1).fixedSize().help(search.error ?? (search.truncated ? "显示前 5,000 处匹配" : "匹配结果"))
                 .accessibilityLabel(search.status)
-            Button { search.move(-1) } label: { Image(systemName: "chevron.up").frame(width: 20, height: 24) }
+            Button { search.move(-1) } label: { Image(systemName: "chevron.up") }
                 .disabled(!search.canMove).help("上一个匹配 ⇧↩ / ⇧⌘G").accessibilityLabel("上一个匹配")
-            Button { search.move(1) } label: { Image(systemName: "chevron.down").frame(width: 20, height: 24) }
+            Button { search.move(1) } label: { Image(systemName: "chevron.down") }
                 .disabled(!search.canMove).help("下一个匹配 ↩ / ⌘G").accessibilityLabel("下一个匹配")
-            Button(action: onClose) { Image(systemName: "xmark").frame(width: 20, height: 24) }
+            Button(action: onClose) { Image(systemName: "xmark") }
                 .help("关闭查找 Esc").accessibilityLabel("关闭查找")
         }
-        .font(.system(size: 12)).buttonStyle(.plain).padding(.horizontal, 22).frame(height: 38)
-        .background(.quaternary.opacity(0.25))
-        .onAppear { focused = true }
-        .onChange(of: focusRequest) { _, _ in focused = true }
+        .font(.system(size: 12)).buttonStyle(LumaButtonStyle())
+        .padding(.horizontal, 16).padding(.vertical, 6).background(LumaTheme.chrome)
         .onExitCommand(perform: onClose)
     }
 }

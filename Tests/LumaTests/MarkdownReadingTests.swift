@@ -20,11 +20,10 @@ import Testing
         .init(offset: 1234, progress: 0.4, blockKey: "chapter/P/abc/0", blockProgress: 0.25, headingID: "chapter", headingProgress: 0.3)
     }
 
-    @Test func previewWidthDefaultsWideAndPersistsCustomSetting() {
+    @Test func previewWidthDefaultsToPaperMeasureAndPersistsCustomSetting() {
         defer { clean() }
         let workspace = Workspace(preferences: preferences)
-        #expect(workspace.previewFullWidth && workspace.markdownPreviewWidth == 0)
-        workspace.previewFullWidth = false
+        #expect(!workspace.previewFullWidth && workspace.markdownPreviewWidth == 840)
         workspace.previewMaxWidth = 1400
         let restored = Workspace(preferences: preferences)
         #expect(restored.markdownPreviewWidth == 1400)
@@ -33,7 +32,7 @@ import Testing
         restored.previewFullWidth = false
         #expect(restored.markdownPreviewWidth == 1400)
         preferences.set(-100, forKey: "previewMaxWidth")
-        #expect(Workspace(preferences: preferences).previewMaxWidth == 1100)
+        #expect(Workspace(preferences: preferences).previewMaxWidth == 840)
     }
 
     @Test func typographyDefaultsPersistAndInvalidPreferencesRecover() throws {

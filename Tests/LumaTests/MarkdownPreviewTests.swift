@@ -149,7 +149,7 @@ import Testing
     }
 
     @Test(arguments: [false, true])
-    func linksSelectionAndFindShareGreenTheme(dark: Bool) async throws {
+    func linksAndSelectionUseBlueWhileFindUsesAmber(dark: Bool) async throws {
         let preview = try await render("# 阅读\n\n[needle](#阅读) 与正文 needle", dark: dark)
         defer { preview.close() }
         _ = try await find("needle", in: preview)
@@ -160,10 +160,10 @@ import Testing
           .map(color => color.match(/[\\d.]+/g).slice(0, 3).map(Number))
         """) as? [[Double]]
         let colors = try #require(channels)
-        #expect(colors.count == 3)
-        for color in colors {
-            #expect(color[1] > color[0] && color[1] > color[2], "Link, selection and search must stay green")
-        }
+        try #require(colors.count == 3 && colors.allSatisfy { $0.count == 3 })
+        #expect(colors[0][2] > colors[0][1] && colors[0][1] > colors[0][0])
+        #expect(colors[1][2] > colors[1][1] && colors[1][1] > colors[1][0])
+        #expect(colors[2][0] > colors[2][1] && colors[2][1] > colors[2][2])
     }
 
     @Test func resourceHandlerCannotReadDocumentOrParentPaths() {
@@ -305,11 +305,26 @@ import Testing
         let source = try String(contentsOf: file, encoding: .utf8)
         let preview = try await render(source, document: file, imageRoot: folder)
         defer { preview.close() }
-        #expect(preview.state.metrics["images"] == 3)
+        #expect(preview.state.metrics["images"] == 2)
         #expect(preview.state.metrics["imageFailures"] == 1)
         #expect(preview.state.metrics["formulas"] == 6)
         #expect(preview.state.metrics["mathFailures"] == 1)
         #expect(try await preview.value("document.querySelector('table .katex') !== null") as? Bool == true)
+    }
+
+    @Test func bundledFormatGuideRendersEveryCatalogEntry() async throws {
+        let folder = try #require(Workspace().samplesURL)
+        let file = folder.appendingPathComponent("格式示例/格式导览.md")
+        let source = try String(contentsOf: file, encoding: .utf8)
+        let preview = try await render(source, document: file, imageRoot: folder, width: 840)
+        defer { preview.close() }
+        let formats = try SampleWorkspace.formats()
+        #expect(preview.state.metrics["tables"] == Set(formats.map(\.section)).count)
+        #expect(try await preview.value("document.querySelectorAll('table tbody tr').length") as? Int == formats.count)
+        #expect(try await preview.value("document.querySelectorAll('.raw-html').length") as? Int == 0)
+        #expect(try await preview.value("getComputedStyle(document.querySelector('main a')).color") as? String == "rgb(58, 96, 149)")
+        let snapshot = CodePreviewTests.Preview(view: preview.view, coordinator: preview.coordinator, state: preview.state)
+        try await snapshot.snapshot("sample-format-catalog")
     }
 
     private func waitForSection(_ preview: Preview, id: String) async throws {
@@ -428,17 +443,30 @@ import Testing
     @Test func bundledNavigationSampleJumpsAfterImageAndDiagramLayoutAndResize() async throws {
         let folder = try #require(Workspace().samplesURL)
         let file = folder.appendingPathComponent("长文档导航.md")
-        let preview = try await render(try String(contentsOf: file, encoding: .utf8), document: file, imageRoot: folder)
+        let preview = try await render(try String(contentsOf: file, encoding: .utf8), document: file, imageRoot: folder, width: 840)
         defer { preview.close() }
         #expect(preview.state.metrics["images"] == 1)
         #expect(preview.state.metrics["diagrams"] == 1)
-        #expect(preview.state.headings.filter { $0.title == "阅读记录" }.map(\.id) == ["阅读记录", "阅读记录-1"])
-        preview.view.frame = NSRect(x: 0, y: 0, width: 600, height: 800)
+        let records = preview.state.headings.filter { $0.title == "阅读记录" }
+        #expect(records.map(\.id) == ["阅读记录", "阅读记录-1"])
+        #expect(records.first?.summary.hasPrefix("这是第一处") == true)
+        #expect(records.last?.summary.hasPrefix("这是第二处") == true)
+        #expect(try await preview.value("document.querySelector('main').getBoundingClientRect().width") as? Double == 840)
+        #expect(try await preview.value("getComputedStyle(document.documentElement).backgroundColor") as? String == "rgb(252, 252, 250)")
+        preview.view.frame = NSRect(x: 0, y: 0, width: 430, height: 680)
         preview.state.navigate(to: "公式与图表之间")
         preview.coordinator.navigateIfNeeded()
         await preview.coordinator.navigationTask?.value
         try await waitForSection(preview, id: "公式与图表之间")
         #expect(try await preview.value("Math.abs(document.getElementById('公式与图表之间').getBoundingClientRect().top - 24) < 2") as? Bool == true)
+        #expect(try await preview.value("document.querySelector('main').getBoundingClientRect().width") as? Double == 430)
+        #expect(try await preview.value("document.documentElement.scrollWidth === window.innerWidth") as? Bool == true)
+        preview.coordinator.dark = true
+        preview.coordinator.renderIfNeeded()
+        await preview.coordinator.renderTask?.value
+        try await waitForSection(preview, id: "公式与图表之间")
+        #expect(try await preview.value("getComputedStyle(document.documentElement).backgroundColor") as? String == "rgb(26, 32, 43)")
+        #expect(try await preview.value("document.documentElement.scrollWidth === window.innerWidth") as? Bool == true)
     }
 
     @Test func hugeOutlineIsBoundedAndRepeatedHeadingAnchorsStayUnique() async throws {
@@ -762,6 +790,33 @@ import Testing
         let values = try #require(try await reopened.value("window.luma.getReadingPosition()") as? [String: Any])
         #expect(MarkdownReadingLocation(message: values)?.blockKey == bookmark.location.blockKey)
         restoredHistory.flush()
+    }
+
+    @Test func chapterBookmarkCanBeSavedWithoutScrollingAndRestoredLater() async throws {
+        let domain = "local.luma.chapter-bookmark-tests.\(UUID().uuidString)"
+        let preferences = try #require(UserDefaults(suiteName: domain))
+        defer { preferences.removePersistentDomain(forName: domain) }
+        let file = URL(fileURLWithPath: "/tmp/bookmark-\(UUID().uuidString).md")
+        let history = MarkdownReadingHistory(preferences: preferences)
+        let session = history.session(for: file)
+        let body = String(repeating: "用段落记录阅读位置。\n\n", count: 45)
+        let preview = try await render("# 开始\n\n\(body)\n## 目标章节\n\n\(body)", document: file, session: session)
+        defer { preview.close() }
+        let tab = preview.coordinator.tab
+        tab.requestReadingBookmark(headingID: "目标章节")
+        preview.coordinator.bookmarkIfNeeded()
+        await preview.coordinator.bookmarkTask?.value
+        #expect(try await preview.value("window.scrollY") as? Double == 0)
+        let saved = try #require(MarkdownReadingHistory(preferences: preferences).session(for: file).bookmarks.first)
+        #expect(saved.title == "目标章节")
+        #expect(saved.location.headingID == "目标章节")
+        preview.state.navigate(to: saved.location)
+        preview.coordinator.navigateIfNeeded()
+        await preview.coordinator.navigationTask?.value
+        try await waitForSection(preview, id: "目标章节")
+        #expect(try await preview.value("window.scrollY > 1000") as? Bool == true)
+        session.removeBookmark(saved.id)
+        #expect(MarkdownReadingHistory(preferences: preferences).session(for: file).bookmarks.isEmpty)
     }
 
     @Test func readingRestoreFallsBackWhenOriginalParagraphDisappears() async throws {

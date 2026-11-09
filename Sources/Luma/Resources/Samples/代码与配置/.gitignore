@@ -1,0 +1,10 @@
+# 工作区临时文件与否定规则。
+.DS_Store
+.build/
+dist/
+**/*.log
+*.tmp
+!README.md
+!阅读记录.log
+cache?/
+\#literal-name

@@ -1,0 +1,11 @@
+diff --git a/reading-card.css b/reading-card.css
+--- a/reading-card.css
++++ b/reading-card.css
+@@ -1,5 +1,5 @@
+ .reading-card {
+-  max-width: 40rem;
+-  padding: 1rem;
++  max-width: 52rem;
++  padding: 2rem;
+   color: #1a202b;
+ }

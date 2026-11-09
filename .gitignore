@@ -1,5 +1,47 @@
+# Swift builds and packaged apps
 .build/
 .swiftpm/
 dist/
+DerivedData/
+*.app/
+*.dSYM/
+*.xcarchive/
+*.xcresult/
+
+# macOS and local editor state
 .DS_Store
 *.xcuserstate
+xcuserdata/
+/.idea/
+/.vscode/
+/.codex/
+
+# Local tooling and logs
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+*.log
+*.tmp
+
+# Environment secrets and signing credentials
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+/.aws/
+/.ssh/
+/secrets/
+
+# Public sample fixtures: these contain only demonstration values.
+!/.env.example
+!/Sources/Luma/Resources/Samples/代码与配置/.env
+!/Sources/Luma/Resources/Samples/代码与配置/阅读记录.log

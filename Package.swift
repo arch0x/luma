@@ -10,7 +10,7 @@ let package = Package(
         .executableTarget(
             name: "Luma",
             dependencies: ["ReaderCore"],
-            resources: [.copy("Resources/Samples"), .copy("Resources/Markdown"), .copy("Resources/Brand")],
+            resources: [.copy("Resources/Samples"), .copy("Resources/Markdown"), .copy("Resources/Brand"), .copy("Resources/SampleCatalog.json")],
             swiftSettings: [
                 .defaultIsolation(MainActor.self),
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault")

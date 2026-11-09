@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<reading-list title="我的本地阅读空间">
+  <document format="markdown" progress="0.5">设计文档.md</document>
+  <document format="pdf" progress="1">阅读空间.pdf</document>
+</reading-list>

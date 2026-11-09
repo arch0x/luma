@@ -60,6 +60,17 @@
         headingID: heading?.id || '', headingProgress: heading ? unit((offset + 24 - heading.top) / heading.span) : 0,
         title: Array.from(title).slice(0, 160).join('')};
     }
+    function captureHeading(id) {
+      refresh();
+      const heading = headings.find(item => item.id === id);
+      if (!heading) return null;
+      const block = blocks.find(item => item.element === heading.element);
+      const maximum = Math.max(0, root.getBoundingClientRect().bottom + window.scrollY - window.innerHeight);
+      const offset = Math.max(0, heading.top - 24);
+      return {offset, progress: maximum ? unit(offset / maximum) : 0,
+        blockKey: block?.key || '', blockProgress: 0, headingID: id, headingProgress: 0,
+        title: Array.from(callbacks.label(heading.element)).slice(0, 160).join('')};
+    }
     function restore(location) {
       refresh();
       const maximum = Math.max(0, root.getBoundingClientRect().bottom + window.scrollY - window.innerHeight);
@@ -76,6 +87,6 @@
       window.scrollTo({top: Math.min(maximum, Math.max(0, target)), behavior: 'auto'});
       return true;
     }
-    return {build, refresh, capture, restore};
+    return {build, refresh, capture, captureHeading, restore};
   };
 })();

@@ -1,0 +1,8 @@
+workspace: 我的本地阅读空间
+appearance: system
+reading:
+  fontSize: 15
+  lineHeight: 1.85
+collections:
+  - 设计文档
+  - 实验记录

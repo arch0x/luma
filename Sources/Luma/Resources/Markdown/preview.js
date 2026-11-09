@@ -17,6 +17,8 @@
   let forcedHeading = null;
   let sectionTimer;
   let outlineFrame;
+  let lastReadingLocation;
+  let readingViewportWidth;
 
   function notify(body) {
     window.webkit?.messageHandlers?.luma?.postMessage(body);
@@ -33,6 +35,8 @@
   function publishPosition() {
     if (restoring) return;
     const location = reading.capture();
+    lastReadingLocation = location;
+    readingViewportWidth = window.innerWidth;
     notify({kind: 'position', offset: location.offset, location});
   }
   function applyWidth(width) {
@@ -66,8 +70,10 @@
   function restoreReadingPosition(location) {
     if (restoring) return false;
     reading.restore(location);
-    forcedHeading = null;
-    headingMap.get(location.headingID)?.focus({preventScroll: true});
+    const heading = headingMap.get(location.headingID);
+    forcedHeading = heading && !location.blockProgress && !location.headingProgress
+      ? {id: heading.id, offset: window.scrollY} : null;
+    heading?.focus({preventScroll: true});
     updateActiveHeading(); publishPosition();
     return true;
   }
@@ -81,6 +87,22 @@
     clone.querySelectorAll('.math-inline,.math-display').forEach(node => node.replaceWith(document.createTextNode(node.dataset.mathSource || node.textContent)));
     clone.querySelectorAll('.local-image').forEach(node => node.replaceWith(document.createTextNode(node.dataset.alt || '')));
     return clone.textContent.replace(/\s+/g, ' ').trim();
+  }
+  function addOutlineSummaries(outline) {
+    if (!outline.length) return;
+    const entries = new Map(outline.map(entry => [entry.id, entry]));
+    let current;
+    for (const element of root.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li')) {
+      if (/^H[1-6]$/.test(element.tagName)) {
+        current = entries.get(element.id);
+      } else if (current && !element.querySelector('h1,h2,h3,h4,h5,h6')) {
+        const text = headingLabel(element);
+        if (!text) continue;
+        const characters = Array.from(text.slice(0, 400));
+        current.summary = characters.length > 160 ? characters.slice(0, 160).join('') + '…' : text;
+        current = undefined;
+      }
+    }
   }
   function buildOutline() {
     headingElements = [...root.querySelectorAll('h1,h2,h3,h4,h5,h6')];
@@ -105,6 +127,7 @@
       heading.prepend(anchor);
       if (outline.length < 2000) outline.push({id, title, level: Number(heading.tagName.slice(1))});
     });
+    addOutlineSummaries(outline);
     return outline;
   }
   function updateActiveHeading() {
@@ -167,6 +190,7 @@
     toolbar.append(label, copy);
     const pre = document.createElement('pre');
     const content = document.createElement('code');
+    if (/^[a-z0-9-]+$/.test(language)) content.classList.add(`language-${language}`);
     content.innerHTML = highlight(code, language);
     if (language && hljs.getLanguage(language) && code.length <= MAX_HIGHLIGHT) content.dataset.highlighted = 'true';
     pre.append(content); container.append(toolbar, pre);
@@ -180,6 +204,29 @@
     numbers.forEach((number, index) => {
       if (number.style.height !== heights[index]) number.style.height = heights[index];
     });
+  }
+  function highlightedJSONLines(content) {
+    const lines = [];
+    const newLine = () => {
+      const line = document.createElement('span'); line.className = 'json-code-line';
+      lines.push(line); return line;
+    };
+    let line = newLine();
+    function visit(node, parents) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        node.textContent.split('\n').forEach((part, index) => {
+          if (index) line = newLine();
+          if (!part) return;
+          let target = line;
+          for (const parent of parents) { const clone = parent.cloneNode(false); target.append(clone); target = clone; }
+          target.append(document.createTextNode(part));
+        });
+      } else {
+        for (const child of node.childNodes) visit(child, [...parents, node]);
+      }
+    }
+    for (const child of content.childNodes) visit(child, []);
+    return lines;
   }
   function diagramBlock(code) {
     const figure = document.createElement('figure');
@@ -304,15 +351,31 @@
       }
     }});
     const codeLanguage = /^[a-z0-9-]+$/.test(options.codeLanguage || '') ? options.codeLanguage : '';
-    const jsonPreview = codeLanguage === 'json';
-    const displaySource = jsonPreview ? window.lumaFormatJSON(source) : source;
+    const jsonPreview = ['json', 'jsonc', 'jsonl', 'ndjson'].includes(codeLanguage);
+    const jsonLines = codeLanguage === 'jsonl' || codeLanguage === 'ndjson';
+    const displaySource = codeLanguage === 'json' ? window.lumaFormatJSON(source)
+      : codeLanguage === 'jsonc' ? window.lumaFormatJSONC(source) : source;
     // Code files are escaped directly; Markdown, HTML, images and formulas stay literal.
-    const html = codeLanguage
-      ? `<pre><code class="language-${codeLanguage}">${escape(displaySource)}\n</code></pre>`
+    const codeHTML = (value, language) => `<pre><code class="language-${language}">${escape(value)}\n</code></pre>`;
+    let html = codeLanguage
+      ? codeHTML(displaySource, codeLanguage)
       : parser.parse(source);
+    if (jsonLines) {
+      const preview = window.lumaJSONLines(source);
+      if (preview.fallback !== undefined) {
+        html = `<p class="json-preview-note">${escape(preview.note)}</p>${codeHTML(preview.fallback, 'plaintext')}`;
+      } else {
+        html = preview.records.map((record, index) => `<section class="json-record">
+          <div class="json-record-title">记录 ${index + 1} · 源码第 ${record.sourceLine} 行</div>
+          ${record.error ? `<p class="json-record-error">${escape(record.error)}</p>` : ''}
+          ${codeHTML(record.value, record.error ? 'plaintext' : 'json')}
+          </section>`).join('') || '<p class="json-preview-note">没有可预览的记录。</p>';
+      }
+    }
     root.toggleAttribute('data-code-preview', !!codeLanguage);
     root.toggleAttribute('data-json-preview', jsonPreview);
-    root.setAttribute('aria-label', codeLanguage ? '代码预览' : 'Markdown 预览');
+    root.toggleAttribute('data-json-lines-preview', jsonLines);
+    root.setAttribute('aria-label', jsonPreview ? `${options.codeTitle || 'JSON'} 预览` : codeLanguage ? '代码预览' : 'Markdown 预览');
     search.reset();
     root.innerHTML = DOMPurify.sanitize(html, {
       USE_PROFILES: {html: true},
@@ -362,7 +425,8 @@
       const language = [...element.classList].find(name => name.startsWith('language-'))?.slice(9).toLowerCase() || '';
       const code = element.textContent.replace(/\n$/, '');
       if (language === 'mermaid') {
-        const diagram = diagramBlock(code); element.parentNode.replaceWith(diagram.figure); diagrams.push(diagram);
+        const diagram = diagramBlock(code);
+        element.parentNode.replaceWith(diagram.figure); diagrams.push(diagram);
       } else {
         const block = codeBlock(code, language);
         if (codeLanguage) block.querySelector('.code-language').textContent = options.codeTitle || language;
@@ -371,22 +435,20 @@
           const row = document.createElement('div');
           row.className = 'json-code-row';
           const content = block.querySelector('code');
-          // Valid JSON tokens contain no literal newlines, so token spans stay within each line.
-          const lines = content.innerHTML.split('\n');
-          if (lines.length <= 20000) {
+          const lineCount = content.textContent.split('\n').length;
+          if (lineCount <= 20000) {
+            // Clone token spans across logical lines, including multiline JSONC comments.
+            const lines = highlightedJSONLines(content);
             row.classList.add('json-numbered');
             const gutter = document.createElement('div');
             gutter.className = 'json-line-numbers';
             gutter.setAttribute('aria-hidden', 'true');
             content.replaceChildren();
-            lines.forEach((html, index) => {
+            lines.forEach((line, index) => {
               if (index) { gutter.append('\n'); content.append('\n'); }
               const number = document.createElement('span');
               number.className = 'json-line-number';
               number.textContent = index + 1;
-              const line = document.createElement('span');
-              line.className = 'json-code-line';
-              line.innerHTML = html;
               gutter.append(number); content.append(line);
             });
             row.append(gutter);
@@ -397,9 +459,17 @@
         element.parentNode.replaceWith(block);
       }
     });
+    const palette = getComputedStyle(document.documentElement);
+    const themeColor = name => palette.getPropertyValue(name).trim();
     mermaid.initialize({
       startOnLoad: false, securityLevel: 'strict', suppressErrorRendering: true,
-      theme: options.dark ? 'dark' : 'default', fontFamily: '-apple-system, sans-serif',
+      theme: 'base', fontFamily: '-apple-system, sans-serif',
+      themeVariables: {
+        darkMode: options.dark, background: themeColor('--paper'),
+        primaryColor: themeColor('--selected'), primaryTextColor: themeColor('--ink'),
+        primaryBorderColor: themeColor('--accent'), lineColor: themeColor('--muted'),
+        secondaryColor: themeColor('--panel'), tertiaryColor: themeColor('--head')
+      },
       htmlLabels: false, flowchart: {htmlLabels: false}, maxTextSize: MAX_DIAGRAM, maxEdges: 500,
       secure: ['secure', 'securityLevel', 'startOnLoad', 'maxTextSize', 'maxEdges', 'suppressErrorRendering', 'htmlLabels', 'flowchart']
     });
@@ -459,14 +529,18 @@
   document.addEventListener('copy', event => {
     if (!root.hasAttribute('data-json-preview') || !event.clipboardData) return;
     const selection = window.getSelection();
-    const code = root.querySelector('pre code');
-    if (!code || !selection?.rangeCount || selection.isCollapsed) return;
-    const range = selection.getRangeAt(0).cloneRange();
-    if (!range.intersectsNode(code)) return;
+    if (!selection?.rangeCount || selection.isCollapsed) return;
+    const selected = selection.getRangeAt(0);
+    const codes = [...root.querySelectorAll('pre code')].filter(code => selected.intersectsNode(code));
+    if (!codes.length) return;
     // Serialize logical lines instead of layout line breaks introduced by wrapping.
-    if (!code.contains(range.startContainer)) range.setStart(code, 0);
-    if (!code.contains(range.endContainer)) range.setEnd(code, code.childNodes.length);
-    event.clipboardData.setData('text/plain', range.cloneContents().textContent);
+    const fragments = codes.map(code => {
+      const range = selected.cloneRange();
+      if (!code.contains(range.startContainer)) range.setStart(code, 0);
+      if (!code.contains(range.endContainer)) range.setEnd(code, code.childNodes.length);
+      return range.cloneContents().textContent;
+    });
+    event.clipboardData.setData('text/plain', fragments.join('\n\n'));
     event.preventDefault();
   });
   window.addEventListener('scroll', () => {
@@ -476,6 +550,12 @@
     scrollTimer = setTimeout(publishPosition, 80);
   }, {passive: true});
   const resizeObserver = new ResizeObserver(() => {
+    if (!restoring && lastReadingLocation && readingViewportWidth !== window.innerWidth &&
+        !root.matches('[data-code-preview]')) {
+      reading.restore(lastReadingLocation);
+      forcedHeading = null;
+      publishPosition();
+    }
     clearTimeout(outlineFrame);
     outlineFrame = setTimeout(() => { syncJSONLineNumbers(); refreshHeadingOffsets(); reading.refresh(); search.relayout(); }, 60);
   });
@@ -483,5 +563,6 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) publishPosition(); });
   window.addEventListener('pagehide', publishPosition);
   window.luma = {render, navigateToHeading, findText: search.findText, moveSearch: search.move,
-    getReadingPosition: () => reading.capture(true), restoreReadingPosition, setPreviewWidth, setReadingLayout, lastResult: null};
+    getReadingPosition: () => reading.capture(true), getHeadingReadingPosition: reading.captureHeading,
+    restoreReadingPosition, setPreviewWidth, setReadingLayout, lastResult: null};
 })();

@@ -1,12 +1,14 @@
 {
   "name": "Luma · 澄览",
-  "version": "0.8.0",
+  "sampleEdition": "2026.11",
   "platform": "macOS",
   "localFirst": true,
   "workspace": {
     "tabs": true,
     "manualSave": true,
-    "formats": ["Markdown", "PDF", "Images", "JSON", "CSV", "Text"]
+    "formats": ["Markdown", "PDF", "SVG", "Images", "JSON", "JSONC", "JSONL", "NDJSON", "CSV", "TSV", "Code", "Text"],
+    "representativeFormats": 67,
+    "theme": {"accent": "#3A6095", "paper": "#FCFCFA", "ink": "#1A202B"}
   },
   "next": null
 }

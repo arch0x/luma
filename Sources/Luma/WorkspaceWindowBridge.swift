@@ -10,14 +10,24 @@ struct WorkspaceWindowBridge: NSViewRepresentable {
         view.installIfNeeded()
         view.window?.isDocumentEdited = hasUnsavedChanges
     }
+    static func dismantleNSView(_ view: WindowAttachment, coordinator: ()) {
+        view.removeFocusMonitor()
+    }
 
     final class WindowAttachment: NSView {
         let guardDelegate: WindowCloseGuard
+        private let workspace: Workspace
+        private var focusMonitor: Any?
         init(workspace: Workspace) {
+            self.workspace = workspace
             guardDelegate = WindowCloseGuard(workspace: workspace)
             super.init(frame: .zero)
         }
         required init?(coder: NSCoder) { nil }
+        override func viewWillMove(toWindow newWindow: NSWindow?) {
+            if newWindow !== window { removeFocusMonitor() }
+            super.viewWillMove(toWindow: newWindow)
+        }
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             installIfNeeded()
@@ -25,11 +35,39 @@ struct WorkspaceWindowBridge: NSViewRepresentable {
         func installIfNeeded() {
             guard let window else { return }
             window.titleVisibility = .hidden
+            window.titlebarAppearsTransparent = true
+            window.titlebarSeparatorStyle = .none
+            window.backgroundColor = LumaTheme.nativePaper
+            if focusMonitor == nil {
+                focusMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self, weak window] event in
+                    if let self, let window, event.window === window {
+                        workspace.recordFindFocus(from: event, in: window)
+                    }
+                    return event
+                }
+            }
             guard window.delegate !== guardDelegate else { return }
             guardDelegate.original = window.delegate
             window.delegate = guardDelegate
         }
+
+        func removeFocusMonitor() {
+            if let focusMonitor { NSEvent.removeMonitor(focusMonitor) }
+            focusMonitor = nil
+        }
     }
+}
+
+struct WorkspaceLibraryRegion: NSViewRepresentable {
+    let workspace: Workspace
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        workspace.libraryRegion = view
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {}
 }
 
 /// Forward SwiftUI's window callbacks while intercepting the one that can discard edits.

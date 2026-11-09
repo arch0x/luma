@@ -73,13 +73,15 @@ private struct MarkdownReadingRecord: Codable {
         save(immediately: false)
     }
 
-    @discardableResult func addBookmark(at value: MarkdownReadingLocation, title: String) -> UUID? {
+    @discardableResult func addBookmark(at value: MarkdownReadingLocation, title: String, chapterStart: Bool = false) -> UUID? {
         let value = value.validated()
+        let label = String(title.trimmingCharacters(in: .whitespacesAndNewlines).prefix(160))
         if let existing = bookmarks.first(where: {
-            $0.location.blockKey == value.blockKey && abs($0.location.blockProgress - value.blockProgress) < 0.01 && abs($0.location.offset - value.offset) < 24
+            guard $0.location.headingID == value.headingID, $0.location.blockKey == value.blockKey else { return false }
+            if chapterStart && $0.title == label && $0.location.blockProgress == 0 && $0.location.headingProgress == 0 { return true }
+            return abs($0.location.blockProgress - value.blockProgress) < 0.01 && abs($0.location.offset - value.offset) < 24
         }) { return existing.id }
         guard bookmarks.count < 500 else { return nil }
-        let label = String(title.trimmingCharacters(in: .whitespacesAndNewlines).prefix(160))
         let bookmark = MarkdownBookmark(id: UUID(), title: label.isEmpty ? "阅读位置" : label, location: value, createdAt: Date())
         bookmarks.append(bookmark)
         save(immediately: true)

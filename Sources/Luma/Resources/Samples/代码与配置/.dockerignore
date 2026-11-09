@@ -1,0 +1,7 @@
+# 构建上下文中的排除规则。
+.git/
+.build/
+dist/
+**/*.log
+*.tmp
+!README.md
