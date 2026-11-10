@@ -57,6 +57,11 @@ struct WorkspaceToolbarAlignment: NSViewRepresentable {
             // AppKit detaches item views while moving them into overflow. Keep tracking
             // the original window so a subsequent resize can bring the tabs back.
             if let toolbarWindow, toolbarWindow !== window, window.toolbar == nil { return }
+            track(window)
+        }
+
+        func track(_ window: NSWindow) {
+            guard toolbarWindow !== window else { scheduleAlignment(); return }
             stopObserving()
             toolbarWindow = window
             for name in [NSWindow.didUpdateNotification, NSWindow.didResizeNotification] {
@@ -82,7 +87,7 @@ struct WorkspaceToolbarAlignment: NSViewRepresentable {
                 guard let window = toolbarWindow ?? window, let toolbar = window.toolbar,
                       let actions = toolbar.items.first(where: { item in
                           item.view.map { self.isDescendant(of: $0) } ?? false
-                      }) else { return }
+                      }) ?? toolbar.items.first(where: { $0.itemIdentifier.rawValue == "documentActions" }) else { return }
                 WorkspaceToolbarAlignment.pin(actions, in: toolbar)
                 updateTabViewport(in: toolbar, before: actions, window: window)
             }
