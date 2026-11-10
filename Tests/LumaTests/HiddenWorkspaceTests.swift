@@ -12,7 +12,7 @@ import Testing
         let folder = directory.appendingPathComponent(".config", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
         try "hidden".write(to: folder.appendingPathComponent("needle.txt"), atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         workspace.loadDirectory(directory)
         let deadline = ContinuousClock.now + .seconds(5)

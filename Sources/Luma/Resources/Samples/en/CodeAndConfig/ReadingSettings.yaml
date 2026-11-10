@@ -1,0 +1,8 @@
+workspace: My local reading space
+appearance: system
+reading:
+  fontSize: 15
+  lineHeight: 1.85
+collections:
+  - Design notes
+  - Lab notes

@@ -31,7 +31,7 @@ import Testing
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = DocumentTab(url: directory.appendingPathComponent(mode == "pdf" ? "note.pdf" : "note.md"))
         if mode == "pdf" {
             let document = PDFDocument()
@@ -76,7 +76,7 @@ import Testing
         let domain = "local.luma.library-focus.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let host = NSHostingView(rootView: WorkspaceView(workspace: workspace))
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 600),
                               styleMask: [.titled, .resizable], backing: .buffered, defer: false)

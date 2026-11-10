@@ -58,7 +58,7 @@ import Testing
         let domain = "local.luma.rail-hover.\(UUID())"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = DocumentTab(url: URL(fileURLWithPath: "/tmp/元数据与草稿.txt"))
         tab.acceptDisk(try TextFileSnapshot(data: Data("本地阅读空间\n一份文档，一组数据。".utf8)))
         tab.applyPreview(.text(tab.draft ?? ""))
@@ -122,7 +122,7 @@ import Testing
         let domain = "local.luma.rail-readers.\(UUID())"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let samples = try #require(workspace.samplesURL)
         let temporary = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).md")
         defer { try? FileManager.default.removeItem(at: temporary) }
@@ -164,7 +164,7 @@ import Testing
         let domain = "local.luma.rail-finder.\(UUID())"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = DocumentTab(url: URL(fileURLWithPath: "/tmp/original.md"))
         var revealed: URL?
         let host = NSHostingView(rootView: DocumentReaderRail(tab: tab, workspace: workspace,

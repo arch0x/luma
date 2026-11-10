@@ -1,0 +1,43 @@
+{
+  "name": "Luma · 澄览",
+  "appVersion": "0.9.0",
+  "sampleEdition": "2026.11.3",
+  "platform": "macOS",
+  "localFirst": true,
+  "workspace": {
+    "tabs": true,
+    "manualSave": true,
+    "formats": [
+      "Markdown",
+      "PDF",
+      "SVG",
+      "Images",
+      "JSON",
+      "JSONC",
+      "JSONL",
+      "NDJSON",
+      "CSV",
+      "TSV",
+      "Code",
+      "Text"
+    ],
+    "representativeFormats": 67,
+    "tableFilters": true,
+    "valueInspector": true,
+    "expandedReading": true,
+    "theme": {
+      "accent": "#3A6095",
+      "paper": "#FCFCFA",
+      "ink": "#1A202B"
+    }
+  },
+  "inspectionExamples": {
+    "colorWithAlpha": "#3A609580",
+    "timestampSeconds": 1794268800,
+    "timestampMilliseconds": 1794268800123,
+    "byteCount": 1572864,
+    "sizeWithUnit": "1.5 MiB",
+    "escapedText": "第一行\n第二行\t你好🙂"
+  },
+  "next": null
+}

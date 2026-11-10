@@ -27,7 +27,7 @@ import Testing
         let tab = DocumentTab(url: URL(fileURLWithPath: "/tmp/\(name)"))
         tab.draft = source; tab.savedText = source
         let state = MarkdownRenderState()
-        let coordinator = MarkdownWebView.Coordinator(source: source, tab: tab, dark: dark, state: state, onOpen: { _ in })
+        let coordinator = MarkdownWebView.Coordinator(source: source, tab: tab, dark: dark, state: state, onOpen: { _ in }, language: .simplifiedChinese)
         let view = MarkdownWebView.makeWebView(coordinator: coordinator)
         view.frame = NSRect(x: 0, y: 0, width: 1000, height: 650)
         let preview = Preview(view: view, coordinator: coordinator, state: state)
@@ -165,7 +165,7 @@ import Testing
         default: source = "FROM scratch\nLABEL name=\"Luma\"\n"
         }
         try source.write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
         await tab.loadTask?.value

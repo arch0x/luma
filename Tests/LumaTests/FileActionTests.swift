@@ -22,7 +22,7 @@ import Testing
         preferences.removePersistentDomain(forName: domain)
     }
     private func workspace() -> Workspace {
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         let bin = bin
         workspace.recycleItem = { url in

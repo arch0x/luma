@@ -1,95 +1,99 @@
-![Luma 应用图标](docs/assets/app-icon.png)
+![Luma app icon](docs/assets/app-icon.png)
 
-# Luma · 澄览
+# Luma
 
-macOS 本地文件阅读与源码编辑工具。把 Markdown、代码、PDF、图片和数据文件放在同一个工作区里，阅读、查找，需要时切换到源码编辑。
+English · [简体中文](README.zh-CN.md)
 
-当前开发版本 **0.9.0（build 15）**，示例集 **2026.11.2**。
+A local file reader and source editor for macOS. Read Markdown, code, PDFs, images and data in one workspace, search what you need, and switch to source when you want to edit.
 
-使用 SwiftUI + AppKit 构建。Markdown 图表、公式和语法高亮随应用打包，可离线使用。
+Current development version: **0.9.0 (build 16)**. Sample collection: **2026.11.3**.
 
-## 界面预览
+Built with SwiftUI and AppKit. Markdown diagrams, math and syntax highlighting ship with the app and work offline.
 
-浅色外观下的 Markdown 阅读：
+## Screenshots
 
-![Luma 浅色外观：资料库、文件标签和 Markdown 阅读](docs/assets/luma-light.png)
+Markdown reading in light appearance:
 
-深色外观下的同一阅读工作区：
+![Luma in light appearance: library, tabs and Markdown preview](docs/assets/luma-light.png)
 
-![Luma 深色外观：章节导航与 Markdown 阅读](docs/assets/luma-dark.png)
+The same workspace in dark appearance:
 
-## 核心功能
+![Luma in dark appearance: heading navigation and Markdown preview](docs/assets/luma-dark.png)
 
-- **阅读 Markdown**：表格、本地图片、Mermaid 图表、LaTeX 数学公式和代码高亮。
-- **接着上次读**：章节导航、正文查找、阅读书签与阅读位置记忆；字体、行距和正文宽度可调整。
-- **预览多种文件**：代码高亮、JSON 格式化、可筛选和排序的 CSV / TSV 表格，以及原生 PDF 和图片阅读。
-- **随时编辑源码**：在预览和源码间切换，保留草稿、选区与撤销记录；选中颜色、时间戳、字节大小或转义字符串，可解释并替换该值。支持手动保存和自动保存。
-- **整理本地工作区**：多文件夹、文件名搜索、多标签，以及文件创建、重命名、拖放移动和移到废纸篓。
-- **按内容调整尺寸**：表格列宽可调整，长单元格可展开；Markdown 表格与图表可展开阅读。
-- **适应阅读习惯**：支持简体中文／English 切换，浅色、深色与跟随系统外观，提供原生菜单和常用键盘快捷键。
+Screenshots show the Chinese interface; English is the default for new installations.
 
-| 文件类型 | 阅读与编辑方式 |
+## Features
+
+- **Read Markdown:** tables, local images, Mermaid diagrams, LaTeX math and highlighted code.
+- **Pick up where you left off:** heading navigation, Find, bookmarks and saved reading positions, with adjustable typography and text width.
+- **Preview different formats:** highlighted code, formatted JSON, filterable and sortable CSV / TSV, and native PDF and image readers.
+- **Edit the source:** keep drafts, selections and undo history while switching modes. Inspect selected colors, timestamps, byte sizes and escaped strings, then explicitly replace them. Save manually or enable Auto Save.
+- **Organize local files:** multiple folders, filename search, tabs, file creation, renaming, drag-and-drop moves and Move to Trash.
+- **Fit the content:** resize table columns, open long cells, and expand Markdown tables and diagrams.
+- **Make it yours:** English and Simplified Chinese, system / light / dark appearance, native menus and keyboard shortcuts.
+
+| File type | Reading and editing |
 | --- | --- |
-| Markdown | 排版预览、章节导航、查找、书签与源码编辑 |
-| 代码与配置 | 常见语言语法高亮、源码编辑；支持 Dockerfile、Makefile、`.gitignore`、`.env` 等 |
-| JSON / GeoJSON / JSONC / JSONL / NDJSON | 格式化预览与源码编辑，预览不会改写文件 |
-| CSV / TSV | 表格预览与源码编辑 |
-| PDF | 阅读与查找 |
-| 图片 / SVG | 缩放预览；SVG 可切换到源码编辑 |
-| 其他 UTF-8 文本 | 检测可读内容后以纯文本打开、查找和编辑 |
+| Markdown | Formatted preview, headings, Find, bookmarks and source editing |
+| Code and configuration | Highlighted preview and source editing, including Dockerfile, Makefile, `.gitignore` and `.env` |
+| JSON / GeoJSON / JSONC / JSONL / NDJSON | Formatted preview and source editing; preview never rewrites files |
+| CSV / TSV | Table preview and source editing |
+| PDF | Reading and Find |
+| Images / SVG | Zoomable preview; SVG also supports source editing |
+| Other UTF-8 text | Content-based detection, reading, Find and editing |
 
-完整操作、快捷键和格式说明见[使用指南](docs/USAGE.md)。
+See the [User Guide](docs/USAGE.md) for details and shortcuts.
 
-## 从源码运行
+## Build from source
 
-需要 **macOS 14+、Swift 6.2+ 和 Apple Command Line Tools**。安装的 Apple 工具链须满足 Swift 版本要求；项目没有远程 SwiftPM 依赖，无需安装 npm 包。
+Requires **macOS 14+, Swift 6.2+ and Apple Command Line Tools**. Your installed Apple toolchain must provide a compatible Swift version. There are no remote SwiftPM dependencies or npm installation steps.
 
-获取源码后，在仓库根目录运行以下命令，生成可从 Finder 打开的应用：
+From the repository root, build an app you can open in Finder:
 
 ```sh
 zsh scripts/build-app.sh release
 open dist/Luma.app
 ```
 
-也可以直接运行：
+Or run directly:
 
 ```sh
 swift run Luma
 ```
 
-当前构建脚本只做本地临时签名，生成的应用尚未经过 Developer ID 签名或 Apple 公证。
+Builds use local ad hoc signing. They are not Developer ID signed or notarized by Apple.
 
-## 第一次使用
+## Get started
 
-1. 在欢迎页选择「打开示例工作区」，体验 Markdown、代码、图片和数据预览。示例使用本机可编辑副本。
-2. 按 `⌘O` 打开自己的文件，或按 `⇧⌘O` 添加文件夹；也可以将文件或文件夹拖进窗口。
-3. 阅读时按 `⌘F` 查找，编辑后按 `⌘S` 保存到原文件；按 `⌘,` 调整阅读排版、外观和自动保存设置。
+1. Choose **Open Sample Workspace** to try real document, code, image and data files in a local editable copy.
+2. Press `⌘O` to open files, `⇧⌘O` to add a folder, or drag files and folders into the window.
+3. Use `⌘F` to search, `⌘S` to save to the original file, and `⌘,` to adjust appearance, reading and editing settings.
 
-## 界面语言
+## Languages and samples
 
-在「设置 → 外观 → 语言 / Language」选择「简体中文」或「English」，界面会立即更新并保存选择。默认保留中文，文件内容、文件名、草稿和阅读位置不会因语言切换而改写。
+English is the default. Choose **Settings → Appearance → Language** to switch to **简体中文** or **English**. The interface updates immediately and remembers your choice. Existing language preferences are retained.
 
-For English UI, open Settings (`⌘,`) → Appearance → Language and choose **English**. Your files and drafts stay unchanged.
+Both languages have a complete sample workspace, including translated filenames, guides, code comments, data and PDFs. **Open Sample Workspace** opens the collection for the current interface language. Each language and edition has a separate editable copy; reopening adds missing files and keeps your edits. Switching languages does not translate or replace open documents, filenames, drafts or reading positions.
 
-应用自有菜单、按钮、提示及预览控件随选择切换；部分 macOS 原生面板可能沿用系统语言，或在下次启动时更新。
+App menus, buttons, messages and preview controls follow this setting. Some macOS system panels may follow the system language or update after restarting the app.
 
-## 已知限制
+## Known limitations
 
-- **自动保存默认关闭，未保存的编辑只保留在内存中，目前没有崩溃草稿恢复。** 关闭文件或退出前会询问如何处理未保存修改。
-- 文本仅支持 UTF-8，读取与保存上限为 4 MB；PDF 上限为 128 MB，位图上限为 64 MB。CSV / TSV 预览最多 10,000 行、200 列。更多边界见[读取与渲染限制](docs/DEVELOPMENT.md#读取与渲染限制)。
-- 源码模式为纯文本编辑；PDF 与位图只供阅读，GIF 仅显示首帧。
-- Markdown 原始 HTML 显示为文本，远程图片不会自动加载。相对图片路径受工作区范围限制；图片位于父目录时，请添加同时包含文档和图片的文件夹。
-- 当前提供文件名搜索，尚不支持工作区全文搜索或持续文件监听。外部文件变化会在回到应用、切换标签或手动刷新时检查。
+- **Auto Save is off by default. Unsaved edits live in memory; crash recovery is not available.** Closing files or quitting prompts you to handle unsaved changes.
+- UTF-8 text reads and saves are limited to 4 MB; PDFs to 128 MB; bitmap images to 64 MB. CSV / TSV previews accept up to 10,000 rows and 200 columns. See [reading and rendering limits](docs/DEVELOPMENT.md#reading-and-rendering-limits).
+- Source mode is a plain text editor. PDFs and bitmap images are read-only; GIF displays its first frame.
+- Raw HTML in Markdown is displayed as text. Remote images do not load automatically. Local image paths are restricted to the workspace scope; add a common parent folder when images live above the document.
+- Search currently covers filenames and the active document, with no workspace-wide content search or continuous file watching. External changes are checked when activating Luma, switching tabs or refreshing.
 
-## 项目文档
+## Project documentation
 
-- [使用指南](docs/USAGE.md)：详细功能、快捷键与示例。
-- [开发说明](docs/DEVELOPMENT.md)：工程结构、构建与测试、资源维护及渲染边界。
-- [变更记录](CHANGELOG.md)：历史阶段的开发与验证记录。
-- [参与贡献](CONTRIBUTING.md)：反馈问题、提出建议和提交修改。
+- [User Guide](docs/USAGE.md): workflows, shortcuts and examples.
+- [Development Guide](docs/DEVELOPMENT.md): structure, building, tests, resources and rendering limits.
+- [Changelog](CHANGELOG.md): development milestones and historical validation.
+- [Contributing](CONTRIBUTING.md): issues, suggestions and patches.
 
-欢迎在仓库的 Issues 中使用「问题反馈」或「功能建议」模板。CI 会在 push、pull request 和手动触发时执行测试与构建，配置见 [.github/workflows/ci.yml](.github/workflows/ci.yml)。
+Use the repository's Bug Report or Feature Request issue templates. [CI](.github/workflows/ci.yml) runs tests and builds on pushes, pull requests and manual dispatch.
 
-## 许可证
+## License
 
-Luma 采用 [MIT License](LICENSE)。随应用分发的第三方 Markdown 组件保留各自的[许可和声明](Sources/Luma/Resources/Markdown/THIRD_PARTY_NOTICES.txt)。
+Luma uses the [MIT License](LICENSE). Bundled third-party Markdown components retain their own [licenses and notices](Sources/Luma/Resources/Markdown/THIRD_PARTY_NOTICES.txt).

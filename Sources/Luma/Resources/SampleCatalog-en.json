@@ -1,0 +1,563 @@
+[
+  {
+    "name": "Markdown",
+    "path": "Welcome.md",
+    "section": "Documents and Data",
+    "extensions": [
+      "md",
+      "markdown",
+      "mdown"
+    ]
+  },
+  {
+    "name": "PDF",
+    "path": "ReadingSpace.pdf",
+    "section": "Documents and Data",
+    "extensions": [
+      "pdf"
+    ]
+  },
+  {
+    "name": "SVG",
+    "path": "ImageAssets/Reading Flow.svg",
+    "section": "Documents and Data",
+    "extensions": [
+      "svg"
+    ]
+  },
+  {
+    "name": "JSON",
+    "path": "Project.json",
+    "section": "Documents and Data",
+    "extensions": [
+      "json"
+    ]
+  },
+  {
+    "name": "GeoJSON",
+    "path": "FormatExamples/ReadingLocation.geojson",
+    "section": "Documents and Data",
+    "extensions": [
+      "geojson"
+    ]
+  },
+  {
+    "name": "JSONC",
+    "path": "FormatExamples/ReadingSettings.jsonc",
+    "section": "Documents and Data",
+    "extensions": [
+      "jsonc"
+    ]
+  },
+  {
+    "name": "JSONL",
+    "path": "FormatExamples/ReadingLog.jsonl",
+    "section": "Documents and Data",
+    "extensions": [
+      "jsonl"
+    ]
+  },
+  {
+    "name": "NDJSON",
+    "path": "FormatExamples/FileEvents.ndjson",
+    "section": "Documents and Data",
+    "extensions": [
+      "ndjson"
+    ]
+  },
+  {
+    "name": "CSV",
+    "path": "ReadingList.csv",
+    "section": "Documents and Data",
+    "extensions": [
+      "csv"
+    ]
+  },
+  {
+    "name": "TSV",
+    "path": "FormatExamples/ReadingProgress.tsv",
+    "section": "Documents and Data",
+    "extensions": [
+      "tsv"
+    ]
+  },
+  {
+    "name": "reStructuredText",
+    "path": "CodeAndConfig/ReadingGuide.rst",
+    "section": "Documents and Data",
+    "extensions": [
+      "rst"
+    ]
+  },
+  {
+    "name": "PNG",
+    "path": "ReadingCover.png",
+    "section": "Images",
+    "extensions": [
+      "png"
+    ]
+  },
+  {
+    "name": "JPEG",
+    "path": "ImageFormats/ReadingCover.jpg",
+    "section": "Images",
+    "extensions": [
+      "jpg",
+      "jpeg"
+    ]
+  },
+  {
+    "name": "GIF",
+    "path": "ImageFormats/ReadingCover.gif",
+    "section": "Images",
+    "extensions": [
+      "gif"
+    ]
+  },
+  {
+    "name": "HEIC / HEIF",
+    "path": "ImageFormats/ReadingCover.heic",
+    "section": "Images",
+    "extensions": [
+      "heic",
+      "heif"
+    ]
+  },
+  {
+    "name": "TIFF",
+    "path": "ImageFormats/ReadingCover.tiff",
+    "section": "Images",
+    "extensions": [
+      "tiff",
+      "tif"
+    ]
+  },
+  {
+    "name": "BMP",
+    "path": "ImageFormats/ReadingCover.bmp",
+    "section": "Images",
+    "extensions": [
+      "bmp"
+    ]
+  },
+  {
+    "name": "WebP",
+    "path": "ImageFormats/ReadingCover.webp",
+    "section": "Images",
+    "extensions": [
+      "webp"
+    ]
+  },
+  {
+    "name": "ICNS",
+    "path": "ImageFormats/AppIcon.icns",
+    "section": "Images",
+    "extensions": [
+      "icns"
+    ]
+  },
+  {
+    "name": "Dockerfile",
+    "path": "CodeAndConfig/Dockerfile",
+    "section": "Code",
+    "extensions": [
+      "dockerfile"
+    ]
+  },
+  {
+    "name": ".dockerignore",
+    "path": "CodeAndConfig/.dockerignore",
+    "section": "Text and Configuration",
+    "extensions": [
+      "dockerignore"
+    ]
+  },
+  {
+    "name": "Swift",
+    "path": "Sample.swift",
+    "section": "Code",
+    "extensions": [
+      "swift"
+    ]
+  },
+  {
+    "name": "Python",
+    "path": "CodeAndConfig/ReadingList.py",
+    "section": "Code",
+    "extensions": [
+      "py"
+    ]
+  },
+  {
+    "name": "JavaScript",
+    "path": "CodeAndConfig/ReadingList.js",
+    "section": "Code",
+    "extensions": [
+      "js",
+      "mjs",
+      "cjs"
+    ]
+  },
+  {
+    "name": "JSX",
+    "path": "CodeAndConfig/ReadingCard.jsx",
+    "section": "Code",
+    "extensions": [
+      "jsx"
+    ]
+  },
+  {
+    "name": "TypeScript",
+    "path": "CodeAndConfig/ReadingList.ts",
+    "section": "Code",
+    "extensions": [
+      "ts",
+      "mts",
+      "cts"
+    ]
+  },
+  {
+    "name": "TSX",
+    "path": "CodeAndConfig/ReadingCard.tsx",
+    "section": "Code",
+    "extensions": [
+      "tsx"
+    ]
+  },
+  {
+    "name": "Rust",
+    "path": "CodeAndConfig/ReadingList.rs",
+    "section": "Code",
+    "extensions": [
+      "rs"
+    ]
+  },
+  {
+    "name": "Go",
+    "path": "CodeAndConfig/ReadingList.go",
+    "section": "Code",
+    "extensions": [
+      "go"
+    ]
+  },
+  {
+    "name": "Ruby",
+    "path": "CodeAndConfig/ReadingList.rb",
+    "section": "Code",
+    "extensions": [
+      "rb"
+    ]
+  },
+  {
+    "name": "C",
+    "path": "CodeAndConfig/ReadingList.c",
+    "section": "Code",
+    "extensions": [
+      "c",
+      "h"
+    ]
+  },
+  {
+    "name": "C++",
+    "path": "CodeAndConfig/ReadingList.cpp",
+    "section": "Code",
+    "extensions": [
+      "cpp",
+      "hpp",
+      "cc",
+      "cxx",
+      "hh",
+      "hxx"
+    ]
+  },
+  {
+    "name": "C#",
+    "path": "CodeAndConfig/ReadingList.cs",
+    "section": "Code",
+    "extensions": [
+      "cs"
+    ]
+  },
+  {
+    "name": "Objective-C",
+    "path": "CodeAndConfig/ReadingList.m",
+    "section": "Code",
+    "extensions": [
+      "m",
+      "mm"
+    ]
+  },
+  {
+    "name": "Java",
+    "path": "CodeAndConfig/ReadingList.java",
+    "section": "Code",
+    "extensions": [
+      "java"
+    ]
+  },
+  {
+    "name": "Kotlin",
+    "path": "CodeAndConfig/ReadingList.kt",
+    "section": "Code",
+    "extensions": [
+      "kt",
+      "kts"
+    ]
+  },
+  {
+    "name": "Shell",
+    "path": "CodeAndConfig/ReadingList.sh",
+    "section": "Code",
+    "extensions": [
+      "sh",
+      "bash",
+      "zsh",
+      "bashrc",
+      "zshrc"
+    ]
+  },
+  {
+    "name": "Fish",
+    "path": "CodeAndConfig/ReadingList.fish",
+    "section": "Code",
+    "extensions": [
+      "fish"
+    ]
+  },
+  {
+    "name": "PHP",
+    "path": "CodeAndConfig/ReadingList.php",
+    "section": "Code",
+    "extensions": [
+      "php"
+    ]
+  },
+  {
+    "name": "Lua",
+    "path": "CodeAndConfig/ReadingList.lua",
+    "section": "Code",
+    "extensions": [
+      "lua"
+    ]
+  },
+  {
+    "name": "Perl",
+    "path": "CodeAndConfig/ReadingList.pl",
+    "section": "Code",
+    "extensions": [
+      "pl"
+    ]
+  },
+  {
+    "name": "R",
+    "path": "CodeAndConfig/ReadingProgress.r",
+    "section": "Code",
+    "extensions": [
+      "r"
+    ]
+  },
+  {
+    "name": "SQL",
+    "path": "CodeAndConfig/ReadingList.sql",
+    "section": "Code",
+    "extensions": [
+      "sql"
+    ]
+  },
+  {
+    "name": "GraphQL",
+    "path": "CodeAndConfig/ReadingList.graphql",
+    "section": "Code",
+    "extensions": [
+      "graphql",
+      "gql"
+    ]
+  },
+  {
+    "name": "Makefile",
+    "path": "CodeAndConfig/Makefile",
+    "section": "Code",
+    "extensions": [
+      "mk"
+    ]
+  },
+  {
+    "name": "HTML",
+    "path": "CodeAndConfig/ReadingCard.html",
+    "section": "Code",
+    "extensions": [
+      "html",
+      "htm",
+      "xhtml"
+    ]
+  },
+  {
+    "name": "CSS",
+    "path": "CodeAndConfig/ReadingCard.css",
+    "section": "Code",
+    "extensions": [
+      "css"
+    ]
+  },
+  {
+    "name": "SCSS",
+    "path": "CodeAndConfig/ReadingCard.scss",
+    "section": "Code",
+    "extensions": [
+      "scss"
+    ]
+  },
+  {
+    "name": "Vue",
+    "path": "FormatExamples/ReadingCard.vue",
+    "section": "Code",
+    "extensions": [
+      "vue"
+    ]
+  },
+  {
+    "name": "Svelte",
+    "path": "FormatExamples/ReadingCard.svelte",
+    "section": "Code",
+    "extensions": [
+      "svelte"
+    ]
+  },
+  {
+    "name": "Less",
+    "path": "FormatExamples/ReadingCard.less",
+    "section": "Code",
+    "extensions": [
+      "less"
+    ]
+  },
+  {
+    "name": "Diff / Patch",
+    "path": "FormatExamples/LayoutChanges.diff",
+    "section": "Code",
+    "extensions": [
+      "diff",
+      "patch"
+    ]
+  },
+  {
+    "name": "YAML",
+    "path": "CodeAndConfig/ReadingSettings.yaml",
+    "section": "Text and Configuration",
+    "extensions": [
+      "yaml",
+      "yml"
+    ]
+  },
+  {
+    "name": "TOML",
+    "path": "CodeAndConfig/ReadingSettings.toml",
+    "section": "Text and Configuration",
+    "extensions": [
+      "toml"
+    ]
+  },
+  {
+    "name": "XML",
+    "path": "CodeAndConfig/ReadingList.xml",
+    "section": "Text and Configuration",
+    "extensions": [
+      "xml"
+    ]
+  },
+  {
+    "name": "Property List",
+    "path": "CodeAndConfig/ReadingSettings.plist",
+    "section": "Text and Configuration",
+    "extensions": [
+      "plist"
+    ]
+  },
+  {
+    "name": "INI",
+    "path": "CodeAndConfig/ReadingSettings.ini",
+    "section": "Text and Configuration",
+    "extensions": [
+      "ini"
+    ]
+  },
+  {
+    "name": "Properties",
+    "path": "CodeAndConfig/ReadingSettings.properties",
+    "section": "Text and Configuration",
+    "extensions": [
+      "properties"
+    ]
+  },
+  {
+    "name": "Conf / Config",
+    "path": "CodeAndConfig/ReaderService.conf",
+    "section": "Text and Configuration",
+    "extensions": [
+      "conf",
+      "config"
+    ]
+  },
+  {
+    "name": "Environment",
+    "path": "CodeAndConfig/.env",
+    "section": "Text and Configuration",
+    "extensions": [
+      "env"
+    ]
+  },
+  {
+    "name": "Git Ignore",
+    "path": "CodeAndConfig/.gitignore",
+    "section": "Text and Configuration",
+    "extensions": [
+      "gitignore"
+    ]
+  },
+  {
+    "name": "EditorConfig",
+    "path": "CodeAndConfig/.editorconfig",
+    "section": "Text and Configuration",
+    "extensions": [
+      "editorconfig"
+    ]
+  },
+  {
+    "name": "Xcode Configuration",
+    "path": "CodeAndConfig/ReadingSettings.xcconfig",
+    "section": "Text and Configuration",
+    "extensions": [
+      "xcconfig"
+    ]
+  },
+  {
+    "name": "Lock File",
+    "path": "CodeAndConfig/Cargo.lock",
+    "section": "Text and Configuration",
+    "extensions": [
+      "lock"
+    ]
+  },
+  {
+    "name": "Log",
+    "path": "CodeAndConfig/Reading.log",
+    "section": "Text and Configuration",
+    "extensions": [
+      "log"
+    ]
+  },
+  {
+    "name": "Plain Text",
+    "path": "CodeAndConfig/ReadingNotes.txt",
+    "section": "Text and Configuration",
+    "extensions": [
+      "txt"
+    ]
+  },
+  {
+    "name": "Custom-extension text",
+    "path": "FormatExamples/Workspace.luma-note",
+    "section": "Text and Configuration",
+    "extensions": []
+  }
+]

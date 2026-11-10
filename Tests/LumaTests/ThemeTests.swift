@@ -10,7 +10,7 @@ import WebKit
         let domain = "local.luma.reader-layout.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let samples = try #require(workspace.samplesURL)
         workspace.addFolder(samples)
         workspace.open([samples.appendingPathComponent("欢迎.md"), samples.appendingPathComponent("长文档导航.md")])
@@ -127,7 +127,7 @@ import WebKit
         let domain = "local.luma.theme-tests.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [URL(fileURLWithPath: "/tmp/工作文档")]
         let state = MarkdownRenderState()
         state.loading = false

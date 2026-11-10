@@ -32,7 +32,7 @@ import Testing
         _ = NSApplication.shared
         let file = directory.appendingPathComponent("note.md")
         try "original".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences); workspace.roots = [directory]
+        let workspace = chineseWorkspace(preferences: preferences); workspace.roots = [directory]
         let tab = try await open(file, in: workspace)
         let editor = tab.sourceEditor()
         editor.textView.insertText("draft ", replacementRange: NSRange(location: 0, length: 0))
@@ -61,7 +61,7 @@ import Testing
         for url in [child, sibling] { try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true) }
         let first = child.appendingPathComponent("one.md"), second = folder.appendingPathComponent("two.txt"), other = sibling.appendingPathComponent("stay.txt")
         for file in [first, second, other] { try "original".write(to: file, atomically: true, encoding: .utf8) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory, folder, child, sibling]; workspace.recent = [folder]
         workspace.expanded = [directory, folder, child]
         let one = try await open(first, in: workspace), two = try await open(second, in: workspace), untouched = try await open(other, in: workspace)
@@ -91,7 +91,7 @@ import Testing
         defer { clean() }
         let file = directory.appendingPathComponent("note.md")
         try "# Chapter".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(file, in: workspace)
         let session = try #require(tab.readingSession)
         let location = MarkdownReadingLocation(offset: 432, progress: 0.4, blockKey: "chapter/p", blockProgress: 0.3, headingID: "chapter", headingProgress: 0.2)
@@ -106,7 +106,7 @@ import Testing
         #expect(preferences.data(forKey: oldKey) == nil)
         let fresh = MarkdownReadingHistory(preferences: preferences).session(for: tab.url)
         #expect(fresh.location == later && fresh.bookmarks.first?.title == "Chapter")
-        let restarted = Workspace(preferences: preferences); restarted.restore()
+        let restarted = chineseWorkspace(preferences: preferences); restarted.restore()
         #expect(restarted.activeTab?.url == tab.url)
         for tab in restarted.tabs { await tab.loadTask?.value }
     }
@@ -115,7 +115,7 @@ import Testing
         defer { clean() }
         let file = directory.appendingPathComponent("note.txt")
         try "original".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(file, in: workspace)
         tab.edit(#"{"value":2}"#)
         _ = try await workspace.rename(FileEntry(url: tab.url, isDirectory: false), to: "note.json")
@@ -132,7 +132,7 @@ import Testing
         defer { clean() }
         let file = directory.appendingPathComponent("note.txt")
         try "original".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(file, in: workspace); tab.edit("draft")
         workspace.renameItem = { _, _ in throw CocoaError(.fileWriteNoPermission) }
         do { _ = try await workspace.rename(FileEntry(url: file, isDirectory: false), to: "other.txt"); Issue.record("Expected failure") }
@@ -149,7 +149,7 @@ import Testing
         defer { clean() }
         let file = directory.appendingPathComponent("note.txt")
         try "original".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(file, in: workspace)
         workspace.renameItem = { url, name in
             #expect(tab.isRenaming)
@@ -168,7 +168,7 @@ import Testing
         defer { clean() }
         let folder = directory.appendingPathComponent("old", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [folder]
         workspace.renameItem = { url, name in
             #expect(workspace.tabs.isEmpty)

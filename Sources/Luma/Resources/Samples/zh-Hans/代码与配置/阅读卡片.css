@@ -1,0 +1,14 @@
+:root {
+  --accent: #3a6095;
+  --paper: #fcfcfa;
+  --ink: #1a202b;
+}
+
+.reading-card {
+  max-width: 52rem;
+  margin-inline: auto;
+  padding: 2rem;
+  color: var(--ink);
+  background: var(--paper);
+  border-left: 3px solid var(--accent);
+}

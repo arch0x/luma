@@ -1,8 +1,12 @@
 import Foundation
+import ReaderCore
 
 nonisolated enum SampleWorkspace {
-    static let edition = "2026.11.2"
-    static let folderName = "Samples-\(edition)"
+    static let edition = "2026.11.3"
+    static var folderName: String { folderName(for: .english) }
+
+    static func folderName(for language: InterfaceLanguage) -> String { "Samples-\(edition)-\(language.rawValue)" }
+    static func welcomeFilename(for language: InterfaceLanguage) -> String { language == .english ? "Welcome.md" : "欢迎.md" }
 
     nonisolated struct Format: Decodable {
         let name: String
@@ -11,8 +15,8 @@ nonisolated enum SampleWorkspace {
         let section: String
     }
 
-    static func formats() throws -> [Format] {
-        guard let url = Bundle.module.url(forResource: "SampleCatalog", withExtension: "json") else {
+    static func formats(language: InterfaceLanguage = .english) throws -> [Format] {
+        guard let url = Bundle.module.url(forResource: "SampleCatalog-\(language.rawValue)", withExtension: "json") else {
             throw CocoaError(.fileReadNoSuchFile)
         }
         return try JSONDecoder().decode([Format].self, from: Data(contentsOf: url))

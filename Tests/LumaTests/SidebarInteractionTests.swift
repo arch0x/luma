@@ -56,7 +56,7 @@ import Testing
         if folder { try FileManager.default.createDirectory(at: item, withIntermediateDirectories: false) }
         let file = folder ? item.appendingPathComponent("note.txt") : item
         try "original".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
@@ -106,7 +106,7 @@ import Testing
         defer { clean() }
         let file = directory.appendingPathComponent("note.txt")
         try "original".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences); workspace.roots = [directory]
+        let workspace = chineseWorkspace(preferences: preferences); workspace.roots = [directory]
         let view = SidebarRowView(entry: FileEntry(url: file, isDirectory: false), workspace: workspace)
         let window = window(for: view); defer { window.close() }
         view.startSession = { _, _ in }
@@ -125,7 +125,7 @@ import Testing
 
     @Test func nativeContextMenuPreservesCreationRenameAndTrashActions() throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let entry = FileEntry(url: directory, isDirectory: true)
         let view = SidebarRowView(entry: entry, workspace: workspace)
         let menu = try #require(view.menu(for: try event(.rightMouseDown)))

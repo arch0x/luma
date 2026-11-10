@@ -29,7 +29,7 @@ import Testing
     @Test func fallbackSupportsFindEditingUndoSaveRenameAndReopen() async throws {
         defer { clean() }
         _ = NSApplication.shared
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open("original\n", name: "note.luma-custom", in: workspace)
         #expect(tab.kind == .text && tab.formatLabel == "纯文本" && !tab.hasPreview && workspace.canFind)
         let editor = tab.sourceEditor()
@@ -40,7 +40,7 @@ import Testing
         #expect(tab.sourceEditor() === editor && tab.canUndo && tab.canEdit)
         #expect(await workspace.save(tab))
         #expect(try String(contentsOf: tab.url, encoding: .utf8) == "edited original\n")
-        let reopened = Workspace(preferences: preferences)
+        let reopened = chineseWorkspace(preferences: preferences)
         reopened.open([tab.url])
         let fresh = try #require(reopened.activeTab)
         await fresh.loadTask?.value
@@ -51,7 +51,7 @@ import Testing
     func jsonVariantsOfferTheirOwnPreviewAndKeepOriginalSource(ext: String) async throws {
         defer { clean() }
         let source = ext == "jsonc" ? "// comment\n{\"ready\": true,}" : "{\"id\":1}\n{\"id\":2}\n"
-        let tab = try await open(source, name: "data.\(ext)", in: Workspace(preferences: preferences))
+        let tab = try await open(source, name: "data.\(ext)", in: chineseWorkspace(preferences: preferences))
         #expect(tab.kind == .text && tab.canEdit && tab.previewError == nil && tab.draft == source)
         #expect(tab.hasPreview && tab.codeLanguage?.identifier == ext && tab.codeLanguage?.isJSONFamily == true)
         #expect(!tab.showSource && tab.formatLabel == ext.uppercased())
@@ -59,7 +59,7 @@ import Testing
 
     @Test func binaryFilesNeverBecomeEditableAndTextDetectionRunsOnReload() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let archive = try await open("PK", name: "archive.zip", in: workspace)
         #expect(!archive.canEdit && archive.kind == .unsupported)
         let tab = try await open("text", name: "note.luma-custom", in: workspace)
@@ -78,7 +78,7 @@ import Testing
     @Test func svgDraftPreviewAndSaveRecoverAfterInvalidXML() async throws {
         defer { clean() }
         let source = #"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="100" height="100" fill="blue"/></svg>"#
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(source, name: "drawing.svg", in: workspace)
         #expect(tab.kind == .svg && tab.hasPreview && tab.canEdit && !tab.showSource && tab.formatLabel == "SVG")
         guard case .ready(.svg(let original)) = tab.state else { Issue.record("Missing SVG preview"); return }
@@ -98,7 +98,7 @@ import Testing
 
     @Test func invalidSVGOpensEditableSourceAndOversizedPreviewKeepsSource() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let broken = try await open("<svg", name: "broken.svg", in: workspace)
         #expect(broken.canEdit && broken.showSource && broken.previewError != nil && broken.draft == "<svg")
         let largeSource = #"<svg xmlns="http://www.w3.org/2000/svg"><!--"# + String(repeating: "x", count: SVGDocument.previewLimit) + "--></svg>"

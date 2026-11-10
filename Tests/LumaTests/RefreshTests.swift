@@ -43,7 +43,7 @@ import Testing
         defer { clean() }
         preferences.set([directory.path], forKey: "workspaceFolders")
         try write("added-before-launch.md")
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.restore()
         try await waitForTree(workspace)
         let root = try #require(workspace.roots.first)
@@ -62,7 +62,7 @@ import Testing
         defer { clean() }
         let child = directory.appendingPathComponent("Nested", isDirectory: true)
         try FileManager.default.createDirectory(at: child, withIntermediateDirectories: false)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         workspace.loadDirectory(child)
         try await waitForTree(workspace)
@@ -92,7 +92,7 @@ import Testing
     @Test(arguments: [false, true])
     func automaticRefreshDoesNotReloadOrPromptForOpenDocument(dirty: Bool) async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         let tab = try await openDocument(in: workspace)
         if dirty { tab.edit("draft") }
@@ -111,7 +111,7 @@ import Testing
 
     @Test func manualRefreshUpdatesTreeContentAndSearchImmediatelyTwice() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         let tab = try await openDocument(in: workspace)
         workspace.query = "needle"
@@ -135,7 +135,7 @@ import Testing
 
     @Test func cancellingDocumentReloadStillRefreshesDirectory() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         let tab = try await openDocument(in: workspace)
         tab.edit("unsaved draft")
@@ -158,7 +158,7 @@ import Testing
 
     @Test func manualRefreshWorksWithoutOpenDocument() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         #expect(workspace.refreshDirectoriesAutomatically())
         try await waitForTree(workspace)
@@ -172,7 +172,7 @@ import Testing
     @Test func applicationActivationNotificationRefreshesAndThrottlesActualView() async throws {
         defer { clean() }
         _ = NSApplication.shared
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         let tab = try await openDocument(in: workspace)
         tab.edit("unsaved draft")

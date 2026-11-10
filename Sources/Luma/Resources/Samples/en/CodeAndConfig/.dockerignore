@@ -1,0 +1,7 @@
+# Exclusion rules for the build context.
+.git/
+.build/
+dist/
+**/*.log
+*.tmp
+!README.md

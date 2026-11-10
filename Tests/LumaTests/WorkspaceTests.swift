@@ -21,7 +21,7 @@ import Testing
 
     @Test func opensRealFilesAndDeduplicatesTabs() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let first = directory.appendingPathComponent("first.md")
         let second = directory.appendingPathComponent("second.json")
         try "# Local document".write(to: first, atomically: true, encoding: .utf8)
@@ -47,7 +47,7 @@ import Testing
 
     @Test func invalidJSONKeepsOriginalSource() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let file = directory.appendingPathComponent("broken.json")
         try "{broken".write(to: file, atomically: true, encoding: .utf8)
         workspace.open([file])
@@ -63,7 +63,7 @@ import Testing
 
     @Test func missingFileCanRecoverAfterReload() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let file = directory.appendingPathComponent("missing.txt")
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
@@ -78,14 +78,14 @@ import Testing
 
     @Test func removingFolderKeepsOpenDocumentAndRestoresOtherRoots() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let file = directory.appendingPathComponent("note.txt")
         try "read only".write(to: file, atomically: true, encoding: .utf8)
         workspace.addFolder(directory)
         workspace.addFolder(directory)
         workspace.open([file])
         #expect(workspace.roots.count == 1)
-        let restored = Workspace(preferences: preferences)
+        let restored = chineseWorkspace(preferences: preferences)
         restored.restore()
         #expect(restored.roots == workspace.roots)
         workspace.removeFolder(directory)
@@ -109,18 +109,18 @@ import Testing
 
     @Test func sampleWorkspaceContainsValidNativeMedia() throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let samples = try #require(workspace.samplesURL)
         let image = try #require(NSImage(contentsOf: samples.appendingPathComponent("留白.png")))
         #expect(image.size.width == 1200)
         let pdf = try #require(PDFDocument(url: samples.appendingPathComponent("阅读空间.pdf")))
         #expect(pdf.pageCount == 2)
-        #expect(pdf.string?.contains("clarity") == true)
+        #expect(pdf.string?.contains("清楚") == true)
     }
 
     @Test func markdownImageRootUsesMostSpecificContainingWorkspace() throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let docs = directory.appendingPathComponent("docs", isDirectory: true)
         let file = docs.appendingPathComponent("note.md")
         #expect(workspace.imageRoot(for: file) == docs)
@@ -134,7 +134,7 @@ import Testing
 
     @Test func markdownFindOpensAndAdvancesWithoutSwitchingToSource() {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = DocumentTab(url: directory.appendingPathComponent("note.md"))
         workspace.tabs = [tab]; workspace.activeID = tab.id
         workspace.openFind()

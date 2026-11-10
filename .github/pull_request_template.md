@@ -1,11 +1,11 @@
-## 解决的问题
+## Problem
 
-说明触发场景、预期结果，以及相关 Issue（如有）。
+Describe the trigger, expected behavior and related issue, if any.
 
-## 修改后的行为
+## Resulting behavior
 
-简述用户会看到的变化。涉及界面时，可附浅色／深色截图。
+Explain what users will see after this change. Include light / dark screenshots for interface changes when useful.
 
-## 验证
+## Validation
 
-列出运行的测试或人工检查，以及尚未验证的环境。
+List tests or manual checks performed and any environments that remain unverified.

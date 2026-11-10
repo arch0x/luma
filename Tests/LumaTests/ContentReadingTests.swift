@@ -9,7 +9,7 @@ import Testing
         let tab = DocumentTab(url: URL(fileURLWithPath: "/tmp/\(name)"))
         tab.draft = source; tab.savedText = source
         let state = MarkdownRenderState()
-        let coordinator = MarkdownWebView.Coordinator(source: source, tab: tab, previewWidth: 400, dark: false, state: state, onOpen: { _ in })
+        let coordinator = MarkdownWebView.Coordinator(source: source, tab: tab, previewWidth: 400, dark: false, state: state, onOpen: { _ in }, language: .simplifiedChinese)
         let view = MarkdownWebView.makeWebView(coordinator: coordinator)
         view.frame = NSRect(x: 0, y: 0, width: width, height: 650)
         let preview = CodePreviewTests.Preview(view: view, coordinator: coordinator, state: state)

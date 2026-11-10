@@ -52,7 +52,7 @@ struct SVGWebView: NSViewRepresentable {
     let dark: Bool
     let state: SVGRenderState
     var actualSize = false
-    var language: AppLanguage = .simplifiedChinese
+    var language: AppLanguage = .english
 
     func makeCoordinator() -> Coordinator { Coordinator(state: state) }
     func makeNSView(context: Context) -> WKWebView {
@@ -86,13 +86,13 @@ struct SVGWebView: NSViewRepresentable {
         private var zoom = 1.0
         private var dark = false
         private var actualSize = false
-        private var language = AppLanguage.simplifiedChinese
+        private var language = AppLanguage.english
         private var revision = ""
         private var navigation: WKNavigation?
 
         init(state: SVGRenderState) { self.state = state }
 
-        func update(source: String, zoom: Double, dark: Bool, actualSize: Bool = false, language: AppLanguage = .simplifiedChinese) {
+        func update(source: String, zoom: Double, dark: Bool, actualSize: Bool = false, language: AppLanguage = .english) {
             let changedAppearance = self.zoom != zoom || self.dark != dark || self.actualSize != actualSize
             self.zoom = zoom; self.dark = dark; self.actualSize = actualSize
             let languageChanged = self.language != language

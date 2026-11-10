@@ -8,18 +8,18 @@ import Testing
         let domain = "local.luma.appearance-tests.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        #expect(Workspace(preferences: preferences).appearance == .system)
+        #expect(chineseWorkspace(preferences: preferences).appearance == .system)
         for choice in AppAppearance.allCases {
             // The string format remains compatible with previous releases.
             preferences.set(choice.rawValue, forKey: "appearance")
-            let workspace = Workspace(preferences: preferences)
+            let workspace = chineseWorkspace(preferences: preferences)
             #expect(workspace.appearance == choice)
             let next: AppAppearance = choice == .dark ? .system : .dark
             workspace.appearance = next
-            #expect(Workspace(preferences: preferences).appearance == next)
+            #expect(chineseWorkspace(preferences: preferences).appearance == next)
         }
         preferences.set("invalid", forKey: "appearance")
-        #expect(Workspace(preferences: preferences).appearance == .system)
+        #expect(chineseWorkspace(preferences: preferences).appearance == .system)
     }
 
     final class Probe {
@@ -50,7 +50,7 @@ import Testing
         let domain = "local.luma.appearance-live.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = DocumentTab(url: URL(fileURLWithPath: "/tmp/appearance.txt"))
         tab.edit("草稿保持不变")
         let probe = Probe()

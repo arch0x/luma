@@ -1,8 +1,8 @@
 import Foundation
 
 public enum InterfaceLanguage: String, CaseIterable, Sendable {
-    case simplifiedChinese = "zh-Hans"
     case english = "en"
+    case simplifiedChinese = "zh-Hans"
 
     public var nativeName: String { self == .simplifiedChinese ? "简体中文" : "English" }
     public var locale: Locale { Locale(identifier: rawValue) }
@@ -48,7 +48,7 @@ public enum ReaderLocalization {
     // Readers report errors on worker actors as well as on the main actor.
     private final class Storage: @unchecked Sendable {
         let lock = NSLock()
-        var language = InterfaceLanguage.simplifiedChinese
+        var language = InterfaceLanguage.english
     }
     private static let storage = Storage()
     public static var language: InterfaceLanguage {

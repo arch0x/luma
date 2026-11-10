@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Luma",
-    defaultLocalization: "zh-Hans",
+    defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     products: [.executable(name: "Luma", targets: ["Luma"])],
     targets: [
@@ -11,7 +11,7 @@ let package = Package(
         .executableTarget(
             name: "Luma",
             dependencies: ["ReaderCore"],
-            resources: [.copy("Resources/Samples"), .copy("Resources/Markdown"), .copy("Resources/Brand"), .copy("Resources/SampleCatalog.json")],
+            resources: [.copy("Resources/Samples"), .copy("Resources/Markdown"), .copy("Resources/Brand"), .copy("Resources/SampleCatalog-en.json"), .copy("Resources/SampleCatalog-zh-Hans.json")],
             swiftSettings: [
                 .defaultIsolation(MainActor.self),
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault")

@@ -8,16 +8,16 @@ import Testing
         let domain = "local.luma.editor-font.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         #expect(workspace.editorFontSize == 13)
         workspace.editorFontSize = 22
-        #expect(Workspace(preferences: preferences).editorFontSize == 22)
+        #expect(chineseWorkspace(preferences: preferences).editorFontSize == 22)
         for invalid in [0.0, -5, 100, .infinity, .nan] {
             preferences.set(invalid, forKey: "editorFontSize")
-            #expect(Workspace(preferences: preferences).editorFontSize == 13)
+            #expect(chineseWorkspace(preferences: preferences).editorFontSize == 13)
         }
         preferences.set("invalid", forKey: "editorFontSize")
-        #expect(Workspace(preferences: preferences).editorFontSize == 13)
+        #expect(chineseWorkspace(preferences: preferences).editorFontSize == 13)
     }
 
     @Test func liveFontChangesReachActiveInactiveAndNewEditorsWithoutChangingDraftOrUndo() async throws {
@@ -25,7 +25,7 @@ import Testing
         let domain = "local.luma.editor-font-live.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let source = String(repeating: "编辑字号改变后继续自动换行。", count: 30)
         func tab(_ name: String) -> DocumentTab {
             let tab = DocumentTab(url: URL(fileURLWithPath: "/tmp/\(name).txt"))
@@ -86,7 +86,7 @@ import Testing
         }
         #expect(third.editor?.textView.font?.pointSize == 22)
         #expect(!third.isDirty)
-        #expect(Workspace(preferences: preferences).editorFontSize == 22)
+        #expect(chineseWorkspace(preferences: preferences).editorFontSize == 22)
         let newEditor = try #require(third.editor)
         newEditor.replaceFromDisk("重新载入后仍使用所选字号")
         #expect(newEditor.textView.font?.pointSize == 22)

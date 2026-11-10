@@ -1,0 +1,10 @@
+# Temporary workspace files and negation rules.
+.DS_Store
+.build/
+dist/
+**/*.log
+*.tmp
+!README.md
+!Reading.log
+cache?/
+\#literal-name

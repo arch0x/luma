@@ -88,7 +88,7 @@ import Testing
         let domain = "local.luma.toolbar-layout.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let samples = try #require(workspace.samplesURL)
         workspace.open([samples.appendingPathComponent("长文档导航.md")])
         let tab = try #require(workspace.activeTab)
@@ -150,7 +150,7 @@ import Testing
         let domain = "local.luma.adaptive-toolbar.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = DocumentTab(url: URL(fileURLWithPath: "/tmp/adaptive.md"))
         tab.draft = "# Document"; tab.savedText = tab.draft
         tab.state = .ready(.markdown(tab.draft ?? ""))

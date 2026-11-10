@@ -1,51 +1,57 @@
-# 参与 Luma
+# Contributing to Luma
 
-欢迎反馈阅读与编辑中遇到的问题，也欢迎提交修复。项目仍处于早期预览阶段。
+English · [简体中文](CONTRIBUTING.zh-CN.md)
 
-## 反馈问题与建议
+Reports and fixes for reading and editing workflows are welcome. Luma is an early preview.
 
-请在仓库的 Issues 中选择「问题反馈」或「功能建议」。问题反馈尽量包含应用版本、macOS 版本、芯片架构、复现步骤，以及预期与实际结果。涉及格式解析时，一份可公开的最小样例会很有帮助。
+## Issues and suggestions
 
-较大的交互调整或新格式支持，建议先描述你想完成的阅读／编辑任务，便于讨论范围。截图、日志与样例请去掉私人信息、真实凭据和敏感文档内容。
+Choose Bug Report or Feature Request in the repository's Issues. Include the app version, macOS version, processor architecture, reproduction steps, expected behavior and actual behavior. For parsing problems, a minimal sample you can share publicly is useful.
 
-## 从源码开始
+For larger interaction changes or new format support, describe the reading or editing task first so the scope can be discussed. Remove private information, credentials and sensitive document content from screenshots, logs and examples.
 
-需要 macOS 14+、Swift 6.2+ 和 Apple Command Line Tools。普通构建没有远程 SwiftPM 或 npm 依赖，也不需要 Developer ID。
+## Run from source
 
-在仓库根目录运行：
+Requires macOS 14+, Swift 6.2+ and Apple Command Line Tools. Normal builds need no remote SwiftPM or npm dependencies, and no Developer ID.
 
 ```sh
 swift run Luma
 ```
 
-应用打包、模块结构与示例资源维护见[开发说明](docs/DEVELOPMENT.md)。
+See the [Development Guide](docs/DEVELOPMENT.md) for packaging, modules and sample maintenance.
 
-## 验证改动
+## Validate changes
 
-完整测试包含真实 AppKit 窗口与 WebKit 子进程，使用串行执行：
+Tests use real AppKit windows and WebKit subprocesses. Run them serially:
 
 ```sh
 zsh scripts/test.sh --no-parallel
 ```
 
-也可以先按改动范围检查：
+You can first run the relevant suite:
 
 ```sh
 zsh scripts/test.sh --no-parallel --filter ReaderCoreTests
 zsh scripts/test.sh --no-parallel --filter LumaTests
 ```
 
-界面变更请用随应用提供的真实示例检查深浅外观、窄窗口、键盘焦点，以及草稿／选区是否保留。文档改动检查图片和本地链接即可；无需为了文字修正运行整套界面测试。
+For interface changes, use the bundled examples to check both languages, light and dark appearance, narrow windows, keyboard focus, and draft / selection preservation. For documentation-only edits, check images and local links without running the full UI suite.
 
-CI 配置在 macOS 15、macOS 26 的 Apple Silicon runner 上使用 Xcode 26.3，执行核心测试、应用测试、release 构建和临时签名校验。原生测试需要正常的窗口服务；具体环境限制见[开发说明](docs/DEVELOPMENT.md#工程结构与测试)。
+CI is configured for macOS 15 and macOS 26 Apple Silicon runners with Xcode 26.3. It runs core and app tests, a release build and ad hoc signature verification. Native tests need window services; see the [test environment notes](docs/DEVELOPMENT.md#structure-and-tests).
 
-新增或调整界面文案时，同步维护 `Localization/en.json`，运行 `python3 scripts/generate-localizations.py`，并检查中英文在窄窗口下的布局。
+## Language conventions
 
-## 提交修改
+Write project documentation, source comments, commit messages and GitHub templates in English. Keep the Chinese README current when user-facing setup or behavior changes. Chinese translations and localized Chinese sample fixtures intentionally use Chinese.
 
-- 一次 PR 聚焦一个问题，说明触发场景、修改后的行为和验证结果。
-- 新增回归测试优先覆盖实际错误输入、文件操作或交互路径。
-- 示例资源与对应生成脚本一起维护，避免刷新后恢复旧内容。
-- 第三方组件保留来源、版本、哈希与许可声明；项目使用 [MIT License](LICENSE)。
+Maintain interface translations in `Localization/en.json`, then run `python3 scripts/generate-localizations.py`. Chinese message keys are stable localization identifiers, not the default display language. Preserve interpolation placeholders and check both languages in narrow windows.
 
-`.build/`、`dist/`、本地配置、凭据和运行日志不提交到仓库。CI 下载产物也使用本地临时签名，不代表经过 Developer ID 签名或 Apple 公证。
+Edit sample text directly in `Sources/Luma/Resources/Samples/en` and `zh-Hans`. Keep both collections equivalent. Update `Samples/catalog.json` for format changes, then run `python3 scripts/refresh-samples.py`; it generates both catalogs and format guides without overwriting editable fixtures.
+
+## Submit a patch
+
+- Keep a PR focused on one problem. Describe the trigger, resulting behavior and validation.
+- Prefer regression tests covering actual invalid input, file operations or interactions.
+- Maintain fixtures and their generators together.
+- Preserve third-party origins, versions, hashes and license notices. Luma uses the [MIT License](LICENSE).
+
+Do not commit `.build/`, `dist/`, local configuration, credentials or runtime logs. CI artifacts are ad hoc signed, without Developer ID signing or Apple notarization.

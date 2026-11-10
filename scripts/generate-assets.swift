@@ -47,7 +47,7 @@ func fullBleedIcon(_ image: CGImage) throws -> CGImage {
 }
 let iconImage = try fullBleedIcon(sourceImage)
 let appIcon = NSImage(cgImage: iconImage, size: NSSize(width: iconImage.width, height: iconImage.height))
-let samples = root.appendingPathComponent("Sources/Luma/Resources/Samples")
+let sampleRoot = root.appendingPathComponent("Sources/Luma/Resources/Samples")
 try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
 
 func bitmap(width: Int, height: Int, draw: () -> Void) throws -> Data {
@@ -96,7 +96,7 @@ func text(_ string: String, x: CGFloat, y: CGFloat, size: CGFloat, color: NSColo
     NSAttributedString(string: string, attributes: [.font: NSFont.systemFont(ofSize: size, weight: weight), .foregroundColor: color]).draw(at: NSPoint(x: x, y: y))
 }
 
-func cover(width: CGFloat, height: CGFloat, subtitle: String) {
+func cover(width: CGFloat, height: CGFloat, subtitle: String, english: Bool = true) {
     let blue = NSColor(srgbRed: 58 / 255, green: 96 / 255, blue: 149 / 255, alpha: 1)
     NSColor(srgbRed: 252 / 255, green: 252 / 255, blue: 250 / 255, alpha: 1).setFill()
     NSRect(x: 0, y: 0, width: width, height: height).fill()
@@ -104,72 +104,77 @@ func cover(width: CGFloat, height: CGFloat, subtitle: String) {
     NSBezierPath(ovalIn: NSRect(x: width * 0.55, y: height * 0.3, width: width * 0.5, height: width * 0.5)).fill()
     blue.withAlphaComponent(0.24).setFill()
     NSBezierPath(roundedRect: NSRect(x: width * 0.68, y: height * 0.15, width: width * 0.17, height: height * 0.62), xRadius: width * 0.085, yRadius: width * 0.085).fill()
-    text("LUMA  /  A LOCAL READING SPACE", x: width * 0.08, y: height * 0.85, size: width * 0.014, color: blue, weight: .medium)
-    text("Less noise.", x: width * 0.08, y: height * 0.54, size: width * 0.068, color: blue, weight: .medium)
-    text("More clarity.", x: width * 0.08, y: height * 0.41, size: width * 0.068, color: blue, weight: .medium)
+    text(english ? "LUMA  /  A LOCAL READING SPACE" : "LUMA  /  本地阅读空间", x: width * 0.08, y: height * 0.85, size: width * 0.014, color: blue, weight: .medium)
+    text(english ? "Less noise." : "少一些干扰。", x: width * 0.08, y: height * 0.54, size: width * 0.068, color: blue, weight: .medium)
+    text(english ? "More clarity." : "读得更清楚。", x: width * 0.08, y: height * 0.41, size: width * 0.068, color: blue, weight: .medium)
     text(subtitle, x: width * 0.08, y: height * 0.16, size: width * 0.018, color: blue)
-    text("01 / MADE FOR YOUR FILES", x: width * 0.08, y: height * 0.08, size: width * 0.012, color: blue.withAlphaComponent(0.75))
+    text(english ? "01 / MADE FOR YOUR FILES" : "01 / 为你的本地文件而作", x: width * 0.08, y: height * 0.08, size: width * 0.012, color: blue.withAlphaComponent(0.75))
 }
 
-let pngURL = samples.appendingPathComponent("留白.png")
-if refreshSamples || !FileManager.default.fileExists(atPath: pngURL.path) {
-    try bitmap(width: 1200, height: 800) { cover(width: 1200, height: 800, subtitle: "A little room for the things that matter.") }.write(to: pngURL)
-}
-
-let pdfURL = samples.appendingPathComponent("阅读空间.pdf")
-if refreshPDF || !FileManager.default.fileExists(atPath: pdfURL.path) {
-    var page = CGRect(x: 0, y: 0, width: 600, height: 800)
-    guard let context = CGContext(pdfURL as CFURL, mediaBox: &page, nil) else { throw NSError(domain: "Assets", code: 3) }
-    context.beginPDFPage(nil)
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
-    cover(width: 600, height: 800, subtitle: "A quiet workspace, one file at a time.")
-    NSGraphicsContext.restoreGraphicsState()
-    context.endPDFPage()
-    context.beginPDFPage(nil)
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
-    let blue = NSColor(srgbRed: 58 / 255, green: 96 / 255, blue: 149 / 255, alpha: 1)
-    let ink = NSColor(srgbRed: 26 / 255, green: 32 / 255, blue: 43 / 255, alpha: 1)
-    NSColor(srgbRed: 252 / 255, green: 252 / 255, blue: 250 / 255, alpha: 1).setFill()
-    NSRect(x: 0, y: 0, width: 600, height: 800).fill()
-    text("A space to read.", x: 48, y: 680, size: 34, color: blue, weight: .semibold)
-    text("Documents, data and code - all in one window.", x: 48, y: 620, size: 16, color: ink)
-    text("Try searching for clarity with Command-F.", x: 48, y: 580, size: 16, color: ink)
-    text("Keep your place. Return to the same paragraph.", x: 48, y: 540, size: 16, color: ink)
-    text("READ", x: 48, y: 438, size: 12, color: blue, weight: .semibold)
-    text("Markdown, PDF, SVG and images.", x: 48, y: 404, size: 19, color: ink)
-    text("EXPLORE", x: 48, y: 330, size: 12, color: blue, weight: .semibold)
-    text("JSON, JSONC, JSON Lines, CSV and TSV.", x: 48, y: 296, size: 19, color: ink)
-    text("EDIT", x: 48, y: 222, size: 12, color: blue, weight: .semibold)
-    text("Preview your draft, then save when ready.", x: 48, y: 188, size: 19, color: ink)
-    text("02 / LUMA / BLUE EDITION 2026.11.2", x: 48, y: 48, size: 10, color: blue)
-    NSGraphicsContext.restoreGraphicsState()
-    context.endPDFPage()
-    context.closePDF()
-}
-
-let imageExamples = samples.appendingPathComponent("图片格式", isDirectory: true)
-try FileManager.default.createDirectory(at: imageExamples, withIntermediateDirectories: true)
-let preview = try bitmap(width: 800, height: 534) {
-    cover(width: 800, height: 534, subtitle: "A little room for the things that matter.")
-}
-guard let source = CGImageSourceCreateWithData(preview as CFData, nil),
-      let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { throw NSError(domain: "Assets", code: 5) }
-for (ext, type) in [("jpg", "public.jpeg"), ("gif", "com.compuserve.gif"), ("heic", "public.heic"),
-                    ("tiff", "public.tiff"), ("bmp", "com.microsoft.bmp")] {
-    let url = imageExamples.appendingPathComponent("阅读封面." + ext)
-    guard refreshSamples || !FileManager.default.fileExists(atPath: url.path) else { continue }
-    guard let destination = CGImageDestinationCreateWithURL(url as CFURL, type as CFString, 1, nil) else {
-        throw NSError(domain: "Assets", code: 6, userInfo: [NSLocalizedDescriptionKey: "Cannot encode \(ext)"])
+for language in ["en", "zh-Hans"] {
+    let english = language == "en"
+    let samples = sampleRoot.appendingPathComponent(language)
+    let pngURL = samples.appendingPathComponent(english ? "ReadingCover.png" : "留白.png")
+    if refreshSamples || !FileManager.default.fileExists(atPath: pngURL.path) {
+        try bitmap(width: 1200, height: 800) { cover(width: 1200, height: 800, subtitle: english ? "A little room for the things that matter." : "留一点空间，给专注。", english: english) }.write(to: pngURL)
     }
-    CGImageDestinationAddImage(destination, image, [
-        kCGImageDestinationLossyCompressionQuality: 0.9,
-        kCGImagePropertyTIFFDictionary: [kCGImagePropertyTIFFCompression: 5]
-    ] as CFDictionary)
-    guard CGImageDestinationFinalize(destination) else { throw NSError(domain: "Assets", code: 7) }
-}
-let sampleIcon = imageExamples.appendingPathComponent("澄览图标.icns")
-if (try? Data(contentsOf: sampleIcon)) != icon {
-    try icon.write(to: sampleIcon)
+
+    let pdfURL = samples.appendingPathComponent(english ? "ReadingSpace.pdf" : "阅读空间.pdf")
+    if refreshPDF || !FileManager.default.fileExists(atPath: pdfURL.path) {
+        var page = CGRect(x: 0, y: 0, width: 600, height: 800)
+        guard let context = CGContext(pdfURL as CFURL, mediaBox: &page, nil) else { throw NSError(domain: "Assets", code: 3) }
+        context.beginPDFPage(nil)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
+        cover(width: 600, height: 800, subtitle: english ? "A quiet workspace, one file at a time." : "一份文件，一个安静的阅读空间。", english: english)
+        NSGraphicsContext.restoreGraphicsState()
+        context.endPDFPage()
+        context.beginPDFPage(nil)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
+        let blue = NSColor(srgbRed: 58 / 255, green: 96 / 255, blue: 149 / 255, alpha: 1)
+        let ink = NSColor(srgbRed: 26 / 255, green: 32 / 255, blue: 43 / 255, alpha: 1)
+        NSColor(srgbRed: 252 / 255, green: 252 / 255, blue: 250 / 255, alpha: 1).setFill()
+        NSRect(x: 0, y: 0, width: 600, height: 800).fill()
+        text(english ? "A space to read." : "一处阅读空间。", x: 48, y: 680, size: 34, color: blue, weight: .semibold)
+        text(english ? "Documents, data and code - all in one window." : "文档、数据与代码，在同一个窗口里。", x: 48, y: 620, size: 16, color: ink)
+        text(english ? "Try searching for clarity with Command-F." : "试试用 Command-F 查找「清楚」。", x: 48, y: 580, size: 16, color: ink)
+        text(english ? "Keep your place. Return to the same paragraph." : "记住位置，回到同一段落。", x: 48, y: 540, size: 16, color: ink)
+        text(english ? "READ" : "阅读", x: 48, y: 438, size: 12, color: blue, weight: .semibold)
+        text(english ? "Markdown, PDF, SVG and images." : "Markdown、PDF、SVG 与图片。", x: 48, y: 404, size: 19, color: ink)
+        text(english ? "EXPLORE" : "探索", x: 48, y: 330, size: 12, color: blue, weight: .semibold)
+        text(english ? "JSON, JSONC, JSON Lines, CSV and TSV." : "JSON、JSONC、JSON Lines、CSV 与 TSV。", x: 48, y: 296, size: 19, color: ink)
+        text(english ? "EDIT" : "编辑", x: 48, y: 222, size: 12, color: blue, weight: .semibold)
+        text(english ? "Preview your draft, then save when ready." : "预览草稿，准备好后再保存。", x: 48, y: 188, size: 19, color: ink)
+        text("02 / LUMA / BLUE EDITION 2026.11.3", x: 48, y: 48, size: 10, color: blue)
+        NSGraphicsContext.restoreGraphicsState()
+        context.endPDFPage()
+        context.closePDF()
+    }
+
+    let imageExamples = samples.appendingPathComponent(english ? "ImageFormats" : "图片格式", isDirectory: true)
+    try FileManager.default.createDirectory(at: imageExamples, withIntermediateDirectories: true)
+    let preview = try bitmap(width: 800, height: 534) {
+        cover(width: 800, height: 534, subtitle: english ? "A little room for the things that matter." : "留一点空间，给专注。", english: english)
+    }
+    guard let source = CGImageSourceCreateWithData(preview as CFData, nil),
+          let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { throw NSError(domain: "Assets", code: 5) }
+    for (ext, type) in [("jpg", "public.jpeg"), ("gif", "com.compuserve.gif"), ("heic", "public.heic"),
+                        ("tiff", "public.tiff"), ("bmp", "com.microsoft.bmp")] {
+        let url = imageExamples.appendingPathComponent((english ? "ReadingCover." : "阅读封面.") + ext)
+        guard refreshSamples || !FileManager.default.fileExists(atPath: url.path) else { continue }
+        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, type as CFString, 1, nil) else {
+            throw NSError(domain: "Assets", code: 6, userInfo: [NSLocalizedDescriptionKey: "Cannot encode \(ext)"])
+        }
+        CGImageDestinationAddImage(destination, image, [
+            kCGImageDestinationLossyCompressionQuality: 0.9,
+            kCGImagePropertyTIFFDictionary: [kCGImagePropertyTIFFCompression: 5]
+        ] as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else { throw NSError(domain: "Assets", code: 7) }
+    }
+    let sampleIcon = imageExamples.appendingPathComponent(english ? "AppIcon.icns" : "澄览图标.icns")
+    if (try? Data(contentsOf: sampleIcon)) != icon {
+        try icon.write(to: sampleIcon)
+    }
+
 }

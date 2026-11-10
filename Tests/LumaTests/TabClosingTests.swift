@@ -31,7 +31,7 @@ import Testing
     @Test(arguments: TabCloseScope.allCases)
     func eachScopeUsesTheClickedTabAndPreservesTheCorrectSurvivors(scope: TabCloseScope) async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tabs = try await open(in: workspace)
         workspace.activeID = tabs[0].id
         let ids = workspace.tabIDs(toClose: scope, relativeTo: tabs[2].id)
@@ -52,7 +52,7 @@ import Testing
 
     @Test func emptySidesAndMissingContextDoNotCloseOtherFiles() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tabs = try await open(in: workspace)
         #expect(workspace.tabIDs(toClose: .left, relativeTo: tabs[0].id).isEmpty)
         #expect(workspace.tabIDs(toClose: .right, relativeTo: tabs[4].id).isEmpty)
@@ -64,7 +64,7 @@ import Testing
     @Test func cancellingLaterInTheReviewKeepsAllTabsDraftsAndUndo() async throws {
         defer { clean() }
         _ = NSApplication.shared
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tabs = try await open(3, in: workspace)
         let editor = tabs[0].sourceEditor()
         editor.textView.insertText("edited ", replacementRange: NSRange(location: 0, length: 0))
@@ -87,7 +87,7 @@ import Testing
 
     @Test func saveAndDiscardApplyOnlyToTheChosenTargetsAndCaptureOnce() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tabs = try await open(3, in: workspace)
         tabs[1].edit("save this"); tabs[2].edit("discard this")
         workspace.activeID = tabs[2].id
@@ -104,7 +104,7 @@ import Testing
 
     @Test func failedSaveKeepsTheEntireRequestedGroupOpen() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tabs = try await open(2, in: workspace)
         tabs[1].edit("invalid\0draft")
         workspace.chooseUnsaved = { _ in .save }
@@ -116,7 +116,7 @@ import Testing
 
     @Test func newEditsDuringPositionCaptureCancelTheWholeClose() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tabs = try await open(2, in: workspace)
         tabs[0].edit("reviewed draft")
         workspace.chooseUnsaved = { _ in .discard }
@@ -128,7 +128,7 @@ import Testing
 
     @Test func tabsOpenedDuringReviewSurviveAndReentrantCloseIsBlocked() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tabs = try await open(2, in: workspace)
         tabs[0].edit("draft")
         let newFile = directory.appendingPathComponent("new.txt")
@@ -148,7 +148,7 @@ import Testing
 
     @Test func cancellingTheGroupRestartsAutoSaveForEarlierReviewedDrafts() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(40))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(40))
         let tabs = try await open(2, in: workspace)
         tabs[0].edit("first draft"); tabs[1].edit("second draft")
         workspace.autoSaveEnabled = true

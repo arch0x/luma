@@ -34,7 +34,7 @@ import ReaderCore
     }
 
     @Test func disabledByDefaultAndPreferenceSurvivesWorkspaceRecreation() async throws {
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
         defer { clean(workspace) }
         #expect(!workspace.autoSaveEnabled)
         let tab = try await open(in: workspace)
@@ -44,13 +44,13 @@ import ReaderCore
         #expect(try String(contentsOf: tab.url, encoding: .utf8) == "original")
         #expect(tab.isDirty)
         workspace.autoSaveEnabled = true
-        #expect(Workspace(preferences: preferences).autoSaveEnabled)
+        #expect(chineseWorkspace(preferences: preferences).autoSaveEnabled)
         workspace.autoSaveEnabled = false
-        #expect(!Workspace(preferences: preferences).autoSaveEnabled)
+        #expect(!chineseWorkspace(preferences: preferences).autoSaveEnabled)
     }
 
     @Test func disablingCancelsPendingSaveAndEnablingSavesExistingDraft() async throws {
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(40))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(40))
         defer { clean(workspace) }
         let tab = try await open(in: workspace)
         tab.edit("pending draft")
@@ -68,7 +68,7 @@ import ReaderCore
 
     @Test(arguments: ["md", "txt", "swift", "json", "csv", "tsv"])
     func savesLatestDraftAndPreservesBackgroundTabs(ext: String) async throws {
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
         defer { clean(workspace) }
         workspace.autoSaveEnabled = true
         let before = ext == "json" ? "{\"n\":1}" : "name,count\noriginal,1"
@@ -91,7 +91,7 @@ import ReaderCore
 
     @Test func nativeUndoAndRedoRemainAvailableAfterAutoSave() async throws {
         _ = NSApplication.shared
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
         defer { clean(workspace) }
         workspace.autoSaveEnabled = true
         let tab = try await open(in: workspace)
@@ -110,7 +110,7 @@ import ReaderCore
 
     @Test(arguments: [false, true])
     func externalConflictPausesWithoutPromptOrOverwrite(checked: Bool) async throws {
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(40))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(40))
         defer { clean(workspace) }
         workspace.autoSaveEnabled = true
         let tab = try await open(in: workspace)
@@ -133,7 +133,7 @@ import ReaderCore
     }
 
     @Test func missingFileIsNotRecreatedAutomatically() async throws {
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
         defer { clean(workspace) }
         workspace.autoSaveEnabled = true
         let tab = try await open(in: workspace)
@@ -145,7 +145,7 @@ import ReaderCore
     }
 
     @Test func failedWriteKeepsDraftAndPausesUntilManualSave() async throws {
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
         defer { clean(workspace) }
         workspace.autoSaveEnabled = true
         let tab = try await open(in: workspace)
@@ -163,7 +163,7 @@ import ReaderCore
     }
 
     @Test func discardDuringCloseCancelsAutoSaveAndDetachesClosedTab() async throws {
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
         defer { clean(workspace) }
         workspace.autoSaveEnabled = true
         let tab = try await open(in: workspace)
@@ -181,7 +181,7 @@ import ReaderCore
     }
 
     @Test func newEditsDuringManualSaveAreAutoSavedAfterItFinishes() async throws {
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
         defer { clean(workspace) }
         workspace.autoSaveEnabled = true
         let tab = try await open(in: workspace)
@@ -199,7 +199,7 @@ import ReaderCore
     }
 
     @Test func pendingAutoSaveFollowsRenameWithoutRecreatingOldPath() async throws {
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(50))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(50))
         defer { clean(workspace) }
         workspace.autoSaveEnabled = true
         let tab = try await open(in: workspace)
@@ -214,7 +214,7 @@ import ReaderCore
 
     @Test func waitsForChineseCompositionToCommitBeforeWriting() async throws {
         _ = NSApplication.shared
-        let workspace = Workspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
+        let workspace = chineseWorkspace(preferences: preferences, autoSaveDelay: .milliseconds(30))
         defer { clean(workspace) }
         workspace.autoSaveEnabled = true
         let tab = try await open(in: workspace)

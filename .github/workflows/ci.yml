@@ -46,6 +46,9 @@ jobs:
       - name: Check generated translations
         run: python3 scripts/generate-localizations.py --check
 
+      - name: Check bilingual sample catalogs
+        run: python3 scripts/refresh-samples.py --check
+
       - name: Test ReaderCore
         run: zsh scripts/test.sh --disable-sandbox --no-parallel -j 2 --filter ReaderCoreTests 2>&1 | tee "$RUNNER_TEMP/luma-ci-logs/core-tests.log"
 

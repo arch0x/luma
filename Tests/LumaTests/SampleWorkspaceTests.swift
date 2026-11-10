@@ -2,6 +2,7 @@ import Foundation
 import ReaderCore
 import AppKit
 import ImageIO
+import PDFKit
 import Testing
 @testable import Luma
 
@@ -15,7 +16,7 @@ import Testing
 
     @Test func existingSamplesGetMissingFilesWithoutLosingEdits() throws {
         defer { try? FileManager.default.removeItem(at: directory) }
-        let source = try #require(Workspace().samplesURL)
+        let source = try #require(chineseWorkspace().samplesURL)
         let editable = directory.appendingPathComponent("Samples")
         try FileManager.default.createDirectory(at: editable, withIntermediateDirectories: true)
         let welcome = editable.appendingPathComponent("欢迎.md")
@@ -55,7 +56,7 @@ import Testing
         let domain = "local.luma.sample-refresh.\(UUID())"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let bundled = try #require(workspace.samplesURL)
         let editable = directory.appendingPathComponent("Samples").resolvingSymlinksInPath().standardizedFileURL
         let formats = editable.appendingPathComponent("格式示例")
@@ -80,18 +81,22 @@ import Testing
         #expect(try String(contentsOf: welcome, encoding: .utf8) == "我的欢迎页")
     }
 
-    @Test func allNewExamplesOpenThroughTheActualWorkspace() async throws {
+    @Test(arguments: InterfaceLanguage.allCases)
+    func allNewExamplesOpenThroughTheActualWorkspace(language: InterfaceLanguage) async throws {
         defer { try? FileManager.default.removeItem(at: directory) }
         let domain = "local.luma.sample-tests.\(UUID())"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
         let workspace = Workspace(preferences: preferences)
+        workspace.language = language
         let source = try #require(workspace.samplesURL)
         let editable = directory.appendingPathComponent("Samples")
         try SampleWorkspace.install(from: source, to: editable)
-        let formats = try SampleWorkspace.formats()
+        let formats = try SampleWorkspace.formats(language: language)
         let examples = formats.map { editable.appendingPathComponent($0.path) }
+        #expect(examples.count == 67)
         workspace.open(examples)
+        #expect(workspace.tabs.count == examples.count)
         for tab in workspace.tabs {
             await tab.loadTask?.value
             if case .ready(.failed(let error)) = tab.state { Issue.record("\(tab.title): \(error)") }
@@ -110,13 +115,13 @@ import Testing
 
     @Test func catalogCoversEveryRecognizedExtensionWithUniqueRepresentatives() throws {
         defer { try? FileManager.default.removeItem(at: directory) }
-        let formats = try SampleWorkspace.formats()
+        let formats = try SampleWorkspace.formats(language: .simplifiedChinese)
         let actual = formats.flatMap(\.extensions)
         let expected = Set(DocumentKind.extensionsByKind.values.flatMap { $0 })
         #expect(Set(actual) == expected)
         #expect(actual.count == Set(actual).count, "An extension must not have duplicate examples")
         #expect(formats.count == Set(formats.map(\.path)).count)
-        let samples = try #require(Workspace().samplesURL)
+        let samples = try #require(chineseWorkspace().samplesURL)
         for format in formats {
             let url = samples.appendingPathComponent(format.path)
             #expect(FileManager.default.fileExists(atPath: url.path), "Missing \(format.name): \(format.path)")
@@ -133,11 +138,11 @@ import Testing
 
     @Test func everyImageExampleUsesItsRealCodecAndCanProduceAPreview() throws {
         defer { try? FileManager.default.removeItem(at: directory) }
-        let samples = try #require(Workspace().samplesURL)
+        let samples = try #require(chineseWorkspace().samplesURL)
         let expected = ["png": "public.png", "jpg": "public.jpeg", "gif": "com.compuserve.gif",
                         "heic": "public.heic", "tiff": "public.tiff", "bmp": "com.microsoft.bmp",
                         "webp": "org.webmproject.webp", "icns": "com.apple.icns"]
-        for format in try SampleWorkspace.formats() where DocumentKind(url: samples.appendingPathComponent(format.path)) == .image {
+        for format in try SampleWorkspace.formats(language: .simplifiedChinese) where DocumentKind(url: samples.appendingPathComponent(format.path)) == .image {
             let url = samples.appendingPathComponent(format.path)
             let source = try #require(CGImageSourceCreateWithURL(url as CFURL, nil), "Cannot decode \(format.path)")
             #expect(CGImageSourceGetType(source) as String? == expected[url.pathExtension])
@@ -151,7 +156,7 @@ import Testing
 
     @Test func coverPaletteAndGuideLinksMatchTheBlueEdition() throws {
         defer { try? FileManager.default.removeItem(at: directory) }
-        let samples = try #require(Workspace().samplesURL)
+        let samples = try #require(chineseWorkspace().samplesURL)
         let bitmap = try #require(NSBitmapImageRep(data: Data(contentsOf: samples.appendingPathComponent("留白.png"))))
         var blue = 0, green = 0
         for y in stride(from: 0, to: bitmap.pixelsHigh, by: 8) {
@@ -166,14 +171,14 @@ import Testing
         let guide = try String(contentsOf: guideURL, encoding: .utf8)
         let expression = try NSRegularExpression(pattern: #"\]\(<?([^\n)>]+)>?\)"#)
         let matches = expression.matches(in: guide, range: NSRange(guide.startIndex..., in: guide))
-        #expect(matches.count >= (try SampleWorkspace.formats()).count)
+        #expect(matches.count >= (try SampleWorkspace.formats(language: .simplifiedChinese)).count)
         for match in matches {
             let range = try #require(Range(match.range(at: 1), in: guide))
             let reference = String(guide[range])
             let url = try #require(URL(string: reference, relativeTo: guideURL)?.absoluteURL)
             #expect(url.isFileURL && FileManager.default.fileExists(atPath: url.path), "Broken guide link: \(reference)")
         }
-        for format in try SampleWorkspace.formats() { #expect(guide.contains(format.name)) }
+        for format in try SampleWorkspace.formats(language: .simplifiedChinese) { #expect(guide.contains(format.name)) }
         #expect(!FileManager.default.fileExists(atPath: samples.appendingPathComponent("格式示例/阅读卡片.svg").path))
         #expect(!FileManager.default.fileExists(atPath: samples.appendingPathComponent("格式示例/设置调整.patch").path))
     }
@@ -182,7 +187,7 @@ import Testing
         let domain = "local.luma.edition.\(UUID())"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let source = try #require(workspace.samplesURL)
         let oldFolder = directory.appendingPathComponent("Samples-2026.11.1")
         let newFolder = directory.appendingPathComponent(SampleWorkspace.folderName)
@@ -206,7 +211,7 @@ import Testing
 
     @Test func newExamplesExerciseFiltersNumericSortAndValueInterpretation() throws {
         defer { try? FileManager.default.removeItem(at: directory) }
-        let source = try #require(Workspace().samplesURL)
+        let source = try #require(chineseWorkspace().samplesURL)
         let csvURL = source.appendingPathComponent("阅读清单.csv")
         let before = try Data(contentsOf: csvURL)
         let table = try CSVDocument(String(decoding: before, as: UTF8.self))

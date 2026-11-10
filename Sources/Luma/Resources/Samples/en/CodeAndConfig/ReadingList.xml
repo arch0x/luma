@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<reading-list title="My local reading space">
+  <document format="markdown" progress="0.5">DesignNotes.md</document>
+  <document format="pdf" progress="1">ReadingSpace.pdf</document>
+</reading-list>

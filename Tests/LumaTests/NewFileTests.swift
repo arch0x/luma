@@ -33,7 +33,7 @@ import ReaderCore
         _ = NSApplication.shared
         let folder = nested ? directory.appendingPathComponent("子目录") : directory
         if nested { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         workspace.loadDirectory(folder)
         try await waitForDirectory(folder, in: workspace)
@@ -55,7 +55,7 @@ import ReaderCore
         defer { clean() }
         let file = directory.appendingPathComponent("existing.md")
         try "original".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
         await tab.loadTask?.value
@@ -71,7 +71,7 @@ import ReaderCore
 
     @Test func concurrentCreatesRefreshAnAlreadyLoadingDirectoryAndSearch() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [directory]
         workspace.query = "new"
         workspace.loadDirectory(directory)

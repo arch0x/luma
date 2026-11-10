@@ -21,7 +21,7 @@ import Testing
         preferences.removePersistentDomain(forName: domain)
     }
     private func workspace() -> Workspace {
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.roots = [source, target]
         return workspace
     }
@@ -107,7 +107,7 @@ import Testing
         #expect(!workspace.canMove(item, into: child))
         #expect(!workspace.canMove(item, into: base))
         #expect(workspace.canMove(item, into: target))
-        let other = Workspace(preferences: preferences)
+        let other = chineseWorkspace(preferences: preferences)
         other.roots = [source, target]
         #expect(!other.canMove(item, into: target))
     }

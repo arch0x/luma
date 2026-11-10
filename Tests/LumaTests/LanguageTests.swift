@@ -12,7 +12,9 @@ import ReaderCore
         let previous = AppLocalization.shared.language
         defer { preferences.removePersistentDomain(forName: domain); AppLocalization.shared.language = previous }
         let workspace = Workspace(preferences: preferences)
-        #expect(workspace.language == .simplifiedChinese)
+        #expect(workspace.language == .english)
+        #expect(workspace.language.nativeName == "English")
+        #expect(AppLanguage.simplifiedChinese.nativeName == "简体中文")
         workspace.showNotice("正在移动“\("中文文件.txt")”…")
         workspace.language = .english
         #expect(workspace.notice == "Moving “中文文件.txt”…")
@@ -24,8 +26,9 @@ import ReaderCore
         #expect(preferences.stringArray(forKey: "AppleLanguages") == ["en"])
         workspace.language = .simplifiedChinese
         #expect(tr("保存") == "保存")
-        preferences.set("unknown", forKey: "appLanguage")
         #expect(Workspace(preferences: preferences).language == .simplifiedChinese)
+        preferences.set("unknown", forKey: "appLanguage")
+        #expect(Workspace(preferences: preferences).language == .english)
     }
 
     @Test func changingLanguageKeepsOpenDraftSelectionUndoAndFolderState() async throws {
@@ -141,7 +144,7 @@ import ReaderCore
         }
         let samples = try #require(workspace.samplesURL)
         workspace.addFolder(samples)
-        workspace.open([samples.appendingPathComponent("欢迎.md"), samples.appendingPathComponent("阅读清单.csv")])
+        workspace.open([samples.appendingPathComponent("Welcome.md"), samples.appendingPathComponent("ReadingList.csv")])
         for tab in workspace.tabs { await tab.loadTask?.value }
         let controller = NSHostingController(rootView: WorkspaceView(workspace: workspace).environment(\.colorScheme, dark ? .dark : .light))
         let readerWindow = NSWindow(contentViewController: controller)

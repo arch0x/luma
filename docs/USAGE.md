@@ -1,129 +1,117 @@
-# 使用指南
+# User Guide
 
-[返回项目首页](../README.md)
+[Project home](../README.md) · [简体中文](USAGE.zh-CN.md)
 
-首次打开可在欢迎页或「文件」菜单选择「打开示例工作区」。示例会复制到本机，可直接编辑；以后打开时只补入缺失文件，保留已有修改。
+Choose **Open Sample Workspace** on the welcome screen or File menu. Luma creates an editable local copy for your current interface language. Subsequent openings add missing files and preserve your changes.
 
-## 工作区与文件管理
+## Workspace and file management
 
-- 添加多个文件夹，按需展开目录，拖拽文件或文件夹打开。目录默认显示隐藏文件与隐藏文件夹（如 `.env`、`.gitignore`、`.git`），文件名搜索也包含隐藏项目。
-- 右键任意工作区文件夹选择「新增文件…」，输入文件名（如 `笔记.md`）创建空文件；创建后自动展开 / 刷新目录并打开源码编辑。支持取消、文件名校验和创建失败提示，同名文件 / 文件夹不会被覆盖。
-- 右键文件夹可「新增文件夹…」，输入名称创建空文件夹并自动刷新；右键文件或文件夹可「移到废纸篓…」，确认后执行，文件夹包含全部内容。涉及打开的未保存文档时先询问保存 / 不保存 / 取消；失败保留标签与草稿，不做永久删除回退。
-- 右键文件或文件夹可「重命名…」，修改名称后立即刷新目录，并同步更新已打开标签及保存路径；文件夹中的打开文档、展开状态、书签与阅读位置一并迁移，未保存草稿及撤销记录保留。同名目标不会被覆盖。
-- 左侧目录通过拖放支持移动单个文件或文件夹到其他工作区文件夹，悬停目标时显示蓝色高亮和移动光标。成功后刷新来源与目标目录、展开目标，并同步已打开标签、保存路径、书签与阅读位置；草稿与撤销记录保留。拒绝同名覆盖、移入自身 / 子目录及拖回原目录。
-- 启动时读取工作区目录；从任何其他 App 切回 Luma 时自动刷新目录，两次自动刷新至少间隔 30 秒。刷新根目录、已展开 / 已缓存的子目录及文件名搜索，自动刷新不会重载正在编辑的内容。
-- 工具栏「刷新目录与当前文件」和 `⌘R` 立即刷新目录树与当前文件，不受自动刷新的 30 秒间隔限制；没有打开文件时也可以刷新目录，未保存文档沿用保存 / 不保存 / 取消的处理。
-- 顶部标签栏支持横向滚动，工具栏提供刷新、预览 / 源码切换、查找与保存。正文左侧导航轨可查看文件信息和保存状态，或在 Finder 中定位文件。左上角系统侧栏按钮可显示或隐藏资料库，资料库标题旁可以打开文件或文件夹。支持 Finder 的“打开方式”和命令行文件参数。
-- 点击「预览 / 源码」切换阅读与编辑。右键文件标签可关闭当前、其他、左侧、右侧或所有标签，并可在 Finder 中显示文件。批量关闭以右键标签为基准；取消、保存失败或确认期间又产生新编辑时，会保留整组标签与草稿。
-- 资料库支持文件名搜索和最近文件夹，重启后恢复已添加的项目及其目录展开 / 收起状态；不会自动展开全部项目。首次使用支持此功能的版本时，若没有旧记录，项目默认收起，手动调整一次后会记住。
+- Add multiple folders or drag files and folders into the window. Hidden entries such as `.env`, `.gitignore` and `.git` are visible and included in filename searches.
+- Right-click a workspace folder to create a file or folder. New files open in Source. Names are validated and existing entries are never overwritten.
+- Right-click files or folders to rename or Move to Trash. Folder operations include their contents. Unsaved documents prompt for Save / Don't Save / Cancel first. Failed operations preserve tabs and drafts; Trash failures do not fall back to permanent deletion.
+- Drag one file or folder onto another workspace folder to move it. The destination highlights blue. Same-name overwrites, moves into a folder's own descendants and moves to the current parent are rejected.
+- Renaming and moving update open tabs, save paths, folder expansion, bookmarks and reading records. Drafts and undo history remain intact.
+- Directories load at startup. Activating Luma from another app refreshes roots, expanded / cached directories and filename search, at most once per 30 seconds. It does not reload your editing buffer.
+- `⌘R` immediately refreshes directories and the current file, even with no file open. Unsaved files use the normal save / discard / cancel flow.
+- The top tab strip scrolls horizontally. The toolbar provides refresh, Preview / Source, Find and Save. File information, save status and Reveal in Finder are available beside the reading area. The system sidebar button shows or hides the library.
+- Open files through Finder's Open With or command-line arguments. Right-click tabs to close the current, other, left, right or all tabs, or reveal a file in Finder. Batch closing is relative to the clicked tab; cancellation, save failure or fresh edits preserve the whole group.
+- Filename search and recent folders are available in the library. Projects, expanded subfolders, tab order and selection restore on restart. Projects without a saved expansion record start collapsed.
 
-## Markdown 阅读
+## Markdown reading
 
-- Markdown 排版：标题、段落、列表、引用、分隔线、行内强调与链接；GFM 表格支持列对齐、行内格式和横向滚动。
-- Markdown 目录：H1–H6 层级大纲、章节折叠 / 全部展开、点击标题跳转、正文滚动时标出当前章节；支持文内锚点链接和标题旁的定位链接。
-- Markdown 正文搜索：正文获得焦点时，`⌘F` 保持预览模式，匹配高亮 / 当前项强调、结果计数、上一个 / 下一个循环跳转。支持跨行内格式的短语、中文 / emoji、可见代码、公式文字和图表标签，默认不区分大小写。
-- Markdown 正文默认居中，最大宽度 840pt，随窄窗口收缩。设置（`⌘,`）可开启铺满，或选择 640–1600pt 的最大宽度。应用会记住你选过的设置，并即时重新排版。
-- Markdown 字体排版：设置（`⌘,`）可选择系统字体、宋体或等宽字体，调整 12–28pt 字号与 1.30–2.40 倍行距；默认系统字体、15pt、1.85 倍。修改即时生效并跨重启保留，标题 / 表格 / 代码字号随正文缩放，代码与公式保留各自字体。
-- Markdown 阅读书签：阅读区「书签 → 添加当前位置」或 `⌘D`，支持点击返回、移除和同位置去重；书签按文档持久保存。
-- 阅读位置记忆：关闭重开 Markdown 或重启应用后恢复阅读位置，应用启动时还会恢复上次打开的文件标签和选中项。
-- 离线 Mermaid 图表：流程图、时序图等；错误图表显示说明并保留源码，支持查看 / 复制图表源码。
-- Markdown 围栏代码块语法高亮：Swift、Rust、TypeScript、JavaScript、Python、JSON 等常见语言，支持复制。无语言标签或不支持的语言保留纯文本。
-- Markdown 本地图片：支持相对路径、工作区内的绝对路径、中文、空格及 URL 编码路径；常见位图和自包含 SVG 自动适合阅读宽度，加载失败显示路径提示。
-- 离线 LaTeX 数学公式：KaTeX 支持 `$…$` / `\(…\)` 行内公式和 `$$…$$` / `\[…\]` 独立公式，字体随应用打包；不解析代码中的公式，错误公式保留源码。
+- Preview headings, paragraphs, lists, quotes, separators, inline formatting, links and aligned GFM tables. Wide tables scroll horizontally.
+- The heading rail follows H1–H6 sections. Hover for a heading and excerpt, click to jump, or right-click to open a hierarchical outline with folding. Heading links and in-document anchors are supported.
+- `⌘F` with preview focused keeps you in Preview. Search highlights visible text, counts results and cycles through them. It supports phrases across inline formatting, Unicode and emoji, visible code, math text and diagram labels. Matching ignores case.
+- Text is centered with a default maximum width of 840 pt and shrinks with the window. Settings (`⌘,`) can fill the reading area or set a 640–1600 pt maximum width.
+- Choose system, serif or monospaced text, 12–28 pt size and 1.30–2.40 line spacing. Defaults are system, 15 pt and 1.85. Changes apply immediately and survive restart. Headings, tables and code scale with the text; code and math retain their own fonts.
+- Use Bookmarks → Add Current Position or `⌘D` to bookmark a position. Navigate, remove or deduplicate bookmarks per document. Reading position restores after reopening or restarting.
+- Mermaid flowcharts, sequence diagrams and other diagrams render offline. Errors retain the source, with controls to view and copy it.
+- Fenced code supports common languages, including Swift, Rust, TypeScript, JavaScript, Python and JSON, with Copy Code. Unknown or unlabelled code stays plain text.
+- Local images support relative paths, absolute paths within the workspace scope, Unicode, spaces and URL encoding. Bitmap images and self-contained SVG fit the reading width; failed loads show a path hint.
+- Bundled KaTeX supports `$…$` and `\(…\)` inline math, and `$$…$$` and `\[…\]` display math. Code is excluded and invalid math retains its source.
 
-## 代码与其他格式
+## Code and other formats
 
-- Swift、Python、JavaScript / TypeScript、Rust、Go、C / C++ 等常见代码文件默认高亮预览，显示语言名称并适配深浅色；切换「源码」可编辑，返回预览显示未保存的草稿。预览内的代码按原文显示，不解析 HTML 或 Markdown。
-- PDFKit 原生 PDF 阅读与查找；图片适合窗口和缩放。
-- 独立 SVG 默认显示矢量预览，支持缩放、适合窗口、透明背景棋盘格及深浅外观；可切换到源码编辑，预览跟随未保存草稿，格式错误时保留源码。
-- 未知扩展名会检查文件类型和内容，可读取的 UTF-8 文本自动按纯文本打开，支持查找、编辑和保存到原文件，保留扩展名、BOM 与换行风格；压缩包、Office 文件、字体、数据库等二进制格式不按文本打开。非 UTF-8 或超过上限时说明原因，并提供默认应用入口。
-- JSONC 支持带注释、尾逗号的格式化预览，保留注释、键顺序、数字字面量和转义；JSONL / NDJSON 按记录分别格式化并标出原始行号，错误行显示说明与原文，其余记录仍可阅读。空行忽略，超过 10,000 条记录或格式化总量超过约 200 万字符时按完整原文预览。预览不会改写源码，切换源码可编辑并保存原格式。
-- Vue / Svelte 组件源码支持模板、JavaScript / TypeScript、CSS / Less / SCSS 分区高亮，以及模板表达式和 Svelte 控制块；Less、Diff / Patch 使用对应语法高亮。组件和补丁作为源码阅读，不执行组件或应用补丁。
-- JSON / GeoJSON 以格式化代码预览，使用两空格缩进、行号和按类型区分的颜色，长文字随窗口宽度自动换行，续行保持逻辑行号对齐，适配深浅色；保留键顺序、数字字面量与字符串转义，不修改源码或文件。CSV / TSV 表格支持引号、转义、CRLF 和多行单元格。
+Code opens in a highlighted preview with a language label and light / dark appearance. Source mode edits the original text; returning to Preview displays the unsaved draft. HTML and Markdown embedded in code remain text.
 
-## 表格筛读
+PDF uses PDFKit for native reading and Find. Images support Fit to Window, zoom and Original Size; GIF shows its first frame. SVG adds a transparency checkerboard, Natural Text Size and source editing. An invalid SVG keeps its source available.
 
-CSV / TSV 第一行为表头，其余为数据记录。点击表头或工具区的「列操作」，可对该列进行升序 / 降序排序、按包含文字过滤，或勾选需要显示的值；不同列的条件取交集。面板显示值的条数、空值数量与可解析的数值范围，列值过多时可搜索。
+Unknown extensions undergo type and content checks. Readable UTF-8 opens as plain text and preserves the name, extension, BOM and line-ending style when saved. Archives, Office files, fonts, databases and other binary formats are excluded. Unsupported encoding or size displays an explanation and an Open in Default App action.
 
-顶部显示「可见条数 / 全部条数」与活动条件。筛选和排序只影响当前视图，不修改文件。行号对应每条记录在源码中的起始行，多行单元格仍保留正确位置。点击条件可单独清除，也可重置全部筛选与排序。
+JSON and GeoJSON use a formatted code preview with two-space indentation, line numbers, typed colors and soft wrapping. Key order, numeric literals and escapes remain unchanged. JSONC retains comments and trailing commas. JSONL / NDJSON display each record with its source line number; invalid records show their source without hiding valid ones. Blank lines are ignored. Above 10,000 records or about two million formatted characters, the preview falls back to the complete source.
 
-拖动表头分隔线调整列宽；「适合窗口」会随阅读区域宽度分配列宽，列很多时仍可横向滚动。双击单元格可查看和复制全文。
+Vue / Svelte highlight template, script and style sections, including embedded JavaScript, TypeScript, CSS, Less, SCSS and template expressions. Less and Diff / Patch have their own highlighting. Components, scripts and patches are displayed as files rather than executed.
 
-## 内容尺寸与展开阅读
+## Read tables
 
-- 源码随窗口宽度软换行；代码块保留长行并支持横向滚动。
-- Markdown 表格可点「展开表格」，双击单元格或聚焦后按 Return 可查看完整内容。
-- Mermaid 图表可点「展开图表」，在独立阅读区域中缩放、适合窗口，或按文字的自然尺寸阅读。按 Esc 或点击关闭回到正文，原阅读位置保留。
-- 独立 SVG 提供「按文字大小」，位图提供「原始大小」；两者均可返回「适合窗口」。
+CSV / TSV use the first row as headers. Click a header or **Column Actions** to sort, filter by contained text or select values. Filters across columns intersect. Panels show value counts, empty values and parseable numeric ranges; long value lists are searchable.
 
-## 源码值解释
+The toolbar shows visible / total records and active conditions. Sorting and filtering only change the view. Row numbers retain each record's starting source line, including multiline cells. Clear one condition or Reset all filters and sorting.
 
-切换到源码，选中一个颜色、时间戳、字节大小或转义字符串，点击工具区「解释所选值」。普通纯文本文件也可使用。一次只处理一个较短的选区。
+Drag header separators to resize columns. Fit to Window distributes widths across the reading area; many columns still scroll horizontally. Double-click a cell to read or copy all its text.
 
-解释方式可以手动更正：颜色支持 `#RGB`、`#RGBA`、`#RRGGBB` 和 `#RRGGBBAA`，并可用系统颜色面板调整；时间戳可选择秒 / 毫秒和 UTC / 本机时区；字节大小明确区分 KB / MB 与 KiB / MiB；字符串展示 JSON 转义解码后的内容，支持编辑。
+## Content size and expanded reading
 
-点击「替换选中内容」才会更新草稿，保留原有引号形式并支持撤销；手动保存或自动保存沿用当前设置。若源码在面板打开后已变化，会拒绝替换并要求重新选择，避免写错位置。解释工具不会扫描整个文件或联网发送选区。
+The source editor soft-wraps without inserting newlines. Code previews retain long lines with horizontal scrolling.
 
-## 编辑、保存与恢复
+Markdown tables offer Expand Table; double-click a cell or focus it and press Return for its full text. Mermaid offers Expand Diagram, zoom, Fit to Window and Natural Text Size. Esc or Close returns to the original reading position. Standalone SVG and bitmap images provide natural / original sizing and Fit to Window.
 
-- Markdown、JSON、CSV / TSV 的源码，以及 UTF-8 文本和代码均可编辑；编辑区随窗口宽度自动换行，软换行不修改文件内容。支持系统撤销 / 重做、剪切复制粘贴与源码查找；切换预览或标签保留草稿、选择位置与撤销历史。
-- 「设置 → 编辑模式 → 自动保存」可开启或关闭自动保存，默认关闭并记住选择。开启后停止输入约 1 秒保存所有已打开文本文件的修改；关闭会取消待执行的自动保存。外部冲突或写入失败时暂停该文件的自动保存并保留草稿，按 `⌘S` 手动处理后继续。自动保存保留撤销 / 重做，不会写入尚未提交的中文输入。
-- `⌘S` 手动保存到原文件。窗口标签和文档标题会标记未保存。关闭文档、关闭窗口、重新载入或退出应用前询问保存 / 不保存 / 取消，保存失败保留编辑。
-- Markdown 预览跟随当前草稿，SVG / JSON / CSV 异步重新解析；无效格式显示解析错误，允许继续编辑和保存源码。
-- 回到应用或切换标签时检查外部修改；保存前再次比较磁盘内容。文件变化或删除时可取消、重新载入或明确覆盖，避免无提示地覆盖外部修改。
-- 普通文本滚动、PDF 页码及图片缩放在当前会话保留；Markdown 的预览阅读位置和书签跨重启保留。
+## Inspect a source value
 
-## 界面语言
+In Source, select one color, timestamp, byte size or escaped string, then choose **Inspect Selected Value**. Plain text also supports it. The tool processes one short selection at a time.
 
-「设置 → 外观 → 语言 / Language」提供「简体中文」和「English」。切换后直接更新应用自有菜单、设置、工具栏、提示，以及 Markdown / JSON / 图表预览中的控件，并记住选择。初始默认中文。
+You can change the interpretation. Colors support `#RGB`, `#RGBA`, `#RRGGBB` and `#RRGGBBAA`, with a system color panel. Timestamps support seconds / milliseconds and UTC / local time. Byte sizes distinguish KB / MB from KiB / MiB. Strings show decoded JSON escapes and can be edited.
 
-文件名、文档正文、工作区目录、未保存草稿和源码选区保持不变；切换语言不会创建新标签，也不会清空撤销记录。系统原生面板由 macOS 管理，部分文字可能在重启应用后更新。
+Only **Replace Selection** updates the draft. It preserves quoting and supports undo; saving follows the current Auto Save setting. If the source or selection has changed since opening the panel, replacement is refused so you can select again. Inspection stays local and does not scan the whole file.
 
-## 外观与排版
+## Edit, save and recover
 
-- 在「设置 → 编辑模式」中调整 10–28 pt 的编辑字号，默认 13 pt；即时应用到已打开的源码编辑区，新标签与重启后沿用选择。保留草稿、选区和撤销记录，预览字号独立设置。
-- 在「设置 → 外观」中选择「跟随系统 / 浅色 / 深色」；立即应用到窗口、源码编辑与 Markdown 预览，选择自动保存并在重启后恢复。
+- Text source supports editing, system undo / redo, cut / copy / paste and Find. Preview and tab switches keep drafts, selection and undo history.
+- Auto Save under Settings → Editing is off by default. When enabled, it saves modified open text files about one second after typing stops; disabling it cancels pending saves. It preserves undo and does not write uncommitted input-method text.
+- External conflicts and write failures pause Auto Save for that file and preserve the draft. Use `⌘S` to resolve the problem and resume.
+- `⌘S` saves to the original file. Tabs and document titles indicate unsaved changes. Closing a file or window, reloading or quitting prompts for Save / Don't Save / Cancel. Save failures retain edits.
+- Markdown previews follow the draft. SVG, JSON and CSV reparse asynchronously; invalid formats show errors while source remains editable and saveable.
+- Activating Luma or switching tabs checks external changes; saving compares disk contents again. External changes or deletion require cancel, reload or explicit overwrite.
+- Unsaved drafts live in memory; crash recovery is not available. Source scroll positions, PDF pages and image zoom are session-only. Markdown preview positions and bookmarks survive restart.
 
-## 快捷键
+## Language and appearance
 
-| 操作 | 快捷键 |
+English is the default. **Settings → Appearance → Language** switches between English and 简体中文 and saves your choice. App menus, toolbars, settings, notices and preview controls update immediately. Existing language choices are retained.
+
+Switching does not rewrite filenames or documents, reset drafts, selections or undo, or create replacement tabs. Some macOS panels may update after restarting. Open Sample Workspace chooses the current language's independent sample collection.
+
+Appearance offers System / Light / Dark and applies immediately to windows, source editors and previews. Editing font size is separate from preview typography: 10–28 pt, default 13 pt, saved across restarts.
+
+## Shortcuts
+
+| Action | Shortcut |
 | --- | --- |
-| 打开文件 / 文件夹 | `⌘O` / `⇧⌘O` |
-| 保存原文件 | `⌘S` |
-| 撤销 / 重做 | `⌘Z` / `⇧⌘Z` |
-| 查找 | `⌘F`，范围取决于当前焦点 |
-| Markdown 下一个 / 上一个匹配 | `⌘G` / `⇧⌘G`，查找框内也可用 Return / Shift-Return |
-| 关闭 Markdown 查找栏 | Esc |
-| 添加 Markdown 阅读书签 | `⌘D` |
-| 关闭标签 | `⌘W` |
-| 下一个 / 上一个标签 | `⌃Tab` / `⇧⌃Tab` |
-| 刷新目录与当前文件 | `⌘R` |
-| 设置 | `⌘,` |
+| Open files / add folder | `⌘O` / `⇧⌘O` |
+| Save original file | `⌘S` |
+| Undo / redo | `⌘Z` / `⇧⌘Z` |
+| Find in focused reader | `⌘F` |
+| Next / previous Markdown match | `⌘G` / `⇧⌘G`; Return / Shift-Return in Find |
+| Close Markdown Find | Esc |
+| Bookmark Markdown position | `⌘D` |
+| Close tab | `⌘W` |
+| Next / previous tab | `⌃Tab` / `⇧⌃Tab` |
+| Refresh directories and current file | `⌘R` |
+| Settings | `⌘,` |
 
-## 示例与阅读行为
+## Samples and reading behavior
 
-示例安装在 `~/Library/Application Support/Luma/Samples-2026.11.2`，欢迎页和 `格式示例/格式导览.md` 提供入口。示例按格式和语言分类，后续打开只补入缺失文件，保留你已有的编辑。升级时会创建新版目录，旧版 `Samples-2026.11.1`、`Samples-2026.11` 与其中的修改会保留。
+Samples install into `~/Library/Application Support/Luma/Samples-2026.11.3-en` or `Samples-2026.11.3-zh-Hans`. Both have 67 representative formats and 93 recognized extensions. Reopening adds missing files; it never overwrites edits. Older editions remain untouched.
 
-`Markdown增强预览.md` 包含对齐表格、流程图、时序图、五种语言的代码块及故意写错的图表。欢迎文档内有入口。
+English entry points are `Welcome.md`, `MarkdownPreview.md`, `ImagesAndMath.md`, `LongDocuments.md`, `FindInDocument.md`, `SourceEditing.md` and `FormatExamples/FormatGuide.md`. Chinese has equivalent translated files. Samples deliberately include an invalid diagram, missing image and unsupported equation to demonstrate error fallback.
 
-`图片与公式.md` 展示本地 PNG / SVG、中文和空格路径、四种公式分隔符、矩阵 / 分式、表格内公式，以及缺失图片和错误公式的回退。欢迎文档也有入口。
+Find updates after a short pause (about 150 ms), retains the phrase across Preview / Source switches and keeps the current match through appearance changes. It searches visible text literally, without OCR or joining phrases across paragraphs or table cells. Search rendered equations by their visible text; search LaTeX commands in Source. Up to 5,000 matches can be highlighted and navigated; `+` marks additional results, and overly long queries ask to be shortened. Highlights do not change selection or copied text.
 
-`长文档导航.md` 展示层级目录、跨级和重复标题、文内跳转，以及图片 / 公式 / 图表排版后的章节定位。正文左侧导航轨提示当前章节；悬停可查看章节标题和摘要，点击跳转，右键可打开层级列表。导航卡片也提供书签管理入口。
+Typography changes preserve Find and try to retain your paragraph. Reopening prefers the saved paragraph, then the section, then overall progress if content has disappeared. Renaming or moving through Luma migrates reading records; external moves are not automatically associated. Up to 500 bookmarks per Markdown document are stored locally, outside the source file.
 
-`正文搜索.md` 展示正文、链接、跨粗体短语、表格、代码、公式和图表的查找。输入短暂停顿后更新结果（约 150ms），黄色表示匹配，橙色表示当前项；结果前后循环，清空或关闭查找会清除高亮。重新按 `⌘F` 会聚焦已有查找栏，保留关键词。手动切换预览 / 源码时保留关键词，查找范围随模式切换。
+## Special filenames
 
-正文搜索基于可见文字，默认不区分大小写，不将搜索词解释为正则表达式。不做图片文字识别，也不跨段落或表格单元格拼接短语。公式按渲染出的文字检索，LaTeX 命令应在源码模式查找。最多显示并导航前 5,000 处结果，超限时计数带 `+`；过长搜索词会提示缩短。高亮不改变文本选择和复制内容。
+Dockerfile supports `Dockerfile`, `Dockerfile.*` and `*.dockerfile` case-insensitively. Makefile supports `Makefile`, `GNUmakefile`, `Makefile.*` and `*.mk`. `.dockerignore` and `*.dockerignore` highlight comments, wildcards and negations. Source editing preserves tabs and rule text.
 
-修改 Markdown 字体、字号、行距和宽度时，会保留搜索与阅读内容。重开文档时优先恢复原段落；段落已消失时回退到章节或整体进度。通过 Luma 重命名或移动文件时会迁移阅读记录；在外部移动的文件暂不自动关联旧记录。
+`.gitignore` and `*.gitignore` highlight comments, wildcards, negation and escapes. `.env`, `.env.local`, `.env.production`, `.env.example` and `*.env` support keys, values, quotes, multiline values, comments and variable references. Each language's CodeAndConfig / 代码与配置 folder has one example of each.
 
-每份 Markdown 文档最多保留 500 个书签，阅读记录保存在本机，不写入原文档。启动时恢复标签顺序与选中项，跳过已不存在的文件。源码滚动位置、PDF 页码和图片缩放只在当前会话保留。
-
-## 特殊文件名
-
-Dockerfile 支持 `Dockerfile`、`Dockerfile.*` 和 `*.dockerfile` 文件名（不区分大小写），默认离线语法高亮预览，可切换源码编辑并按原名保存；示例在「代码与配置 / Dockerfile」。
-
-Makefile 支持 `Makefile`、`GNUmakefile`、`Makefile.*` 与 `*.mk` 的离线高亮；`.dockerignore` 及 `*.dockerignore` 支持注释、通配符与否定规则高亮。两者都可切换源码编辑，保留制表符与规则原文；「代码与配置」各有一份示例。
-
-`.gitignore` 与 `*.gitignore` 支持注释、通配符、否定及转义规则高亮；`.env`、`.env.local`、`.env.production`、`.env.example` 与 `*.env` 支持键值、引号、多行值、注释与变量引用高亮。预览保留原文，两类示例各保留一份。
-
-完整的格式与大小限制见[开发说明](DEVELOPMENT.md#读取与渲染限制)。
+See the [Development Guide](DEVELOPMENT.md#reading-and-rendering-limits) for format and size limits.

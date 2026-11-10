@@ -237,7 +237,7 @@ struct NativeTableReader: NSViewRepresentable {
     let state: TableReadingState
     let revision: Int
     let widthMode: TableReadingState.WidthMode
-    var language: AppLanguage = .simplifiedChinese
+    var language: AppLanguage = .english
     func makeCoordinator() -> Coordinator { Coordinator(state: state) }
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = TableReadingScrollView()

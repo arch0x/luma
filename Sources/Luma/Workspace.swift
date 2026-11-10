@@ -385,7 +385,11 @@ struct ReadFileResult: Sendable {
     @ObservationIgnored var moveItem: @MainActor (URL, URL) async throws -> URL
 
     var activeTab: DocumentTab? { tabs.first { $0.id == activeID } }
-    var samplesURL: URL? { Bundle.module.url(forResource: "Samples", withExtension: nil) }
+    var samplesURL: URL? { samplesURL(for: language) }
+
+    func samplesURL(for language: AppLanguage) -> URL? {
+        Bundle.module.url(forResource: "Samples", withExtension: nil)?.appendingPathComponent(language.rawValue, isDirectory: true)
+    }
 
     var canFind: Bool { activeTab.map { $0.kind.hasSource || $0.kind == .pdf } ?? false }
     var canFindNext: Bool {
@@ -454,7 +458,7 @@ struct ReadFileResult: Sendable {
         moveItem = { url, folder in try await service.moveItem(at: url, into: folder) }
         self.preferences = preferences
         self.autoSaveDelay = autoSaveDelay
-        language = AppLanguage(rawValue: preferences.string(forKey: "appLanguage") ?? "") ?? .simplifiedChinese
+        language = AppLanguage(rawValue: preferences.string(forKey: "appLanguage") ?? "") ?? .english
         autoSaveEnabled = preferences.object(forKey: "autoSaveEnabled") as? Bool ?? false
         readingHistory = MarkdownReadingHistory(preferences: preferences)
         appearance = AppAppearance(rawValue: preferences.string(forKey: "appearance") ?? "") ?? .system
@@ -1126,12 +1130,13 @@ struct ReadFileResult: Sendable {
             let support = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             let parent = support.appendingPathComponent("Luma", isDirectory: true)
             try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-            let editable = parent.appendingPathComponent(SampleWorkspace.folderName, isDirectory: true)
-            try installAndOpenSamples(from: folder, at: editable)
+            let editable = parent.appendingPathComponent(SampleWorkspace.folderName(for: language), isDirectory: true)
+            try installAndOpenSamples(from: folder, at: editable, language: language)
         } catch { showNotice("无法创建可编辑的示例工作区：\(error.localizedDescription)") }
     }
 
-    func installAndOpenSamples(from source: URL, at editable: URL) throws {
+    func installAndOpenSamples(from source: URL, at editable: URL, language: AppLanguage? = nil) throws {
+        let language = language ?? self.language
         try SampleWorkspace.install(from: source, to: editable)
         let normalized = editable.resolvingSymlinksInPath().standardizedFileURL
         let path = WorkspacePath.normalized(normalized)
@@ -1143,7 +1148,7 @@ struct ReadFileResult: Sendable {
             }
             if !query.isEmpty { search() }
         } else { addFolder(normalized) }
-        open([normalized.appendingPathComponent("欢迎.md")])
+        open([normalized.appendingPathComponent(SampleWorkspace.welcomeFilename(for: language))])
     }
 }
 

@@ -1,0 +1,15 @@
+My local reading space
+================
+
+This UTF-8 text file uses the custom extension .luma-note.
+Luma detects the content as plain text and preserves the filename when saving.
+
+Read today:
+  - Design notes
+  - Lab notes
+  - A new code snippet
+
+ReadingNotes：
+  Write your thoughts here, then press Command-S to save.
+
+Try Command-F to find "local", or Command-Z to undo your last edit.

@@ -22,7 +22,7 @@ import Testing
             try? FileManager.default.removeItem(at: file)
         }
         try "original".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
         await tab.loadTask?.value

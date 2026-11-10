@@ -95,7 +95,7 @@ import Testing
         let domain = "local.luma.svg-sample.\(UUID())"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let file = try #require(workspace.samplesURL).appendingPathComponent(path)
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
@@ -147,7 +147,7 @@ import Testing
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { try? FileManager.default.removeItem(at: file); preferences.removePersistentDomain(forName: domain) }
         try Data(source.utf8).write(to: file)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
         await tab.loadTask?.value

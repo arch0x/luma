@@ -7,7 +7,7 @@ typealias AppLanguage = InterfaceLanguage
 
 @Observable final class AppLocalization {
     static let shared = AppLocalization()
-    var language = AppLanguage.simplifiedChinese {
+    var language = AppLanguage.english {
         didSet {
             ReaderLocalization.language = language
             updateNativeMenus()

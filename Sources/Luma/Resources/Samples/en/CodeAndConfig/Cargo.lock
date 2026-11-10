@@ -1,0 +1,6 @@
+# Example dependency lock file.
+version = 4
+
+[[package]]
+name = "reading-notes"
+version = "1.0.0"

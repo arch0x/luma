@@ -1,0 +1,1032 @@
+[
+  {
+    "extensions": [
+      "md",
+      "markdown",
+      "mdown"
+    ],
+    "en": {
+      "name": "Markdown",
+      "path": "Welcome.md",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "Markdown",
+      "path": "欢迎.md",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "pdf"
+    ],
+    "en": {
+      "name": "PDF",
+      "path": "ReadingSpace.pdf",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "PDF",
+      "path": "阅读空间.pdf",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "svg"
+    ],
+    "en": {
+      "name": "SVG",
+      "path": "ImageAssets/Reading Flow.svg",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "SVG",
+      "path": "图片资源/阅读 流程.svg",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "json"
+    ],
+    "en": {
+      "name": "JSON",
+      "path": "Project.json",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "JSON",
+      "path": "项目.json",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "geojson"
+    ],
+    "en": {
+      "name": "GeoJSON",
+      "path": "FormatExamples/ReadingLocation.geojson",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "GeoJSON",
+      "path": "格式示例/阅读位置.geojson",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "jsonc"
+    ],
+    "en": {
+      "name": "JSONC",
+      "path": "FormatExamples/ReadingSettings.jsonc",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "JSONC",
+      "path": "格式示例/阅读设置.jsonc",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "jsonl"
+    ],
+    "en": {
+      "name": "JSONL",
+      "path": "FormatExamples/ReadingLog.jsonl",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "JSONL",
+      "path": "格式示例/阅读记录.jsonl",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "ndjson"
+    ],
+    "en": {
+      "name": "NDJSON",
+      "path": "FormatExamples/FileEvents.ndjson",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "NDJSON",
+      "path": "格式示例/文件事件.ndjson",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "csv"
+    ],
+    "en": {
+      "name": "CSV",
+      "path": "ReadingList.csv",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "CSV",
+      "path": "阅读清单.csv",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "tsv"
+    ],
+    "en": {
+      "name": "TSV",
+      "path": "FormatExamples/ReadingProgress.tsv",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "TSV",
+      "path": "格式示例/阅读进度.tsv",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "rst"
+    ],
+    "en": {
+      "name": "reStructuredText",
+      "path": "CodeAndConfig/ReadingGuide.rst",
+      "section": "Documents and Data"
+    },
+    "zh-Hans": {
+      "name": "reStructuredText",
+      "path": "代码与配置/阅读说明.rst",
+      "section": "文档与数据"
+    }
+  },
+  {
+    "extensions": [
+      "png"
+    ],
+    "en": {
+      "name": "PNG",
+      "path": "ReadingCover.png",
+      "section": "Images"
+    },
+    "zh-Hans": {
+      "name": "PNG",
+      "path": "留白.png",
+      "section": "图片"
+    }
+  },
+  {
+    "extensions": [
+      "jpg",
+      "jpeg"
+    ],
+    "en": {
+      "name": "JPEG",
+      "path": "ImageFormats/ReadingCover.jpg",
+      "section": "Images"
+    },
+    "zh-Hans": {
+      "name": "JPEG",
+      "path": "图片格式/阅读封面.jpg",
+      "section": "图片"
+    }
+  },
+  {
+    "extensions": [
+      "gif"
+    ],
+    "en": {
+      "name": "GIF",
+      "path": "ImageFormats/ReadingCover.gif",
+      "section": "Images"
+    },
+    "zh-Hans": {
+      "name": "GIF",
+      "path": "图片格式/阅读封面.gif",
+      "section": "图片"
+    }
+  },
+  {
+    "extensions": [
+      "heic",
+      "heif"
+    ],
+    "en": {
+      "name": "HEIC / HEIF",
+      "path": "ImageFormats/ReadingCover.heic",
+      "section": "Images"
+    },
+    "zh-Hans": {
+      "name": "HEIC / HEIF",
+      "path": "图片格式/阅读封面.heic",
+      "section": "图片"
+    }
+  },
+  {
+    "extensions": [
+      "tiff",
+      "tif"
+    ],
+    "en": {
+      "name": "TIFF",
+      "path": "ImageFormats/ReadingCover.tiff",
+      "section": "Images"
+    },
+    "zh-Hans": {
+      "name": "TIFF",
+      "path": "图片格式/阅读封面.tiff",
+      "section": "图片"
+    }
+  },
+  {
+    "extensions": [
+      "bmp"
+    ],
+    "en": {
+      "name": "BMP",
+      "path": "ImageFormats/ReadingCover.bmp",
+      "section": "Images"
+    },
+    "zh-Hans": {
+      "name": "BMP",
+      "path": "图片格式/阅读封面.bmp",
+      "section": "图片"
+    }
+  },
+  {
+    "extensions": [
+      "webp"
+    ],
+    "en": {
+      "name": "WebP",
+      "path": "ImageFormats/ReadingCover.webp",
+      "section": "Images"
+    },
+    "zh-Hans": {
+      "name": "WebP",
+      "path": "图片格式/阅读封面.webp",
+      "section": "图片"
+    }
+  },
+  {
+    "extensions": [
+      "icns"
+    ],
+    "en": {
+      "name": "ICNS",
+      "path": "ImageFormats/AppIcon.icns",
+      "section": "Images"
+    },
+    "zh-Hans": {
+      "name": "ICNS",
+      "path": "图片格式/澄览图标.icns",
+      "section": "图片"
+    }
+  },
+  {
+    "extensions": [
+      "dockerfile"
+    ],
+    "en": {
+      "name": "Dockerfile",
+      "path": "CodeAndConfig/Dockerfile",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Dockerfile",
+      "path": "代码与配置/Dockerfile",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "dockerignore"
+    ],
+    "en": {
+      "name": ".dockerignore",
+      "path": "CodeAndConfig/.dockerignore",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": ".dockerignore",
+      "path": "代码与配置/.dockerignore",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "swift"
+    ],
+    "en": {
+      "name": "Swift",
+      "path": "Sample.swift",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Swift",
+      "path": "示例代码.swift",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "py"
+    ],
+    "en": {
+      "name": "Python",
+      "path": "CodeAndConfig/ReadingList.py",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Python",
+      "path": "代码与配置/阅读清单.py",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "js",
+      "mjs",
+      "cjs"
+    ],
+    "en": {
+      "name": "JavaScript",
+      "path": "CodeAndConfig/ReadingList.js",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "JavaScript",
+      "path": "代码与配置/阅读清单.js",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "jsx"
+    ],
+    "en": {
+      "name": "JSX",
+      "path": "CodeAndConfig/ReadingCard.jsx",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "JSX",
+      "path": "代码与配置/阅读卡片.jsx",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "ts",
+      "mts",
+      "cts"
+    ],
+    "en": {
+      "name": "TypeScript",
+      "path": "CodeAndConfig/ReadingList.ts",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "TypeScript",
+      "path": "代码与配置/阅读清单.ts",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "tsx"
+    ],
+    "en": {
+      "name": "TSX",
+      "path": "CodeAndConfig/ReadingCard.tsx",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "TSX",
+      "path": "代码与配置/阅读卡片.tsx",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "rs"
+    ],
+    "en": {
+      "name": "Rust",
+      "path": "CodeAndConfig/ReadingList.rs",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Rust",
+      "path": "代码与配置/阅读清单.rs",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "go"
+    ],
+    "en": {
+      "name": "Go",
+      "path": "CodeAndConfig/ReadingList.go",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Go",
+      "path": "代码与配置/阅读清单.go",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "rb"
+    ],
+    "en": {
+      "name": "Ruby",
+      "path": "CodeAndConfig/ReadingList.rb",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Ruby",
+      "path": "代码与配置/阅读清单.rb",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "c",
+      "h"
+    ],
+    "en": {
+      "name": "C",
+      "path": "CodeAndConfig/ReadingList.c",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "C",
+      "path": "代码与配置/阅读清单.c",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "cpp",
+      "hpp",
+      "cc",
+      "cxx",
+      "hh",
+      "hxx"
+    ],
+    "en": {
+      "name": "C++",
+      "path": "CodeAndConfig/ReadingList.cpp",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "C++",
+      "path": "代码与配置/阅读清单.cpp",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "cs"
+    ],
+    "en": {
+      "name": "C#",
+      "path": "CodeAndConfig/ReadingList.cs",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "C#",
+      "path": "代码与配置/阅读清单.cs",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "m",
+      "mm"
+    ],
+    "en": {
+      "name": "Objective-C",
+      "path": "CodeAndConfig/ReadingList.m",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Objective-C",
+      "path": "代码与配置/阅读清单.m",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "java"
+    ],
+    "en": {
+      "name": "Java",
+      "path": "CodeAndConfig/ReadingList.java",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Java",
+      "path": "代码与配置/ReadingList.java",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "kt",
+      "kts"
+    ],
+    "en": {
+      "name": "Kotlin",
+      "path": "CodeAndConfig/ReadingList.kt",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Kotlin",
+      "path": "代码与配置/阅读清单.kt",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "sh",
+      "bash",
+      "zsh",
+      "bashrc",
+      "zshrc"
+    ],
+    "en": {
+      "name": "Shell",
+      "path": "CodeAndConfig/ReadingList.sh",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Shell",
+      "path": "代码与配置/阅读清单.sh",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "fish"
+    ],
+    "en": {
+      "name": "Fish",
+      "path": "CodeAndConfig/ReadingList.fish",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Fish",
+      "path": "代码与配置/阅读清单.fish",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "php"
+    ],
+    "en": {
+      "name": "PHP",
+      "path": "CodeAndConfig/ReadingList.php",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "PHP",
+      "path": "代码与配置/阅读清单.php",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "lua"
+    ],
+    "en": {
+      "name": "Lua",
+      "path": "CodeAndConfig/ReadingList.lua",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Lua",
+      "path": "代码与配置/阅读清单.lua",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "pl"
+    ],
+    "en": {
+      "name": "Perl",
+      "path": "CodeAndConfig/ReadingList.pl",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Perl",
+      "path": "代码与配置/阅读清单.pl",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "r"
+    ],
+    "en": {
+      "name": "R",
+      "path": "CodeAndConfig/ReadingProgress.r",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "R",
+      "path": "代码与配置/阅读进度.r",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "sql"
+    ],
+    "en": {
+      "name": "SQL",
+      "path": "CodeAndConfig/ReadingList.sql",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "SQL",
+      "path": "代码与配置/阅读清单.sql",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "graphql",
+      "gql"
+    ],
+    "en": {
+      "name": "GraphQL",
+      "path": "CodeAndConfig/ReadingList.graphql",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "GraphQL",
+      "path": "代码与配置/阅读清单.graphql",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "mk"
+    ],
+    "en": {
+      "name": "Makefile",
+      "path": "CodeAndConfig/Makefile",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Makefile",
+      "path": "代码与配置/Makefile",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "html",
+      "htm",
+      "xhtml"
+    ],
+    "en": {
+      "name": "HTML",
+      "path": "CodeAndConfig/ReadingCard.html",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "HTML",
+      "path": "代码与配置/阅读卡片.html",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "css"
+    ],
+    "en": {
+      "name": "CSS",
+      "path": "CodeAndConfig/ReadingCard.css",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "CSS",
+      "path": "代码与配置/阅读卡片.css",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "scss"
+    ],
+    "en": {
+      "name": "SCSS",
+      "path": "CodeAndConfig/ReadingCard.scss",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "SCSS",
+      "path": "代码与配置/阅读卡片.scss",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "vue"
+    ],
+    "en": {
+      "name": "Vue",
+      "path": "FormatExamples/ReadingCard.vue",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Vue",
+      "path": "格式示例/阅读卡片.vue",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "svelte"
+    ],
+    "en": {
+      "name": "Svelte",
+      "path": "FormatExamples/ReadingCard.svelte",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Svelte",
+      "path": "格式示例/阅读卡片.svelte",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "less"
+    ],
+    "en": {
+      "name": "Less",
+      "path": "FormatExamples/ReadingCard.less",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Less",
+      "path": "格式示例/阅读卡片.less",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "diff",
+      "patch"
+    ],
+    "en": {
+      "name": "Diff / Patch",
+      "path": "FormatExamples/LayoutChanges.diff",
+      "section": "Code"
+    },
+    "zh-Hans": {
+      "name": "Diff / Patch",
+      "path": "格式示例/排版调整.diff",
+      "section": "代码"
+    }
+  },
+  {
+    "extensions": [
+      "yaml",
+      "yml"
+    ],
+    "en": {
+      "name": "YAML",
+      "path": "CodeAndConfig/ReadingSettings.yaml",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "YAML",
+      "path": "代码与配置/阅读设置.yaml",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "toml"
+    ],
+    "en": {
+      "name": "TOML",
+      "path": "CodeAndConfig/ReadingSettings.toml",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "TOML",
+      "path": "代码与配置/阅读设置.toml",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "xml"
+    ],
+    "en": {
+      "name": "XML",
+      "path": "CodeAndConfig/ReadingList.xml",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "XML",
+      "path": "代码与配置/阅读清单.xml",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "plist"
+    ],
+    "en": {
+      "name": "Property List",
+      "path": "CodeAndConfig/ReadingSettings.plist",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "Property List",
+      "path": "代码与配置/阅读设置.plist",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "ini"
+    ],
+    "en": {
+      "name": "INI",
+      "path": "CodeAndConfig/ReadingSettings.ini",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "INI",
+      "path": "代码与配置/阅读设置.ini",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "properties"
+    ],
+    "en": {
+      "name": "Properties",
+      "path": "CodeAndConfig/ReadingSettings.properties",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "Properties",
+      "path": "代码与配置/阅读设置.properties",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "conf",
+      "config"
+    ],
+    "en": {
+      "name": "Conf / Config",
+      "path": "CodeAndConfig/ReaderService.conf",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "Conf / Config",
+      "path": "代码与配置/阅读服务.conf",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "env"
+    ],
+    "en": {
+      "name": "Environment",
+      "path": "CodeAndConfig/.env",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "Environment",
+      "path": "代码与配置/.env",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "gitignore"
+    ],
+    "en": {
+      "name": "Git Ignore",
+      "path": "CodeAndConfig/.gitignore",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "Git Ignore",
+      "path": "代码与配置/.gitignore",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "editorconfig"
+    ],
+    "en": {
+      "name": "EditorConfig",
+      "path": "CodeAndConfig/.editorconfig",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "EditorConfig",
+      "path": "代码与配置/.editorconfig",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "xcconfig"
+    ],
+    "en": {
+      "name": "Xcode Configuration",
+      "path": "CodeAndConfig/ReadingSettings.xcconfig",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "Xcode Configuration",
+      "path": "代码与配置/阅读设置.xcconfig",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "lock"
+    ],
+    "en": {
+      "name": "Lock File",
+      "path": "CodeAndConfig/Cargo.lock",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "Lock File",
+      "path": "代码与配置/Cargo.lock",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "log"
+    ],
+    "en": {
+      "name": "Log",
+      "path": "CodeAndConfig/Reading.log",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "Log",
+      "path": "代码与配置/阅读记录.log",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [
+      "txt"
+    ],
+    "en": {
+      "name": "Plain Text",
+      "path": "CodeAndConfig/ReadingNotes.txt",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "Plain Text",
+      "path": "代码与配置/阅读笔记.txt",
+      "section": "文本与配置"
+    }
+  },
+  {
+    "extensions": [],
+    "en": {
+      "name": "Custom-extension text",
+      "path": "FormatExamples/Workspace.luma-note",
+      "section": "Text and Configuration"
+    },
+    "zh-Hans": {
+      "name": "自定义扩展名文本",
+      "path": "格式示例/工作区.luma-note",
+      "section": "文本与配置"
+    }
+  }
+]

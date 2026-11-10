@@ -1,0 +1,7 @@
+Title,Type,Status,Pages,Notes
+Product ideas,Markdown,Read,12,"This is a long reading note. In a narrow window, resize the column, then double-click the cell to read the full text.
+Filtering and sorting affect only the view, leaving this CSV unchanged; multiline cells retain their original source line numbers."
+Lab notes,CSV,Reading,2,"Includes commas, newlines and double quotes: ""Read first, then edit"""
+API example,JSON,To read,120,"Reset filters, then sort Pages ascending to check numeric ordering: 2, 5, 12, 120."
+Design reference,Image,To read,,"Pages is empty; inspect the empty-value count in its column filter."
+For tomorrow,Text,Read,5,"Click a column header or Column Actions to filter, then Reset to restore all records."

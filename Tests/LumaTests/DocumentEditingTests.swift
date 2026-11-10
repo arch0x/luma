@@ -28,7 +28,7 @@ import ReaderCore
     @Test(arguments: ["md", "json", "csv", "tsv", "swift", "yaml", "txt"])
     func allTextFormatsEditPreviewAndSave(ext: String) async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let before: String, after: String
         switch ext {
         case "json": before = #"{"count":1}"#; after = #"{"count":2}"#
@@ -55,7 +55,7 @@ import ReaderCore
     @Test(arguments: ["json", "csv"])
     func invalidStructuredDraftCanBeSavedAndPreviewRecovers(ext: String) async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let valid = ext == "json" ? #"{"n":1}"# : "name,count\na,1"
         let invalid = ext == "json" ? "{incomplete" : "name,count\n\"unfinished"
         let tab = try await open(valid, name: "note.\(ext)", in: workspace)
@@ -72,7 +72,7 @@ import ReaderCore
     @Test func nativeUndoSurvivesTabAndPreviewSwitchesAndTracksSavedContent() async throws {
         defer { clean() }
         _ = NSApplication.shared
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open("original 🙂", name: "note.md", in: workspace)
         let editor = tab.sourceEditor()
         editor.textView.setSelectedRange(NSRange(location: (editor.textView.string as NSString).length, length: 0))
@@ -103,7 +103,7 @@ import ReaderCore
 
     @Test func conflictCancelPreservesDraftAndExternalBytes() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(in: workspace)
         tab.edit("my draft")
         try "external".write(to: tab.url, atomically: true, encoding: .utf8)
@@ -117,7 +117,7 @@ import ReaderCore
 
     @Test func overwriteRechecksIfFileChangesDuringConflictDecision() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(in: workspace)
         tab.edit("draft")
         try "second".write(to: tab.url, atomically: true, encoding: .utf8)
@@ -141,7 +141,7 @@ import ReaderCore
     @Test func explicitReloadReplacesDraftAndClearsUndo() async throws {
         defer { clean() }
         _ = NSApplication.shared
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(in: workspace)
         let editor = tab.sourceEditor()
         editor.textView.insertText("draft", replacementRange: NSRange(location: 0, length: 8))
@@ -154,7 +154,7 @@ import ReaderCore
 
     @Test func failedReloadOrSaveKeepsEditedContent() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(in: workspace)
         tab.edit("draft")
         try "external".write(to: tab.url, atomically: true, encoding: .utf8)
@@ -174,7 +174,7 @@ import ReaderCore
     @Test(arguments: [UnsavedChoice.cancel, .discard, .save])
     func closingDirtyTabHonorsChoice(choice: UnsavedChoice) async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(in: workspace)
         tab.edit("draft")
         workspace.chooseUnsaved = { _ in choice }
@@ -186,7 +186,7 @@ import ReaderCore
 
     @Test func cancelQuitKeepsAllDraftsAndSuccessfulReviewSavesOrDiscards() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let first = try await open(in: workspace)
         let second = try await open("second", name: "second.txt", in: workspace)
         first.edit("first draft"); second.edit("second draft")
@@ -201,7 +201,7 @@ import ReaderCore
 
     @Test func reloadRequiresDecisionAndDirectLoadNeverDiscardsDraft() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(in: workspace)
         tab.edit("draft")
         workspace.load(tab)
@@ -216,7 +216,7 @@ import ReaderCore
 
     @Test func editsMadeDuringSaveRemainDirty() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(in: workspace)
         tab.edit("save this")
         try "external".write(to: tab.url, atomically: true, encoding: .utf8)
@@ -228,7 +228,7 @@ import ReaderCore
 
     @Test func newEditsDuringFinalCloseCaptureCancelClosing() async throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let tab = try await open(in: workspace)
         tab.edit("reviewed draft")
         workspace.chooseUnsaved = { _ in .discard }

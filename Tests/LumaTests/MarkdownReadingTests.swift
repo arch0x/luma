@@ -22,33 +22,33 @@ import Testing
 
     @Test func previewWidthDefaultsToPaperMeasureAndPersistsCustomSetting() {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         #expect(!workspace.previewFullWidth && workspace.markdownPreviewWidth == 840)
         workspace.previewMaxWidth = 1400
-        let restored = Workspace(preferences: preferences)
+        let restored = chineseWorkspace(preferences: preferences)
         #expect(restored.markdownPreviewWidth == 1400)
         restored.previewFullWidth = true
         #expect(restored.markdownPreviewWidth == 0)
         restored.previewFullWidth = false
         #expect(restored.markdownPreviewWidth == 1400)
         preferences.set(-100, forKey: "previewMaxWidth")
-        #expect(Workspace(preferences: preferences).previewMaxWidth == 840)
+        #expect(chineseWorkspace(preferences: preferences).previewMaxWidth == 840)
     }
 
     @Test func typographyDefaultsPersistAndInvalidPreferencesRecover() throws {
         defer { clean() }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         #expect(workspace.markdownTypography == MarkdownTypography())
         workspace.markdownFont = .songti
         workspace.markdownFontSize = 22
         workspace.markdownLineHeight = 2.1
         let freshPreferences = try #require(UserDefaults(suiteName: domain))
-        let restored = Workspace(preferences: freshPreferences)
+        let restored = chineseWorkspace(preferences: freshPreferences)
         #expect(restored.markdownTypography == MarkdownTypography(font: .songti, fontSize: 22, lineHeight: 2.1))
         preferences.set("unknown-font", forKey: "markdownFont")
         preferences.set(200, forKey: "markdownFontSize")
         preferences.set(-1, forKey: "markdownLineHeight")
-        #expect(Workspace(preferences: preferences).markdownTypography == MarkdownTypography())
+        #expect(chineseWorkspace(preferences: preferences).markdownTypography == MarkdownTypography())
         #expect(MarkdownTypography(fontSize: .nan, lineHeight: .infinity) == MarkdownTypography())
     }
 
@@ -56,7 +56,7 @@ import Testing
         defer { clean() }
         let file = directory.appendingPathComponent("note.md")
         try "# Chapter".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.open([file])
         let first = try #require(workspace.activeTab)
         await first.loadTask?.value
@@ -67,7 +67,7 @@ import Testing
         #expect(reopened !== first)
         #expect(reopened.markdownLocation == location)
         await workspace.prepareForTermination()
-        let restarted = Workspace(preferences: preferences)
+        let restarted = chineseWorkspace(preferences: preferences)
         restarted.restore()
         let tab = try #require(restarted.activeTab)
         await tab.loadTask?.value
@@ -120,12 +120,12 @@ import Testing
         let second = directory.appendingPathComponent("second.md")
         let text = directory.appendingPathComponent("text.txt")
         for file in [first, second, text] { try "read".write(to: file, atomically: true, encoding: .utf8) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.open([first, second, text])
         workspace.activeID = workspace.tabs[0].id
         for tab in workspace.tabs { await tab.loadTask?.value }
         try FileManager.default.removeItem(at: second)
-        let restarted = Workspace(preferences: preferences)
+        let restarted = chineseWorkspace(preferences: preferences)
         restarted.restore()
         #expect(restarted.tabs.map(\.title) == ["first.md", "text.txt"])
         #expect(restarted.activeTab?.title == "first.md")
@@ -140,7 +140,7 @@ import Testing
         defer { clean() }
         let file = directory.appendingPathComponent("note.md")
         try "read".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
         await tab.loadTask?.value
@@ -152,7 +152,7 @@ import Testing
         workspace.close(tab.id)
         await workspace.prepareForTermination()
         #expect(MarkdownReadingHistory(preferences: preferences).session(for: file).location == final)
-        let restarted = Workspace(preferences: preferences)
+        let restarted = chineseWorkspace(preferences: preferences)
         restarted.restore()
         #expect(restarted.tabs.isEmpty)
     }

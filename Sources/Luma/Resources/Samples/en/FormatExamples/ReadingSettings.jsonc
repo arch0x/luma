@@ -1,0 +1,11 @@
+// Example reading settings with comments and trailing commas.
+{
+  "workspace": "My local reading space",
+  "reading": {
+    "fontSize": 15,
+    "lineHeight": 1.85,
+    "maxWidth": 840,
+  },
+  // Change this name, then press Command-S to save.
+  "collections": ["Design notes", "Lab notes", "Code snippets"],
+}

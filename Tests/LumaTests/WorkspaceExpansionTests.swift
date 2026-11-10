@@ -25,7 +25,7 @@ import ReaderCore
     }
     private func paths(_ urls: Set<URL>) -> Set<String> { Set(urls.map(WorkspacePath.normalized)) }
     private func relaunched() -> Workspace {
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.restore()
         return workspace
     }
@@ -42,7 +42,7 @@ import ReaderCore
         let source = try folder("First/Sources"), nested = try folder("First/Sources/Readers")
         let file = second.appendingPathComponent("note.txt")
         try "Read without expanding this project".write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.addFolder(first); workspace.addFolder(second)
         workspace.toggleDirectory(second)
         workspace.toggleDirectory(source); workspace.toggleDirectory(nested)
@@ -62,7 +62,7 @@ import ReaderCore
     @Test func collapsingEverythingSurvivesRepeatedRelaunchAndRefresh() async throws {
         defer { clean() }
         let first = try folder("First"), second = try folder("Second")
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.addFolder(first); workspace.addFolder(second)
         workspace.toggleDirectory(first); workspace.toggleDirectory(second)
         try await waitForTree(workspace)
@@ -81,7 +81,7 @@ import ReaderCore
     @Test func collapsedParentDoesNotLoseItsRememberedChildrenOrOpenOnLaunch() async throws {
         defer { clean() }
         let root = try folder("Project"), child = try folder("Project/Child")
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.addFolder(root); workspace.toggleDirectory(child); workspace.toggleDirectory(root)
         try await waitForTree(workspace)
         let restored = relaunched()
@@ -126,7 +126,7 @@ import ReaderCore
     @Test func renamingAndRemovingProjectsUpdatesTheNextLaunch() async throws {
         defer { clean() }
         let first = try folder("First"), second = try folder("Second"), child = try folder("First/Child")
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.addFolder(first); workspace.addFolder(second)
         workspace.toggleDirectory(second); workspace.toggleDirectory(child)
         try await waitForTree(workspace)

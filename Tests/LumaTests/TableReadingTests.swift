@@ -88,7 +88,7 @@ import ReaderCore
     @Test func realSampleRemainsReadableInNarrowWindow() async throws {
         _ = NSApplication.shared
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let source = try String(contentsOf: root.appendingPathComponent("Sources/Luma/Resources/Samples/阅读清单.csv"), encoding: .utf8)
+        let source = try String(contentsOf: root.appendingPathComponent("Sources/Luma/Resources/Samples/zh-Hans/阅读清单.csv"), encoding: .utf8)
         let state = TableReadingState(); state.update(try CSVDocument(source)); state.widthMode = .fit
         let host = NSHostingView(rootView: TableReader(state: state).foregroundStyle(LumaTheme.ink).background(LumaTheme.paper))
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 420, height: 400), styleMask: [.borderless], backing: .buffered, defer: false)
@@ -113,7 +113,7 @@ import ReaderCore
         let domain = "local.luma.table-chrome.\(UUID())"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let samples = try #require(workspace.samplesURL)
         let names = ["欢迎.md", "源码编辑.md", "阅读清单.csv", "长文档导航.md", "正文搜索.md", "项目.json"]
         workspace.open(names.map { samples.appendingPathComponent($0) })

@@ -18,7 +18,7 @@ import Testing
         let state = MarkdownRenderState()
         let tab = DocumentTab(url: document ?? URL(fileURLWithPath: "/tmp/preview.md"), readingSession: session)
         if let location { tab.rememberReadingPosition(location) }
-        let coordinator = MarkdownWebView.Coordinator(source: source, tab: tab, imageRoot: imageRoot, previewWidth: width, typography: typography, dark: dark, state: state, onOpen: { _ in })
+        let coordinator = MarkdownWebView.Coordinator(source: source, tab: tab, imageRoot: imageRoot, previewWidth: width, typography: typography, dark: dark, state: state, onOpen: { _ in }, language: .simplifiedChinese)
         let view = MarkdownWebView.makeWebView(coordinator: coordinator)
         view.frame = NSRect(x: 0, y: 0, width: 1000, height: 800)
         let preview = Preview(view: view, coordinator: coordinator, state: state)
@@ -236,7 +236,7 @@ import Testing
         let docs = directory.appendingPathComponent("docs")
         try FileManager.default.createDirectory(at: assets, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: docs, withIntermediateDirectories: true)
-        let sample = try #require(Workspace().samplesURL).appendingPathComponent("留白.png")
+        let sample = try #require(chineseWorkspace().samplesURL).appendingPathComponent("留白.png")
         try FileManager.default.copyItem(at: sample, to: assets.appendingPathComponent("中文 空格.png"))
         try FileManager.default.copyItem(at: sample, to: assets.appendingPathComponent("100% 留白.png"))
         let preview = try await render("""
@@ -300,7 +300,7 @@ import Testing
     }
 
     @Test func bundledImageAndMathSampleRendersTogether() async throws {
-        let folder = try #require(Workspace().samplesURL)
+        let folder = try #require(chineseWorkspace().samplesURL)
         let file = folder.appendingPathComponent("图片与公式.md")
         let source = try String(contentsOf: file, encoding: .utf8)
         let preview = try await render(source, document: file, imageRoot: folder)
@@ -313,7 +313,7 @@ import Testing
     }
 
     @Test func bundledFormatGuideRendersEveryCatalogEntry() async throws {
-        let folder = try #require(Workspace().samplesURL)
+        let folder = try #require(chineseWorkspace().samplesURL)
         let file = folder.appendingPathComponent("格式示例/格式导览.md")
         let source = try String(contentsOf: file, encoding: .utf8)
         let preview = try await render(source, document: file, imageRoot: folder, width: 840)
@@ -441,7 +441,7 @@ import Testing
     }
 
     @Test func bundledNavigationSampleJumpsAfterImageAndDiagramLayoutAndResize() async throws {
-        let folder = try #require(Workspace().samplesURL)
+        let folder = try #require(chineseWorkspace().samplesURL)
         let file = folder.appendingPathComponent("长文档导航.md")
         let preview = try await render(try String(contentsOf: file, encoding: .utf8), document: file, imageRoot: folder, width: 840)
         defer { preview.close() }
@@ -698,7 +698,7 @@ import Testing
         let domain = "local.luma.typography-web-tests.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let paragraphs = (0..<40).map { "段落\($0)：" + String(repeating: "重开之后接着阅读。", count: 12) }.joined(separator: "\n\n")
         let source = "# 保存排版\n\n" + paragraphs
         let original = try await render(source)
@@ -709,7 +709,7 @@ import Testing
         workspace.markdownFont = .monospaced
         workspace.markdownFontSize = 24
         workspace.markdownLineHeight = 2.2
-        let restarted = Workspace(preferences: try #require(UserDefaults(suiteName: domain)))
+        let restarted = chineseWorkspace(preferences: try #require(UserDefaults(suiteName: domain)))
         let reopened = try await render(source, typography: restarted.markdownTypography, location: saved)
         defer { reopened.close() }
         #expect(try await reopened.value("getComputedStyle(document.querySelector('main')).fontSize") as? String == "24px")

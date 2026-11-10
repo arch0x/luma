@@ -141,7 +141,7 @@ struct MarkdownWebView: NSViewRepresentable {
     let findRequest: Int
     let bookmarkRequest: Int
     let onOpen: ([URL]) -> Void
-    var language: AppLanguage = .simplifiedChinese
+    var language: AppLanguage = .english
 
     func makeCoordinator() -> Coordinator {
         Coordinator(source: source, tab: tab, imageRoot: imageRoot, previewWidth: previewWidth, typography: typography, dark: dark, state: state, onOpen: onOpen, language: language)
@@ -229,7 +229,7 @@ struct MarkdownWebView: NSViewRepresentable {
         private var layoutRevision = 0
         private var bookmarkInFlightRequest: Int?
 
-        init(source: String, tab: DocumentTab, imageRoot: URL? = nil, previewWidth: Double = 0, typography: MarkdownTypography = .init(), dark: Bool, state: MarkdownRenderState, onOpen: @escaping ([URL]) -> Void, language: AppLanguage = .simplifiedChinese) {
+        init(source: String, tab: DocumentTab, imageRoot: URL? = nil, previewWidth: Double = 0, typography: MarkdownTypography = .init(), dark: Bool, state: MarkdownRenderState, onOpen: @escaping ([URL]) -> Void, language: AppLanguage = .english) {
             self.source = source; self.tab = tab; self.dark = dark; self.state = state; self.onOpen = onOpen
             self.imageRoot = imageRoot ?? tab.url.deletingLastPathComponent()
             self.previewWidth = previewWidth

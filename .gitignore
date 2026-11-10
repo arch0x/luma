@@ -43,5 +43,7 @@ __pycache__/
 
 # Public sample fixtures: these contain only demonstration values.
 !/.env.example
-!/Sources/Luma/Resources/Samples/代码与配置/.env
-!/Sources/Luma/Resources/Samples/代码与配置/阅读记录.log
+!/Sources/Luma/Resources/Samples/zh-Hans/代码与配置/.env
+!/Sources/Luma/Resources/Samples/en/CodeAndConfig/.env
+!/Sources/Luma/Resources/Samples/zh-Hans/代码与配置/阅读记录.log
+!/Sources/Luma/Resources/Samples/en/CodeAndConfig/Reading.log

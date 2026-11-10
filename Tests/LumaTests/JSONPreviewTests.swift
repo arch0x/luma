@@ -10,7 +10,7 @@ import Testing
         let tab = DocumentTab(url: URL(fileURLWithPath: "/tmp/\(name)"))
         tab.draft = source; tab.savedText = source
         let state = MarkdownRenderState()
-        let coordinator = MarkdownWebView.Coordinator(source: source, tab: tab, dark: dark, state: state, onOpen: { _ in })
+        let coordinator = MarkdownWebView.Coordinator(source: source, tab: tab, dark: dark, state: state, onOpen: { _ in }, language: .simplifiedChinese)
         let view = MarkdownWebView.makeWebView(coordinator: coordinator)
         view.frame = NSRect(x: 0, y: 0, width: 1000, height: 850)
         let preview = CodePreviewTests.Preview(view: view, coordinator: coordinator, state: state)
@@ -107,7 +107,7 @@ import Testing
         let edited = #"{"z":2,"a":false}"#
         let file = directory.appendingPathComponent("note.json")
         try raw.write(to: file, atomically: true, encoding: .utf8)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
         await tab.loadTask?.value
@@ -304,7 +304,7 @@ import Testing
         let raw = ext == "jsonc" ? "// keep this comment\n{\"value\":1,}" : "{\"value\":1}\n{\"next\":true}\n"
         let changed = raw.replacingOccurrences(of: ":1", with: ":2")
         try Data(raw.utf8).write(to: file)
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         workspace.open([file])
         let tab = try #require(workspace.activeTab)
         await tab.loadTask?.value

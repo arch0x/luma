@@ -1,0 +1,8 @@
+My local reading space
+
+Read today:
+- Design notes
+- Lab notes
+- A new code snippet
+
+Press Command-F to search and Command-S to save your notes.

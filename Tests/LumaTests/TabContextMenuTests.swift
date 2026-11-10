@@ -28,7 +28,7 @@ import Testing
         let domain = "local.luma.native-tab-menu.\(UUID())"
         let preferences = try #require(UserDefaults(suiteName: domain))
         defer { try? FileManager.default.removeItem(at: directory); preferences.removePersistentDomain(forName: domain) }
-        let workspace = Workspace(preferences: preferences)
+        let workspace = chineseWorkspace(preferences: preferences)
         let files = try (0..<3).map { index in
             let file = directory.appendingPathComponent("note-\(index).txt")
             try Data("original \(index)".utf8).write(to: file)
