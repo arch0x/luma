@@ -9,10 +9,17 @@ import Testing
 
     @MainActor private struct Preview {
         let view: WKWebView
+        let window: NSWindow
         let coordinator: SVGWebView.Coordinator
         let state: SVGRenderState
         func value(_ script: String) async throws -> Any? { try await view.evaluateJavaScript(script) }
-        func close() { SVGWebView.dismantleNSView(view, coordinator: coordinator) }
+        func close() {
+            SVGWebView.dismantleNSView(view, coordinator: coordinator)
+            window.contentView = nil; window.close()
+        }
+        func dimensions() async throws -> String {
+            try await value("JSON.stringify({width: image.clientWidth, style: image.style.width, zoom, actualSize, viewport: innerWidth})") as? String ?? "No dimensions"
+        }
         func snapshot(_ name: String) async throws {
             guard let path = ProcessInfo.processInfo.environment["LUMA_SVG_PREVIEW_DIR"] else { return }
             let image = try await view.takeSnapshot(configuration: nil)
@@ -30,7 +37,13 @@ import Testing
         let coordinator = SVGWebView.Coordinator(state: state)
         let view = SVGWebView.makeWebView(coordinator: coordinator)
         view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-        let preview = Preview(view: view, coordinator: coordinator, state: state)
+        // A live window lets older WebKit versions deliver viewport and drawing updates.
+        let host = NSView(frame: view.frame)
+        host.addSubview(view)
+        let window = NSWindow(contentRect: host.bounds, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false; window.contentView = host
+        window.orderBack(nil)
+        let preview = Preview(view: view, window: window, coordinator: coordinator, state: state)
         coordinator.update(source: source, zoom: zoom, dark: dark)
         do { try await wait(preview); return preview }
         catch { preview.close(); throw error }
@@ -83,7 +96,8 @@ import Testing
             if try await preview.value("document.querySelector('img').clientWidth") as? Int == 400 { break }
             try await Task.sleep(for: .milliseconds(20))
         }
-        #expect(try await preview.value("document.querySelector('img').clientWidth") as? Int == 400)
+        let actualDimensions = try await preview.dimensions()
+        #expect(try await preview.value("document.querySelector('img').clientWidth") as? Int == 400, "\(actualDimensions)")
         #expect(try await preview.value("document.documentElement.scrollWidth > innerWidth") as? Bool == true)
         preview.coordinator.update(source: source, zoom: 1, dark: false, actualSize: false)
         _ = try await preview.value("window.setView(1, false, false)")
@@ -136,7 +150,8 @@ import Testing
         preview.coordinator.update(source: source, zoom: 1.25, dark: true)
         try await wait(preview)
         #expect(preview.state.error == nil && preview.state.size == CGSize(width: 400, height: 240))
-        #expect(try await preview.value("document.querySelector('img').style.width") as? String == "500px")
+        let recoveredDimensions = try await preview.dimensions()
+        #expect(try await preview.value("document.querySelector('img').style.width") as? String == "500px", "\(recoveredDimensions)")
         #expect(try await preview.value("document.documentElement.dataset.dark") as? String == "true")
     }
 

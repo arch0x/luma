@@ -22,6 +22,7 @@ import WebKit
         window.isReleasedWhenClosed = false
         window.appearance = NSAppearance(named: .aqua)
         window.contentView = host
+        window.orderBack(nil)
         defer { window.delegate = nil; window.close() }
 
         func webView(in view: NSView) -> WKWebView? {
@@ -50,7 +51,7 @@ import WebKit
         window.effectiveAppearance.performAsCurrentDrawingAppearance {
             #expect(window.backgroundColor.usingColorSpace(.sRGB) == LumaTheme.nativePaper.usingColorSpace(.sRGB))
         }
-        #expect(wide.bounds.height >= 725, "Document actions belong in the window toolbar, leaving no second header")
+        #expect(wide.bounds.height >= window.contentLayoutRect.height - 1, "Document actions belong in the window toolbar, leaving no second header")
         try await captureWorkspace(host, web: wide, named: "workspace-light-wide")
         let readerLeft = wide.convert(wide.bounds, to: host).minX
         #expect((260...290).contains(readerLeft), "The preview begins after the library and the permanent rail")
@@ -60,13 +61,13 @@ import WebKit
         let narrow = try await waitForWeb { web in
             guard (390...510).contains(web.bounds.width) else { return false }
             let stable = try? await web.evaluateJavaScript("""
-            document.documentElement.scrollWidth === window.innerWidth &&
+            document.documentElement.scrollWidth <= document.documentElement.clientWidth &&
             window.luma.getReadingPosition().headingID === '公式与图表之间'
             """)
             return stable as? Bool == true
         }
         #expect(narrow === wide, "Resizing must retain the running preview")
-        #expect(narrow.bounds.height >= 495, "A narrow window must not stack extra toolbars")
+        #expect(narrow.bounds.height >= window.contentLayoutRect.height - 1, "A narrow window must not stack extra toolbars")
         #expect(abs(narrow.convert(narrow.bounds, to: host).minX - readerLeft) < 2)
         window.appearance = NSAppearance(named: .darkAqua)
         let dark = try await waitForWeb { web in
@@ -148,6 +149,7 @@ import WebKit
         window.isReleasedWhenClosed = false
         window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
         window.contentView = hosting
+        window.orderBack(nil)
         defer { window.delegate = nil; window.close() }
         hosting.layoutSubtreeIfNeeded()
         try await Task.sleep(for: .milliseconds(150))
@@ -177,7 +179,7 @@ import WebKit
             }
         }
         #expect(readableGlyphPixels > 15, "Native directory names must stay readable in either appearance")
-        func counts(from start: Double, to end: Double) -> (purple: Int, blue: Int, current: Int) {
+        func counts(in bitmap: NSBitmapImageRep, from start: Double, to end: Double) -> (purple: Int, blue: Int, current: Int) {
             var purple = 0, blue = 0, current = 0
             for x in stride(from: Int(start * Double(bitmap.pixelsWide)), to: Int(end * Double(bitmap.pixelsWide)), by: 2) {
                 for y in stride(from: 0, to: bitmap.pixelsHigh, by: 2) {
@@ -191,8 +193,8 @@ import WebKit
             }
             return (purple, blue, current)
         }
-        let sidebar = counts(from: 0, to: 0.20)
-        let outline = counts(from: 0.80, to: 1)
+        let sidebar = counts(in: rowBitmap, from: 0, to: 1)
+        let outline = counts(in: bitmap, from: 0.80, to: 1)
         #expect(sidebar.blue > 7, "The folder should render blue")
         #expect(sidebar.purple == 0, "Ancestor tint must not leak into the sidebar")
         #expect(outline.current > 5, "The current mark should render white in dark mode and dark ink in light mode")

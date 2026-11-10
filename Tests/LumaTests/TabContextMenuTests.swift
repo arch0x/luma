@@ -43,6 +43,7 @@ import Testing
                               styleMask: [.titled, .resizable], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.contentView = host
+        window.orderBack(nil)
         defer { window.delegate = nil; window.close() }
         let deadline = ContinuousClock.now + .seconds(8)
         var views: [DocumentTabMenuRegion] = []

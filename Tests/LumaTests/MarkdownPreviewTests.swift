@@ -459,14 +459,14 @@ import Testing
         await preview.coordinator.navigationTask?.value
         try await waitForSection(preview, id: "公式与图表之间")
         #expect(try await preview.value("Math.abs(document.getElementById('公式与图表之间').getBoundingClientRect().top - 24) < 2") as? Bool == true)
-        #expect(try await preview.value("document.querySelector('main').getBoundingClientRect().width") as? Double == 430)
-        #expect(try await preview.value("document.documentElement.scrollWidth === window.innerWidth") as? Bool == true)
+        #expect(try await preview.value("document.querySelector('main').getBoundingClientRect().width === document.documentElement.clientWidth") as? Bool == true)
+        #expect(try await preview.value("document.documentElement.scrollWidth <= document.documentElement.clientWidth") as? Bool == true)
         preview.coordinator.dark = true
         preview.coordinator.renderIfNeeded()
         await preview.coordinator.renderTask?.value
         try await waitForSection(preview, id: "公式与图表之间")
         #expect(try await preview.value("getComputedStyle(document.documentElement).backgroundColor") as? String == "rgb(26, 32, 43)")
-        #expect(try await preview.value("document.documentElement.scrollWidth === window.innerWidth") as? Bool == true)
+        #expect(try await preview.value("document.documentElement.scrollWidth <= document.documentElement.clientWidth") as? Bool == true)
     }
 
     @Test func hugeOutlineIsBoundedAndRepeatedHeadingAnchorsStayUnique() async throws {
@@ -636,7 +636,7 @@ import Testing
         preview.coordinator.previewWidth = 0
         preview.coordinator.layoutIfNeeded()
         await preview.coordinator.layoutTask?.value
-        #expect(try await preview.value("document.querySelector('main').getBoundingClientRect().width") as? Double == 1000)
+        #expect(try await preview.value("document.querySelector('main').getBoundingClientRect().width === document.documentElement.clientWidth") as? Bool == true)
         #expect(try await preview.value("document.querySelector('h1') === window.originalHeading") as? Bool == true)
         #expect(search.count == 2)
         #expect(try await preview.value("document.querySelectorAll('.search-hit-current').length > 0") as? Bool == true)
