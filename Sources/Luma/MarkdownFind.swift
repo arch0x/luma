@@ -57,7 +57,8 @@ struct MarkdownFindBar: View {
         HStack(spacing: 5) {
             HStack(spacing: 7) {
                 Image(systemName: "magnifyingglass").foregroundStyle(LumaTheme.muted).accessibilityHidden(true)
-                SearchTextField(text: Binding(get: { search.query }, set: search.setQuery),
+                // Swift 6.2 crashes when adapting the isolated setter method reference.
+                SearchTextField(text: Binding(get: { search.query }, set: { search.setQuery($0) }),
                                 placeholder: tr("在 Markdown 正文中查找"), accessibilityLabel: tr("Markdown 正文搜索"),
                                 focusRequest: focusRequest, onFocusChange: { focused = $0 },
                                 onSubmit: { search.move($0 ? -1 : 1) }, onCancel: onClose)
