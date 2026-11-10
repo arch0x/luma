@@ -15,20 +15,20 @@ public struct JSONNode: Identifiable, Sendable {
 
     private static func make(_ object: Any, key: String, path: String, depth: Int) throws -> JSONNode {
         guard depth < 128 else {
-            throw NSError(domain: "JSON", code: 1, userInfo: [NSLocalizedDescriptionKey: "JSON 嵌套超过 128 层，请使用源码视图。"])
+            throw NSError(domain: "JSON", code: 1, userInfo: [NSLocalizedDescriptionKey: coreText("JSON 嵌套超过 128 层，请使用源码视图。")])
         }
         if let dictionary = object as? [String: Any] {
             let children = try dictionary.sorted { $0.key < $1.key }.map { name, item in
                 let escaped = name.replacingOccurrences(of: "~", with: "~0").replacingOccurrences(of: "/", with: "~1")
                 return try make(item, key: name, path: path + "/" + escaped, depth: depth + 1)
             }
-            return JSONNode(id: path, key: key, value: "{ \(children.count) 项 }", children: children, isString: false)
+            return JSONNode(id: path, key: key, value: coreText("{ \(children.count) 项 }"), children: children, isString: false)
         }
         if let array = object as? [Any] {
             let children = try array.enumerated().map { index, item in
                 try make(item, key: "[\(index)]", path: path + "/\(index)", depth: depth + 1)
             }
-            return JSONNode(id: path, key: key, value: "[ \(children.count) 项 ]", children: children, isString: false)
+            return JSONNode(id: path, key: key, value: coreText("[ \(children.count) 项 ]"), children: children, isString: false)
         }
         let value: String
         let isString: Bool

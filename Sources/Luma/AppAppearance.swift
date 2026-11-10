@@ -4,11 +4,11 @@ nonisolated enum AppAppearance: String, CaseIterable, Identifiable {
     case system, light, dark
 
     var id: Self { self }
-    var title: String {
+    @MainActor var title: String {
         switch self {
-        case .system: "跟随系统"
-        case .light: "浅色"
-        case .dark: "深色"
+        case .system: tr("跟随系统")
+        case .light: tr("浅色")
+        case .dark: tr("深色")
         }
     }
     var symbol: String {
@@ -31,7 +31,7 @@ struct AppearancePicker: View {
     @Binding var selection: AppAppearance
 
     var body: some View {
-        Picker("外观", selection: $selection) {
+        Picker(tr("外观"), selection: $selection) {
             ForEach(AppAppearance.allCases) { appearance in
                 Label(appearance.title, systemImage: appearance.symbol).tag(appearance)
             }

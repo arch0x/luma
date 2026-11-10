@@ -6,11 +6,11 @@ nonisolated enum TabCloseScope: CaseIterable, Hashable {
 
     var title: String {
         switch self {
-        case .current: "关闭标签页"
-        case .others: "关闭其他标签页"
-        case .left: "关闭左侧标签页"
-        case .right: "关闭右侧标签页"
-        case .all: "关闭所有标签页"
+        case .current: readerText("关闭标签页")
+        case .others: readerText("关闭其他标签页")
+        case .left: readerText("关闭左侧标签页")
+        case .right: readerText("关闭右侧标签页")
+        case .all: readerText("关闭所有标签页")
         }
     }
 }
@@ -95,7 +95,7 @@ final class DocumentTabMenuRegion: NSView {
             menu.addItem(item)
         }
         menu.addItem(.separator())
-        let reveal = NSMenuItem(title: "在 Finder 中显示", action: #selector(performMenuAction(_:)), keyEquivalent: "")
+        let reveal = NSMenuItem(title: readerText("在 Finder 中显示"), action: #selector(performMenuAction(_:)), keyEquivalent: "")
         reveal.target = self
         reveal.tag = -1
         menu.addItem(reveal)

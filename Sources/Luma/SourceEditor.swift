@@ -138,7 +138,7 @@ final class SourceEditor: NSObject, NSTextViewDelegate {
         textView.breakUndoCoalescing()
         textView.insertText(replacement, replacementRange: range)
         textView.breakUndoCoalescing()
-        textView.undoManager?.setActionName("替换所选值")
+        textView.undoManager?.setActionName(tr("替换所选值"))
         textView.scrollRangeToVisible(textView.selectedRange())
         return true
     }

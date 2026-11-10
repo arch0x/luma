@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct DocumentModeSwitch: View {
-    static let width: CGFloat = 145
+    static var pageWidth: CGFloat { AppLocalization.shared.language == .english ? 90 : 68 }
+    static var width: CGFloat { pageWidth * 2 + 9 }
     @Binding var showSource: Bool
 
     var body: some View {
         HStack(spacing: 3) {
-            page("预览", symbol: "book", source: false)
-            page("源码", symbol: "chevron.left.forwardslash.chevron.right", source: true)
+            page(tr("预览"), symbol: "book", source: false)
+            page(tr("源码"), symbol: "chevron.left.forwardslash.chevron.right", source: true)
         }
         .padding(3)
         .background(LumaTheme.chrome, in: RoundedRectangle(cornerRadius: LumaTheme.groupRadius))
@@ -17,7 +18,7 @@ struct DocumentModeSwitch: View {
                 .allowsHitTesting(false)
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("文档视图")
+        .accessibilityLabel(tr("文档视图"))
     }
 
     private func page(_ title: String, symbol: String, source: Bool) -> some View {
@@ -30,7 +31,7 @@ struct DocumentModeSwitch: View {
         }
         .buttonStyle(DocumentPageStyle(selected: selected))
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .help(source ? "打开可编辑的源码" : "阅读排版后的文档")
+        .help(source ? tr("打开可编辑的源码") : tr("阅读排版后的文档"))
     }
 }
 
@@ -43,7 +44,7 @@ private struct DocumentPageStyle: ButtonStyle {
         configuration.label
             .font(.system(size: 12, weight: selected ? .semibold : .medium))
             .foregroundStyle(selected ? LumaTheme.accent : LumaTheme.muted)
-            .frame(width: 68, height: 28)
+            .frame(width: DocumentModeSwitch.pageWidth, height: 28)
             .background {
                 if selected {
                     DocumentPageShape().fill(LumaTheme.control)

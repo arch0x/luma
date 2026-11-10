@@ -63,12 +63,12 @@ public enum DocumentKind: String, Sendable, CaseIterable {
         switch self {
         case .markdown: "Markdown"
         case .pdf: "PDF"
-        case .image: "图片"
+        case .image: coreText("图片")
         case .svg: "SVG"
         case .json: "JSON"
-        case .table: "表格"
-        case .text: "纯文本"
-        case .unsupported: "文件"
+        case .table: coreText("表格")
+        case .text: coreText("纯文本")
+        case .unsupported: coreText("文件")
         }
     }
 
@@ -93,12 +93,12 @@ public enum ReaderError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .tooLarge(let limit): "文件超出当前预览上限（\(limit / 1_024 / 1_024) MB）。请在默认应用中打开。"
-        case .notUTF8: "暂时只支持 UTF-8 文本。请转换编码后再打开。"
-        case .binary: "这个文件包含二进制内容，无法作为文本预览。"
-        case .invalidCSV(let reason): "表格格式错误：\(reason)"
-        case .tooManyRows: "表格超过 10,000 行，请在表格应用中打开。"
-        case .tooManyColumns: "表格超过 200 列，请在表格应用中打开。"
+        case .tooLarge(let limit): coreText("文件超出当前预览上限（\(limit / 1_024 / 1_024) MB）。请在默认应用中打开。")
+        case .notUTF8: coreText("暂时只支持 UTF-8 文本。请转换编码后再打开。")
+        case .binary: coreText("这个文件包含二进制内容，无法作为文本预览。")
+        case .invalidCSV(let reason): coreText("表格格式错误：\(reason)")
+        case .tooManyRows: coreText("表格超过 10,000 行，请在表格应用中打开。")
+        case .tooManyColumns: coreText("表格超过 200 列，请在表格应用中打开。")
         }
     }
 }

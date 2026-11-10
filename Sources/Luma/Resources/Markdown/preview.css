@@ -28,7 +28,7 @@ main { width: 100%; min-height: 100vh; max-width: var(--reading-width, none); ma
   background: var(--paper);
   font-family: var(--reading-font, -apple-system, BlinkMacSystemFont, sans-serif);
   font-size: var(--reading-size, 15px); line-height: var(--reading-line-height, 1.85); }
-main:empty::before { content: '这份文档还是空的。'; color: var(--muted); }
+main:empty::before { content: var(--empty-document-label, '这份文档还是空的。'); color: var(--muted); }
 h1,h2,h3,h4,h5,h6 { line-height: 1.35; font-weight: 650; margin: 1.6em 0 .65em; letter-spacing: -.02em; }
 h1,h2,h3,h4,h5,h6 { position: relative; scroll-margin-top: 24px; }
 h1:focus,h2:focus,h3:focus,h4:focus,h5:focus,h6:focus { outline: none; }

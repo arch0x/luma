@@ -60,8 +60,8 @@ struct MarkdownSectionRail: View {
         .background(LumaTheme.paper)
         .disabled(state.loading && state.headings.isEmpty)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("章节导航")
-        .accessibilityHint(state.outlineTruncated ? "显示前 2,000 个标题" : "")
+        .accessibilityLabel(tr("章节导航"))
+        .accessibilityHint(state.outlineTruncated ? tr("显示前 2,000 个标题") : "")
     }
 
     private var chapterMarks: some View {
@@ -109,7 +109,7 @@ struct MarkdownSectionRail: View {
         }
         .buttonStyle(.plain)
         .focused($focusedID, equals: "")
-        .accessibilityLabel("阅读书签")
+        .accessibilityLabel(tr("阅读书签"))
         .onHover { inside in
             if inside { peek.show("") }
             else { peek.dismissSoon() }
@@ -153,10 +153,10 @@ struct MarkdownSectionRail: View {
             previewID == heading.id ? SectionMarkPreview(heading: heading, bounds: $0) : nil
         }
         .accessibilityLabel(heading.title)
-        .accessibilityValue(current ? "当前章节" : "第 \(heading.level) 级标题")
+        .accessibilityValue(current ? tr("当前章节") : tr("第 \(heading.level) 级标题"))
         .accessibilityHint(heading.summary)
         .accessibilityAddTraits(current ? .isSelected : [])
-        .accessibilityAction(named: Text("打开章节和书签卡片")) { peek.show(heading.id) }
+        .accessibilityAction(named: Text(tr("打开章节和书签卡片"))) { peek.show(heading.id) }
     }
 
     private func hoverStrength(at index: Int, isHovered: Bool) -> CGFloat {
@@ -229,7 +229,7 @@ private struct SectionSummaryCard: View {
             }
             if let session = tab.readingSession {
                 MarkdownBookmarksView(session: session,
-                                      addTitle: heading == nil ? "添加当前位置" : "添加本节书签",
+                                      addTitle: heading == nil ? tr("添加当前位置") : tr("添加本节书签"),
                                       adding: state.addingBookmark || state.loading,
                                       onAdd: { tab.requestReadingBookmark(headingID: heading?.id) },
                                       onSelect: { location in

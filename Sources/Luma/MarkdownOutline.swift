@@ -49,14 +49,14 @@ struct MarkdownOutlineView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("文档大纲").font(.system(size: 11, weight: .semibold)).foregroundStyle(LumaTheme.muted)
+                Text(tr("文档大纲")).font(.system(size: 11, weight: .semibold)).foregroundStyle(LumaTheme.muted)
                 Spacer()
                 Menu {
-                    Button("全部展开") { tab.markdownCollapsedHeadings.removeAll() }
-                    Button("折叠所有章节") { tab.markdownCollapsedHeadings = Set(items.filter(\.hasChildren).map(\.id)) }
+                    Button(tr("全部展开")) { tab.markdownCollapsedHeadings.removeAll() }
+                    Button(tr("折叠所有章节")) { tab.markdownCollapsedHeadings = Set(items.filter(\.hasChildren).map(\.id)) }
                 } label: { Image(systemName: "ellipsis").frame(width: 22, height: 22) }
-                .menuStyle(.borderlessButton).fixedSize().help("大纲显示选项")
-                .accessibilityLabel("大纲显示选项")
+                .menuStyle(.borderlessButton).fixedSize().help(tr("大纲显示选项"))
+                .accessibilityLabel(tr("大纲显示选项"))
             }.padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 8)
 
             ScrollViewReader { proxy in
@@ -73,7 +73,7 @@ struct MarkdownOutlineView: View {
                                             .font(.system(size: 8, weight: .semibold)).frame(width: 16, height: 25)
                                     }
                                     .buttonStyle(.plain).foregroundStyle(LumaTheme.muted)
-                                    .accessibilityLabel("\(tab.markdownCollapsedHeadings.contains(item.id) ? "展开" : "折叠") \(item.heading.title)")
+                                    .accessibilityLabel("\(tab.markdownCollapsedHeadings.contains(item.id) ? tr("展开") : tr("折叠")) \(item.heading.title)")
                                 } else { Color.clear.frame(width: 16, height: 25) }
                                 Button {
                                     state.navigate(to: item.id)
@@ -86,7 +86,7 @@ struct MarkdownOutlineView: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.vertical, 6).contentShape(Rectangle())
                                 }.buttonStyle(.plain).help(item.heading.title)
-                                    .accessibilityValue(item.id == visibleActiveID ? "当前章节" : "H\(item.heading.level)")
+                                    .accessibilityValue(item.id == visibleActiveID ? tr("当前章节") : "H\(item.heading.level)")
                             }
                             .padding(.leading, CGFloat(item.depth) * 10 + 3).padding(.trailing, 8)
                             .background(item.id == visibleActiveID ? LumaTheme.selected : .clear,
@@ -104,13 +104,13 @@ struct MarkdownOutlineView: View {
                 .onChange(of: visibleActiveID, initial: true) { _, id in if let id { proxy.scrollTo(id, anchor: .center) } }
             }
             if state.outlineTruncated {
-                Text("显示前 2,000 个标题").font(.system(size: 10)).foregroundStyle(.tertiary).padding(12)
+                Text(tr("显示前 2,000 个标题")).font(.system(size: 10)).foregroundStyle(.tertiary).padding(12)
             }
         }
         .tint(LumaTheme.accent)
         .accentColor(LumaTheme.accent)
         .disabled(state.loading)
         .background(LumaTheme.chrome)
-        .accessibilityElement(children: .contain).accessibilityLabel("文档大纲")
+        .accessibilityElement(children: .contain).accessibilityLabel(tr("文档大纲"))
     }
 }

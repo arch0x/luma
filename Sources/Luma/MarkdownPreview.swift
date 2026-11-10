@@ -50,7 +50,7 @@ struct MarkdownPreview: View {
                     MarkdownSectionRail(state: state, peek: sectionPeek)
                     .contextMenu {
                         if !state.headings.isEmpty {
-                            Button("打开层级目录") {
+                            Button(tr("打开层级目录")) {
                                 sectionPeek.dismiss()
                                 showOutlineList = true
                             }
@@ -70,16 +70,16 @@ struct MarkdownPreview: View {
 
     private var reader: some View {
         ZStack {
-            MarkdownWebView(source: source, tab: tab, imageRoot: imageRoot, previewWidth: previewWidth, typography: typography, dark: colorScheme == .dark, state: state, navigationRequest: state.navigationRequest, findRequest: tab.markdownFind.request, bookmarkRequest: tab.markdownBookmarkRequest, onOpen: onOpen)
+            MarkdownWebView(source: source, tab: tab, imageRoot: imageRoot, previewWidth: previewWidth, typography: typography, dark: colorScheme == .dark, state: state, navigationRequest: state.navigationRequest, findRequest: tab.markdownFind.request, bookmarkRequest: tab.markdownBookmarkRequest, onOpen: onOpen, language: AppLocalization.shared.language)
                 .id(imageRoot)
                 .opacity(state.error == nil && (!state.loading || !state.metrics.isEmpty) ? 1 : 0)
-            if state.loading { ProgressView("正在排版…").padding().background(LumaTheme.chrome, in: RoundedRectangle(cornerRadius: 8)) }
+            if state.loading { ProgressView(tr("正在排版…")).padding().background(LumaTheme.chrome, in: RoundedRectangle(cornerRadius: 8)) }
             if let error = state.error {
                 VStack(spacing: 16) {
                     Image(systemName: "text.document").font(.largeTitle).foregroundStyle(.secondary)
-                    Text("Markdown 预览暂时不可用").font(.headline)
+                    Text(tr("Markdown 预览暂时不可用")).font(.headline)
                     Text(error).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 420)
-                    Button("查看源码") { tab.showSource = true }
+                    Button(tr("查看源码")) { tab.showSource = true }
                         .buttonStyle(LumaButtonStyle(emphasis: .secondary))
                 }.padding(30)
             }
@@ -91,7 +91,7 @@ struct MarkdownPreview: View {
 enum MarkdownResources {
     static let entryURL = URL(string: "luma-preview://reader/index.html")!
     static let allowedFiles: Set<String> = [
-        "index.html", "preview.css", "preview.js", "content-tools.js", "search.js", "reading.js", "json.js", "languages.js", "vendor/marked.umd.js", "vendor/purify.min.js",
+        "index.html", "preview.css", "preview.js", "localization.js", "content-tools.js", "search.js", "reading.js", "json.js", "languages.js", "vendor/marked.umd.js", "vendor/purify.min.js",
         "vendor/highlight.min.js", "vendor/swift.min.js", "vendor/rust.min.js", "vendor/typescript.min.js", "vendor/mermaid.min.js",
         "vendor/katex/katex.min.js", "vendor/katex/katex.min.css"
     ]
@@ -141,9 +141,10 @@ struct MarkdownWebView: NSViewRepresentable {
     let findRequest: Int
     let bookmarkRequest: Int
     let onOpen: ([URL]) -> Void
+    var language: AppLanguage = .simplifiedChinese
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(source: source, tab: tab, imageRoot: imageRoot, previewWidth: previewWidth, typography: typography, dark: dark, state: state, onOpen: onOpen)
+        Coordinator(source: source, tab: tab, imageRoot: imageRoot, previewWidth: previewWidth, typography: typography, dark: dark, state: state, onOpen: onOpen, language: language)
     }
 
     static func makeWebView(coordinator: Coordinator) -> WKWebView {
@@ -170,6 +171,7 @@ struct MarkdownWebView: NSViewRepresentable {
         coordinator.dark = dark
         coordinator.previewWidth = previewWidth
         coordinator.typography = typography
+        coordinator.language = language
         coordinator.renderIfNeeded()
         coordinator.layoutIfNeeded()
         coordinator.navigateIfNeeded()
@@ -199,6 +201,7 @@ struct MarkdownWebView: NSViewRepresentable {
         var dark: Bool
         var previewWidth: Double
         var typography: MarkdownTypography
+        var language: AppLanguage
         let tab: DocumentTab
         let imageRoot: URL
         let state: MarkdownRenderState
@@ -216,6 +219,7 @@ struct MarkdownWebView: NSViewRepresentable {
         private var lastSource: String?
         private var lastDark: Bool?
         private var lastCodeLanguage: CodeLanguage?
+        private var lastLanguage: AppLanguage?
         private var revision = 0
         private var findRevision = 0
         private var lastFindRequest: Int?
@@ -225,11 +229,12 @@ struct MarkdownWebView: NSViewRepresentable {
         private var layoutRevision = 0
         private var bookmarkInFlightRequest: Int?
 
-        init(source: String, tab: DocumentTab, imageRoot: URL? = nil, previewWidth: Double = 0, typography: MarkdownTypography = .init(), dark: Bool, state: MarkdownRenderState, onOpen: @escaping ([URL]) -> Void) {
+        init(source: String, tab: DocumentTab, imageRoot: URL? = nil, previewWidth: Double = 0, typography: MarkdownTypography = .init(), dark: Bool, state: MarkdownRenderState, onOpen: @escaping ([URL]) -> Void, language: AppLanguage = .simplifiedChinese) {
             self.source = source; self.tab = tab; self.dark = dark; self.state = state; self.onOpen = onOpen
             self.imageRoot = imageRoot ?? tab.url.deletingLastPathComponent()
             self.previewWidth = previewWidth
             self.typography = typography
+            self.language = language
             lastNavigationRequest = state.navigationRequest
         }
 
@@ -240,7 +245,9 @@ struct MarkdownWebView: NSViewRepresentable {
 
         func renderIfNeeded() {
             let codeLanguage = tab.codeLanguage
-            guard loaded, let webView, lastSource != source || lastDark != dark || lastCodeLanguage != codeLanguage else { return }
+            guard loaded, let webView, lastSource != source || lastDark != dark || lastCodeLanguage != codeLanguage || lastLanguage != language else { return }
+            let preserveReadingPosition = lastLanguage != nil && lastLanguage != language
+            lastLanguage = language
             lastSource = source; lastDark = dark; lastCodeLanguage = codeLanguage
             rendering = true
             renderTask?.cancel()
@@ -251,6 +258,7 @@ struct MarkdownWebView: NSViewRepresentable {
             let current = revision
             let source = source
             let dark = dark
+            let language = language
             let offset = tab.markdownOffset
             let location = tab.markdownLocation?.javascriptValue
             let width = previewWidth
@@ -262,8 +270,8 @@ struct MarkdownWebView: NSViewRepresentable {
                 state.loading = true; state.error = nil
                 do {
                     let result = try await webView.callAsyncJavaScript(
-                        "try { return await window.luma.render(source, options); } catch (error) { return {renderError: String(error.message || error).slice(0, 600)}; }",
-                        arguments: ["source": source, "options": ["dark": dark, "offset": offset, "width": width, "typography": typography.javascriptValue, "location": location ?? [:], "codeLanguage": codeLanguage?.identifier ?? "", "codeTitle": codeLanguage?.title ?? ""]],
+                        "try { if (options.preserveReadingPosition) options.location = window.luma.getReadingPosition(); return await window.luma.render(source, options); } catch (error) { return {renderError: String(error.message || error).slice(0, 600)}; }",
+                        arguments: ["source": source, "options": ["language": language.rawValue, "preserveReadingPosition": preserveReadingPosition, "dark": dark, "offset": offset, "width": width, "typography": typography.javascriptValue, "location": location ?? [:], "codeLanguage": codeLanguage?.identifier ?? "", "codeTitle": codeLanguage?.title ?? ""]],
                         in: nil, contentWorld: .page
                     )
                     guard !Task.isCancelled, current == revision else { return }
@@ -453,7 +461,7 @@ struct MarkdownWebView: NSViewRepresentable {
             state.loading = false; state.error = error.localizedDescription
         }
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-            loaded = false; state.loading = false; state.error = "预览进程已退出。请重新载入文件，或切换到源码。"
+            loaded = false; state.loading = false; state.error = tr("预览进程已退出。请重新载入文件，或切换到源码。")
         }
     }
 }

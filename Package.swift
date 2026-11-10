@@ -3,10 +3,11 @@ import PackageDescription
 
 let package = Package(
     name: "Luma",
+    defaultLocalization: "zh-Hans",
     platforms: [.macOS(.v14)],
     products: [.executable(name: "Luma", targets: ["Luma"])],
     targets: [
-        .target(name: "ReaderCore"),
+        .target(name: "ReaderCore", resources: [.process("Resources")]),
         .executableTarget(
             name: "Luma",
             dependencies: ["ReaderCore"],

@@ -5,9 +5,9 @@ public enum FileMoveError: LocalizedError, Equatable {
     case targetNotDirectory, sameDirectory, intoSelf
     public var errorDescription: String? {
         switch self {
-        case .targetNotDirectory: "目标位置不是本地文件夹。"
-        case .sameDirectory: "项目已经位于这个文件夹中。"
-        case .intoSelf: "不能将文件夹移到自身或它的子文件夹中。"
+        case .targetNotDirectory: coreText("目标位置不是本地文件夹。")
+        case .sameDirectory: coreText("项目已经位于这个文件夹中。")
+        case .intoSelf: coreText("不能将文件夹移到自身或它的子文件夹中。")
         }
     }
 }

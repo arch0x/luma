@@ -14,13 +14,13 @@ struct DocumentInformation {
         case .image: format = "\(tab.url.pathExtension.uppercased()) 图片"
         case .table: format = tab.url.pathExtension.uppercased()
         case .unsupported:
-            format = tab.url.pathExtension.isEmpty ? "未知格式" : "\(tab.url.pathExtension.uppercased()) 文件"
+            format = tab.url.pathExtension.isEmpty ? tr("未知格式") : tr("\(tab.url.pathExtension.uppercased()) 文件")
         default: format = tab.codeLanguage?.title ?? tab.kind.label
         }
         characterCount = source?.count
         sourceByteCount = source?.utf8.count
-        if source != nil { encoding = tab.diskSnapshot?.hasBOM == true ? "UTF-8（BOM）" : "UTF-8" }
-        else { encoding = tab.kind.hasSource ? "未识别" : "不适用" }
+        if source != nil { encoding = tab.diskSnapshot?.hasBOM == true ? trKey("UTF-8（BOM）") : "UTF-8" }
+        else { encoding = tab.kind.hasSource ? tr("未识别") : tr("不适用") }
     }
 }
 
@@ -42,12 +42,12 @@ struct DocumentReaderRail<Navigation: View>: View {
                 ?? max(8, (geometry.size.height - actionsHeight) / 2)
             VStack(spacing: separation) {
                 VStack(spacing: 2) {
-                    DocumentRailButton(symbol: "info.circle", label: "文件信息", identifier: "documentInformation",
+                    DocumentRailButton(symbol: "info.circle", label: tr("文件信息"), identifier: "documentInformation",
                                        selected: showingInformation, hover: { showingInformation = $0 }) {
                         showingInformation = true
                     }
                     .frame(width: 30, height: 30)
-                    DocumentRailButton(symbol: "folder", label: "在 Finder 中显示",
+                    DocumentRailButton(symbol: "folder", label: tr("在 Finder 中显示"),
                                        identifier: "revealDocumentInFinder") { reveal(tab.url) }
                         .frame(width: 30, height: 30)
                 }
@@ -87,20 +87,20 @@ private struct DocumentInformationCard: View {
                 .foregroundStyle(LumaTheme.ink)
                 .lineLimit(2).truncationMode(.middle)
             VStack(spacing: 7) {
-                row("类型", information.format)
-                row("字符数", information.characterCount.map { $0.formatted() } ?? "不适用")
-                row("编码", information.encoding)
-                if let bytes = information.sourceByteCount { row("源码大小", "\(bytes.formatted()) 字节") }
+                row(tr("类型"), information.format)
+                row(tr("字符数"), information.characterCount.map { $0.formatted() } ?? tr("不适用"))
+                row(tr("编码"), information.encoding)
+                if let bytes = information.sourceByteCount { row(tr("源码大小"), tr("\(bytes.formatted()) 字节")) }
             }
             if information.characterCount != nil {
                 LumaRule()
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("按当前源码统计，含空格与换行")
+                    Text(tr("按当前源码统计，含空格与换行"))
                         .foregroundStyle(LumaTheme.muted)
-                    Text(tab.isSaving ? "正在保存…" : tab.externalChange ? "磁盘文件已变化" : tab.isDirty ? "未保存" : "已保存")
+                    Text(tab.isSaving ? tr("正在保存…") : tab.externalChange ? tr("磁盘文件已变化") : tab.isDirty ? tr("未保存") : tr("已保存"))
                         .foregroundStyle(tab.isDirty || tab.externalChange ? LumaTheme.warning : LumaTheme.muted)
                     if workspace.autoSaveEnabled {
-                        Text(tab.autoSaveError == nil ? "自动保存已开启" : "自动保存已暂停")
+                        Text(tab.autoSaveError == nil ? tr("自动保存已开启") : tr("自动保存已暂停"))
                             .foregroundStyle(tab.autoSaveError == nil ? LumaTheme.muted : LumaTheme.warning)
                     }
                 }.font(.system(size: 11))
@@ -154,7 +154,7 @@ struct DocumentRailButton: NSViewRepresentable {
                 .withSymbolConfiguration(.init(pointSize: 14, weight: .regular))
         }
         button.setAccessibilityLabel(label)
-        button.setAccessibilityHelp(hover == nil ? label : "悬停查看文件信息，移开收起；也可按空格查看。")
+        button.setAccessibilityHelp(hover == nil ? label : tr("悬停查看文件信息，移开收起；也可按空格查看。"))
         button.toolTip = hover == nil ? label : nil
         button.onHover = hover
         button.onAction = action

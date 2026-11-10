@@ -54,15 +54,15 @@ public struct CSVDocument: Sendable {
                 endedRow = true
                 previousCR = character == "\r"
             } else if state == .afterQuote {
-                throw ReaderError.invalidCSV("引号结束后存在多余字符")
+                throw ReaderError.invalidCSV(coreText("引号结束后存在多余字符"))
             } else if character == "\"" {
-                guard field.isEmpty else { throw ReaderError.invalidCSV("字段中存在未转义的引号") }
+                guard field.isEmpty else { throw ReaderError.invalidCSV(coreText("字段中存在未转义的引号")) }
                 state = .quoted
             } else {
                 field.append(character)
             }
         }
-        guard state != .quoted else { throw ReaderError.invalidCSV("引号未闭合") }
+        guard state != .quoted else { throw ReaderError.invalidCSV(coreText("引号未闭合")) }
         if !endedRow && (!text.isEmpty || !row.isEmpty || !field.isEmpty) { try appendRow() }
         self.rows = rows
         self.sourceLines = sourceLines

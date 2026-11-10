@@ -8,9 +8,9 @@ public enum FileCreationError: LocalizedError, Equatable {
 
     public var errorDescription: String? {
         switch self {
-        case .invalidName: "请输入有效名称，不能使用 /、:、控制字符或单独的 .、..。"
-        case .alreadyExists(let name): "已存在名为“\(name)”的文件或文件夹，请换一个名称。"
-        case .notDirectory: "目标位置不是本地文件夹，请重新选择。"
+        case .invalidName: coreText("请输入有效名称，不能使用 /、:、控制字符或单独的 .、..。")
+        case .alreadyExists(let name): coreText("已存在名为“\(name)”的文件或文件夹，请换一个名称。")
+        case .notDirectory: coreText("目标位置不是本地文件夹，请重新选择。")
         }
     }
 }

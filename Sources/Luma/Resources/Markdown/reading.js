@@ -54,7 +54,7 @@
       const block = at(blocks, offset + 24) || blocks[0];
       const heading = at(headings, offset + 28);
       const headingTitle = heading ? callbacks.label(heading.element) : '';
-      const title = block?.label && block.label !== headingTitle ? `${headingTitle ? headingTitle + ' · ' : ''}${block.label}` : headingTitle || '阅读位置';
+      const title = block?.label && block.label !== headingTitle ? `${headingTitle ? headingTitle + ' · ' : ''}${block.label}` : headingTitle || window.lumaUI.text('阅读位置');
       return {offset, progress: maximum ? unit(offset / maximum) : 0,
         blockKey: block?.key || '', blockProgress: block ? unit((offset + 24 - block.top) / block.span) : 0,
         headingID: heading?.id || '', headingProgress: heading ? unit((offset + 24 - heading.top) / heading.span) : 0,

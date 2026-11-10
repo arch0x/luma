@@ -17,14 +17,14 @@ struct SourceReader: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                Text("源码").font(.caption).foregroundStyle(LumaTheme.muted)
+                Text(tr("源码")).font(.caption).foregroundStyle(LumaTheme.muted)
                 Spacer(minLength: 0)
                 Button {
                     selection = tab.sourceEditor().selectedValue()
                     inspecting = selection != nil
-                } label: { Label("解释所选值", systemImage: "slider.horizontal.3") }
+                } label: { Label(tr("解释所选值"), systemImage: "slider.horizontal.3") }
                     .disabled(tab.sourceSelection.length == 0 || tab.sourceSelection.length > 4096 || tab.isLoading)
-                    .help(tab.sourceSelection.length > 4096 ? "选区过长，请缩小到一个值后再解释" : "选中颜色、时间戳、字节大小或转义字符串后查看解释与替换")
+                    .help(tab.sourceSelection.length > 4096 ? tr("选区过长，请缩小到一个值后再解释") : tr("选中颜色、时间戳、字节大小或转义字符串后查看解释与替换"))
                     .popover(isPresented: $inspecting) {
                         if let selection {
                             ValueInspector(selection: selection, tab: tab) { inspecting = false }
@@ -67,32 +67,32 @@ struct ValueInspector: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("解释所选值").font(.headline)
+                Text(tr("解释所选值")).font(.headline)
                 Spacer()
-                Button(action: close) { Image(systemName: "xmark") }.accessibilityLabel("关闭值解释")
+                Button(action: close) { Image(systemName: "xmark") }.accessibilityLabel(tr("关闭值解释"))
             }
             Text(selection.source).font(.system(.caption, design: .monospaced)).lineLimit(3).textSelection(.enabled)
                 .foregroundStyle(LumaTheme.muted)
-            Picker("解释方式", selection: $kind) {
-                ForEach(ReadableValue.Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            Picker(tr("解释方式"), selection: $kind) {
+                ForEach(ReadableValue.Kind.allCases, id: \.self) { Text(trKey($0.rawValue)).tag($0) }
             }.onChange(of: kind) { _, _ in
                 replacement = selection.source; decoded = ReadableValue.decodedString(selection.source) ?? ""; error = nil
             }
             details
             Divider()
-            TextField("替换为", text: $replacement, axis: .vertical).lineLimit(1...4).textFieldStyle(.roundedBorder)
+            TextField(tr("替换为"), text: $replacement, axis: .vertical).lineLimit(1...4).textFieldStyle(.roundedBorder)
                 .onChange(of: replacement) { _, value in
                     if let value = ReadableValue.decodedString(value), kind == .string, decoded != value { decoded = value }
                 }
-            if !valid { Text("这个值无法按当前方式解释，请修改内容或切换解释方式。").font(.caption).foregroundStyle(LumaTheme.warning) }
+            if !valid { Text(tr("这个值无法按当前方式解释，请修改内容或切换解释方式。")).font(.caption).foregroundStyle(LumaTheme.warning) }
             if let error { Text(error).font(.caption).foregroundStyle(LumaTheme.warning) }
-            Text("解释方式与单位可更正。点击替换后更新草稿，可撤销；保存沿用当前设置。")
+            Text(tr("解释方式与单位可更正。点击替换后更新草稿，可撤销；保存沿用当前设置。"))
                 .font(.caption).foregroundStyle(LumaTheme.muted)
             HStack {
                 Spacer()
-                Button("替换选中内容") {
+                Button(tr("替换选中内容")) {
                     if tab.sourceEditor().replaceValue(selection, with: replacement) { close() }
-                    else { error = "源码或选区状态已变化，请关闭面板后重新选择。" }
+                    else { error = tr("源码或选区状态已变化，请关闭面板后重新选择。") }
                 }.disabled(!valid || replacement == selection.source || tab.isLoading || tab.isRenaming)
             }
         }.padding(16).frame(width: 340).foregroundStyle(LumaTheme.ink)
@@ -102,7 +102,7 @@ struct ValueInspector: View {
         switch kind {
         case .color:
             if let rgba = ReadableValue.color(replacement) {
-                ColorPicker("颜色", selection: Binding(get: {
+                ColorPicker(tr("颜色"), selection: Binding(get: {
                     Color(.sRGB, red: rgba.red, green: rgba.green, blue: rgba.blue, opacity: rgba.alpha)
                 }, set: { color in
                     guard let rgb = NSColor(color).usingColorSpace(.sRGB) else { return }
@@ -112,10 +112,10 @@ struct ValueInspector: View {
                 Text(rgba.hex).monospaced().textSelection(.enabled)
             }
         case .timestamp:
-            Picker("单位", selection: $unit) {
-                ForEach(ReadableValue.TimestampUnit.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            Picker(tr("单位"), selection: $unit) {
+                ForEach(ReadableValue.TimestampUnit.allCases, id: \.self) { Text(trKey($0.rawValue)).tag($0) }
             }.pickerStyle(.segmented)
-            Toggle("使用本机时区", isOn: $localTime).toggleStyle(.checkbox)
+            Toggle(tr("使用本机时区"), isOn: $localTime).toggleStyle(.checkbox)
             if let date = ReadableValue.date(replacement, unit: unit) {
                 let formatter = ISO8601DateFormatter()
                 let _ = formatter.timeZone = localTime ? .current : TimeZone(secondsFromGMT: 0)
@@ -125,13 +125,13 @@ struct ValueInspector: View {
             }
         case .bytes:
             if let bytes = ReadableValue.byteCount(replacement) {
-                Text("\(bytes.formatted(.number.precision(.fractionLength(0...3)))) 字节").textSelection(.enabled)
+                Text(tr("\(bytes.formatted(.number.precision(.fractionLength(0...3)))) 字节")).textSelection(.enabled)
                 Text("\((bytes / 1024).formatted(.number.precision(.fractionLength(0...3)))) KiB · \((bytes / 1_048_576).formatted(.number.precision(.fractionLength(0...3)))) MiB")
                     .font(.caption).foregroundStyle(LumaTheme.muted)
-                Text("KB / MB 按 1000 换算；KiB / MiB 按 1024 换算。").font(.caption)
+                Text(tr("KB / MB 按 1000 换算；KiB / MiB 按 1024 换算。")).font(.caption)
             }
         case .string:
-            Text("解码后的文字").font(.caption).foregroundStyle(LumaTheme.muted)
+            Text(tr("解码后的文字")).font(.caption).foregroundStyle(LumaTheme.muted)
             TextEditor(text: $decoded).font(.system(.body, design: .monospaced)).frame(height: 110)
                 .border(LumaTheme.controlBorder)
                 .onChange(of: decoded) { _, value in

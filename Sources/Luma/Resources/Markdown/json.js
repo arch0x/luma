@@ -1,6 +1,7 @@
 /* Whitespace-only formatting: keep number lexemes, duplicate keys, escapes and comments. */
 (() => {
   'use strict';
+  const ui = window.lumaUI.text;
   const MAX_OUTPUT = 2 * 1024 * 1024;
   const whitespace = character => /[ \n\r\t]/.test(character);
   const punctuation = character => '{}[],:'.includes(character);
@@ -20,14 +21,14 @@
           if (character === '\\') position++;
           else if (character === '"') { closed = true; break; }
         }
-        if (!closed) throw new SyntaxError('字符串尚未结束');
+        if (!closed) throw new SyntaxError(ui('字符串尚未结束'));
       } else if (comments && source.startsWith('//', position)) {
         kind = 'lineComment'; position += 2;
         while (position < source.length && !/[\r\n]/.test(source[position])) position++;
       } else if (comments && source.startsWith('/*', position)) {
         kind = 'blockComment';
         const end = source.indexOf('*/', position + 2);
-        if (end === -1) throw new SyntaxError('块注释尚未结束');
+        if (end === -1) throw new SyntaxError(ui('块注释尚未结束'));
         position = end + 2;
       } else if (punctuation(source[position])) {
         position++;
@@ -37,7 +38,7 @@
                !(comments && (source.startsWith('//', position) || source.startsWith('/*', position)))) position++;
       }
       result.push({kind, text: source.slice(start, position)});
-      if (result.length > 250000) throw new RangeError('格式化标记超过上限');
+      if (result.length > 250000) throw new RangeError(ui('格式化标记超过上限'));
     }
     return result;
   }
@@ -100,7 +101,7 @@
       try { return format(source, items); }
       catch (error) { if (error instanceof RangeError) return source; throw error; }
     } catch (error) {
-      throw new Error(`JSONC 格式错误：${String(error.message || error).slice(0, 240)}`);
+      throw new Error(ui('JSONC 格式错误：{0}', String(error.message || error).slice(0, 240)));
     }
   };
 
@@ -110,12 +111,12 @@
     const fallback = note => ({records: [], fallback: source, note});
     for (const [index, line] of source.split(/\r\n|\r|\n/).entries()) {
       if (!line.trim()) continue;
-      if (records.length >= 10000) return fallback('记录超过 10,000 条，已按原文显示。可以切换到源码继续编辑。');
+      if (records.length >= 10000) return fallback(ui('记录超过 10,000 条，已按原文显示。可以切换到源码继续编辑。'));
       let value = line, error = '';
       try { JSON.parse(line); value = window.lumaFormatJSON(line); }
-      catch (failure) { error = `第 ${index + 1} 行不是有效 JSON：${String(failure.message || failure).slice(0, 200)}`; }
+      catch (failure) { error = ui('第 {0} 行不是有效 JSON：{1}', index + 1, String(failure.message || failure).slice(0, 200)); }
       size += value.length;
-      if (size > MAX_OUTPUT) return fallback('格式化后的内容超过预览上限，已按原文显示。');
+      if (size > MAX_OUTPUT) return fallback(ui('格式化后的内容超过预览上限，已按原文显示。'));
       records.push({sourceLine: index + 1, value, error});
     }
     return {records};

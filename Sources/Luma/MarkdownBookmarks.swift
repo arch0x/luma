@@ -10,7 +10,7 @@ struct MarkdownBookmarksView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 4) {
-                Text(session.bookmarks.isEmpty ? "书签" : "书签 · \(session.bookmarks.count)")
+                Text(session.bookmarks.isEmpty ? tr("书签") : tr("书签 · \(session.bookmarks.count)"))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(LumaTheme.muted)
                 Spacer(minLength: 4)
@@ -37,7 +37,7 @@ struct MarkdownBookmarksView: View {
                                     Image(systemName: "trash")
                                 }
                                 .buttonStyle(LumaButtonStyle())
-                                .help("移除书签").accessibilityLabel("移除 \(bookmark.title)")
+                                .help(tr("移除书签")).accessibilityLabel(tr("移除 \(bookmark.title)"))
                             }
                             .padding(.horizontal, 8).frame(height: 32)
                         }

@@ -8,10 +8,10 @@ enum MarkdownImageError: LocalizedError {
     case outsideWorkspace, unsupported, tooLarge, budget
     var errorDescription: String? {
         switch self {
-        case .outsideWorkspace: "图片不在当前工作区内。请添加包含该图片的文件夹。"
-        case .unsupported: "图片不存在、格式不受支持或文件已损坏。"
-        case .tooLarge: "图片超过预览大小限制。"
-        case .budget: "此文档的图片预览已达到大小限制。"
+        case .outsideWorkspace: readerText("图片不在当前工作区内。请添加包含该图片的文件夹。")
+        case .unsupported: readerText("图片不存在、格式不受支持或文件已损坏。")
+        case .tooLarge: readerText("图片超过预览大小限制。")
+        case .budget: readerText("此文档的图片预览已达到大小限制。")
         }
     }
 }

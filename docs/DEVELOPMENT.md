@@ -67,6 +67,21 @@ zsh scripts/test.sh --no-parallel
 
 运行最低版本仍由 `Package.swift` 声明为 macOS 14；CI 的两个环境不替代 macOS 14 或 Intel 实机验证。GitHub 端的实际执行结果将在仓库配置并推送后产生。
 
+## 界面本地化
+
+`Localization/en.json` 是应用自有中文文案与英文译文的统一来源。Swift 界面使用 `tr` / `trKey`，ReaderCore 的非主线程错误使用 `coreText`；插值保留为编号占位符，用户文件名和内容只作为数据插入。
+
+修改文案后运行：
+
+```sh
+python3 scripts/generate-localizations.py
+python3 scripts/generate-localizations.py --check
+```
+
+脚本生成 ReaderCore 资源包中的 `zh-Hans.lproj` / `en.lproj` 及离线预览的 `localization.js`，CI 会检查生成结果是否同步。新增用户文案需要同时补充英文译文，并保留 `{0}` 等占位符。目录名称、用户正文、代码内容与格式标识不进行翻译。
+
+语言偏好保存在本机。切换时更新现有视图及菜单，不以重建工作区的方式刷新语言；预览重排前会捕获当前阅读锚点。Apple 原生面板的语言仍由系统呈现机制管理。
+
 ## 原生交互
 
 - 标签右键菜单通过 AppKit 原生菜单处理，支持鼠标右键与 Control-click；命中检查同时限制到标签自身和横向滚动的可见区域，普通点击、关闭按钮和滚动保持原有行为。关闭标签或拆卸工具栏时清理对应的事件监听。

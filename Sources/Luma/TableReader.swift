@@ -31,7 +31,7 @@ struct TableCellSelection: Identifiable {
     var hasConditions: Bool { !filters.isEmpty || sortColumn != nil }
     func title(_ column: Int) -> String {
         let label = rows.first.flatMap { column < $0.count ? $0[column] : nil } ?? ""
-        return label.isEmpty ? "第 \(column + 1) 列" : label
+        return label.isEmpty ? tr("第 \(column + 1) 列") : label
     }
     func value(row: Int, column: Int) -> String {
         guard rows.indices.contains(row), rows[row].indices.contains(column) else { return "" }
@@ -110,60 +110,60 @@ struct TableReader: View {
                     HStack(spacing: 8) {
                         ForEach(state.filters.keys.sorted(), id: \.self) { column in
                             Button { state.setFilter(.init(), column: column) } label: {
-                                Label("\(state.title(column)) · 已筛选", systemImage: "xmark.circle")
-                            }.help("移除这一列的筛选")
+                                Label(tr("\(state.title(column)) · 已筛选"), systemImage: "xmark.circle")
+                            }.help(tr("移除这一列的筛选"))
                         }
                         if let column = state.sortColumn {
-                            Text("\(state.title(column)) · \(state.ascending ? "升序" : "降序")").foregroundStyle(LumaTheme.muted)
+                            Text("\(state.title(column)) · \(state.ascending ? tr("升序") : tr("降序"))").foregroundStyle(LumaTheme.muted)
                         }
                     }.font(.caption).buttonStyle(LumaButtonStyle()).padding(.horizontal, 12).padding(.vertical, 4)
                 }
             }
             LumaRule()
             if state.rows.isEmpty {
-                ContentUnavailableView("空表格", systemImage: "tablecells", description: Text("这个文件没有可显示的数据。"))
+                ContentUnavailableView(tr("空表格"), systemImage: "tablecells", description: Text(tr("这个文件没有可显示的数据。")))
             } else {
-                NativeTableReader(state: state, revision: state.revision, widthMode: state.widthMode)
+                NativeTableReader(state: state, revision: state.revision, widthMode: state.widthMode, language: AppLocalization.shared.language)
                     .clipped()
                     .overlay {
                         if state.visibleRows.isEmpty && state.dataCount > 0 {
-                            ContentUnavailableView("没有匹配的记录", systemImage: "line.3.horizontal.decrease.circle", description: Text("调整表头筛选，或重置全部条件。"))
+                            ContentUnavailableView(tr("没有匹配的记录"), systemImage: "line.3.horizontal.decrease.circle", description: Text(tr("调整表头筛选，或重置全部条件。")))
                                 .allowsHitTesting(false)
                         }
                     }
             }
             LumaRule()
-            Text("点击表头筛选或排序 · 拖动表头分隔线调整列宽 · 双击单元格查看全文 · 行号对应源文件起始行")
+            Text(tr("点击表头筛选或排序 · 拖动表头分隔线调整列宽 · 双击单元格查看全文 · 行号对应源文件起始行"))
                 .font(.system(size: 11)).foregroundStyle(LumaTheme.muted).lineLimit(2).padding(7)
         }
         .sheet(item: $state.expandedCell) { cell in
             VStack(alignment: .leading, spacing: 12) {
-                Text("源码第 \(state.sourceLine(cell.row)) 行 · \(state.title(cell.column))").font(.headline).lineLimit(2)
+                Text(tr("源码第 \(state.sourceLine(cell.row)) 行 · \(state.title(cell.column))")).font(.headline).lineLimit(2)
                 ScrollView {
                     Text(state.value(row: cell.row, column: cell.column)).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(12)
                 }.background(LumaTheme.paper).frame(minHeight: 180)
                 HStack {
-                    Button("复制完整内容") {
+                    Button(tr("复制完整内容")) {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(state.value(row: cell.row, column: cell.column), forType: .string)
                     }
                     Spacer()
-                    Button("完成") { state.expandedCell = nil }.keyboardShortcut(.defaultAction)
+                    Button(tr("完成")) { state.expandedCell = nil }.keyboardShortcut(.defaultAction)
                 }
             }.padding(20).frame(width: 540, height: 380).onExitCommand { state.expandedCell = nil }
         }
     }
     private var recordCount: some View {
-        Text("\(state.visibleRows.count.formatted()) / \(state.dataCount.formatted()) 条 · \(state.columnCount) 列")
+        Text(tr("\(state.visibleRows.count.formatted()) / \(state.dataCount.formatted()) 条 · \(state.columnCount) 列"))
             .font(.caption.monospacedDigit()).foregroundStyle(LumaTheme.muted)
     }
     private var controls: some View {
         HStack(spacing: 8) {
-            Picker("列宽", selection: $state.widthMode) {
-                ForEach(TableReadingState.WidthMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            Picker(tr("列宽"), selection: $state.widthMode) {
+                ForEach(TableReadingState.WidthMode.allCases, id: \.self) { Text(trKey($0.rawValue)).tag($0) }
             }.labelsHidden().fixedSize().controlSize(.small)
-            Menu("列操作") {
+            Menu(tr("列操作")) {
                 ForEach(0..<state.columnCount, id: \.self) { column in
                     Button(state.title(column)) { filterColumn = column; showingFilter = true }
                 }
@@ -171,7 +171,7 @@ struct TableReader: View {
             .popover(isPresented: $showingFilter) {
                 TableColumnFilterView(state: state, column: filterColumn)
             }
-            Button("重置") { state.reset() }.disabled(!state.hasConditions).help("重置全部筛选与排序")
+            Button(tr("重置")) { state.reset() }.disabled(!state.hasConditions).help(tr("重置全部筛选与排序"))
         }
     }
 }
@@ -185,30 +185,30 @@ struct TableColumnFilterView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(state.title(column)).font(.headline).lineLimit(2)
             HStack {
-                Button("升序") { state.sort(column: column, ascending: true) }
-                Button("降序") { state.sort(column: column, ascending: false) }
+                Button(tr("升序")) { state.sort(column: column, ascending: true) }
+                Button(tr("降序")) { state.sort(column: column, ascending: false) }
                 Spacer()
-                Button("清除此列") { state.setFilter(.init(), column: column) }
+                Button(tr("清除此列")) { state.setFilter(.init(), column: column) }
             }.controlSize(.small)
-            TextField("包含文字", text: Binding(get: { filter.query }, set: { value in
+            TextField(tr("包含文字"), text: Binding(get: { filter.query }, set: { value in
                 var next = filter; next.query = value; state.setFilter(next, column: column)
             })).textFieldStyle(.roundedBorder)
             let summaryValues = state.facets(column: column)
             let numbers = summaryValues.compactMap { TableReadingState.number($0.value) }
-            Text("空值 \(summaryValues.first(where: { $0.value.isEmpty })?.count ?? 0) · \(summaryValues.count) 种值")
+            Text(tr("空值 \(summaryValues.first(where: { $0.value.isEmpty })?.count ?? 0) · \(summaryValues.count) 种值"))
                 .font(.caption).foregroundStyle(.secondary)
             if let low = numbers.min(), let high = numbers.max() {
-                Text("数值范围 \(NSDecimalNumber(decimal: low).stringValue) – \(NSDecimalNumber(decimal: high).stringValue)")
+                Text(tr("数值范围 \(NSDecimalNumber(decimal: low).stringValue) – \(NSDecimalNumber(decimal: high).stringValue)"))
                     .font(.caption).foregroundStyle(.secondary).lineLimit(2)
             }
             Divider()
             HStack {
-                Button("全选") { var next = filter; next.values = nil; state.setFilter(next, column: column) }
-                Button("全不选") { var next = filter; next.values = []; state.setFilter(next, column: column) }
+                Button(tr("全选")) { var next = filter; next.values = nil; state.setFilter(next, column: column) }
+                Button(tr("全不选")) { var next = filter; next.values = []; state.setFilter(next, column: column) }
                 Spacer()
-                Text("值 · 条数").foregroundStyle(.secondary)
+                Text(tr("值 · 条数")).foregroundStyle(.secondary)
             }.font(.caption)
-            TextField("搜索列值", text: $valueQuery).textFieldStyle(.roundedBorder)
+            TextField(tr("搜索列值"), text: $valueQuery).textFieldStyle(.roundedBorder)
             let values = state.facets(column: column).filter { valueQuery.isEmpty || $0.value.localizedCaseInsensitiveContains(valueQuery) }
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
@@ -220,7 +220,7 @@ struct TableColumnFilterView: View {
                             next.values = values; state.setFilter(next, column: column)
                         })) {
                             HStack {
-                                Text(item.value.isEmpty ? "（空值）" : item.value).lineLimit(2)
+                                Text(item.value.isEmpty ? tr("（空值）") : item.value).lineLimit(2)
                                 Spacer()
                                 Text(item.count.formatted()).foregroundStyle(.secondary).monospacedDigit()
                             }
@@ -228,7 +228,7 @@ struct TableColumnFilterView: View {
                     }
                 }.padding(.vertical, 4)
             }.frame(height: 200)
-            if values.count > 200 { Text("显示前 200 个值，请搜索缩小范围。").font(.caption).foregroundStyle(.secondary) }
+            if values.count > 200 { Text(tr("显示前 200 个值，请搜索缩小范围。")).font(.caption).foregroundStyle(.secondary) }
         }.padding(14).frame(width: 310)
     }
 }
@@ -237,6 +237,7 @@ struct NativeTableReader: NSViewRepresentable {
     let state: TableReadingState
     let revision: Int
     let widthMode: TableReadingState.WidthMode
+    var language: AppLanguage = .simplifiedChinese
     func makeCoordinator() -> Coordinator { Coordinator(state: state) }
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = TableReadingScrollView()
@@ -255,7 +256,7 @@ struct NativeTableReader: NSViewRepresentable {
         table.columnAutoresizingStyle = .noColumnAutoresizing
         table.allowsColumnReordering = false
         table.target = context.coordinator; table.doubleAction = #selector(Coordinator.expandCell)
-        table.setAccessibilityLabel("数据表格，点击表头筛选，双击单元格查看完整内容")
+        table.setAccessibilityLabel(tr("数据表格，点击表头筛选，双击单元格查看完整内容"))
         scroll.hasHorizontalScroller = true; scroll.hasVerticalScroller = true; scroll.autohidesScrollers = true
         scroll.documentView = table
         context.coordinator.table = table
@@ -312,8 +313,8 @@ struct NativeTableReader: NSViewRepresentable {
             cell.font = .systemFont(ofSize: 12)
             cell.textColor = column < 0 ? .secondaryLabelColor : LumaTheme.nativeInk
             cell.lineBreakMode = .byTruncatingTail
-            cell.toolTip = column < 0 ? "源码第 \(state.sourceLine(original)) 行" : state.value(row: original, column: column)
-            cell.setAccessibilityLabel(column < 0 ? "源码第 \(state.sourceLine(original)) 行" : "\(state.title(column))：\(state.value(row: original, column: column))")
+            cell.toolTip = column < 0 ? tr("源码第 \(state.sourceLine(original)) 行") : state.value(row: original, column: column)
+            cell.setAccessibilityLabel(column < 0 ? tr("源码第 \(state.sourceLine(original)) 行") : "\(state.title(column))：\(state.value(row: original, column: column))")
             return cell
         }
         func tableView(_ tableView: NSTableView, didClick tableColumn: NSTableColumn) {

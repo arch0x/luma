@@ -13,8 +13,8 @@ struct PDFReader: View {
         Group {
             if let document { PDFCanvas(document: document, tab: tab) }
             else if failed {
-                FilePlaceholder(symbol: "doc.richtext", title: "无法读取 PDF", message: "文件可能已损坏、不可访问，或超过 128 MB。", url: tab.url)
-            } else { ProgressView("正在打开 PDF…") }
+                FilePlaceholder(symbol: "doc.richtext", title: tr("无法读取 PDF"), message: tr("文件可能已损坏、不可访问，或超过 128 MB。"), url: tab.url)
+            } else { ProgressView(tr("正在打开 PDF…")) }
         }
         .task(id: tab.url) {
             let size = (try? tab.url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
@@ -102,8 +102,8 @@ private actor ImageLoader {
         case tooLarge, unreadable
         var errorDescription: String? {
             switch self {
-            case .tooLarge: "图片超过 64 MB，请在默认应用中打开。"
-            case .unreadable: "图片格式不受支持，或文件已经损坏。"
+            case .tooLarge: readerText("图片超过 64 MB，请在默认应用中打开。")
+            case .unreadable: readerText("图片格式不受支持，或文件已经损坏。")
             }
         }
     }
@@ -130,27 +130,27 @@ struct ImageReader: View {
                 }.background(LumaTheme.paper)
                 LumaRule()
                 HStack(spacing: 6) {
-                    Text("\(Int(image.size.width)) × \(Int(image.size.height)) · 最高 4096px 预览")
+                    Text(tr("\(Int(image.size.width)) × \(Int(image.size.height)) · 最高 4096px 预览"))
                         .font(.caption).foregroundStyle(LumaTheme.muted).lineLimit(1)
                     Spacer()
                     Button { tab.zoom = max(0.25, tab.zoom / 1.25) } label: { Image(systemName: "minus.magnifyingglass") }
-                        .help("缩小").accessibilityLabel("缩小")
-                    Button("适合窗口") { tab.imageActualSize = false; tab.zoom = 1 }
-                    Button("原始大小") { tab.imageActualSize = true; tab.zoom = 1 }
+                        .help(tr("缩小")).accessibilityLabel(tr("缩小"))
+                    Button(tr("适合窗口")) { tab.imageActualSize = false; tab.zoom = 1 }
+                    Button(tr("原始大小")) { tab.imageActualSize = true; tab.zoom = 1 }
                     Button { tab.zoom = min(8, tab.zoom * 1.25) } label: { Image(systemName: "plus.magnifyingglass") }
-                        .help("放大").accessibilityLabel("放大")
+                        .help(tr("放大")).accessibilityLabel(tr("放大"))
                 }.buttonStyle(LumaButtonStyle()).padding(.horizontal, 12).padding(.vertical, 4)
                     .background(LumaTheme.chrome)
             } else if let error {
-                FilePlaceholder(symbol: "photo", title: "无法读取图片", message: error, url: tab.url)
-            } else { ProgressView("正在打开图片…").frame(maxWidth: .infinity, maxHeight: .infinity) }
+                FilePlaceholder(symbol: "photo", title: tr("无法读取图片"), message: error, url: tab.url)
+            } else { ProgressView(tr("正在打开图片…")).frame(maxWidth: .infinity, maxHeight: .infinity) }
         }
         .task(id: tab.url) {
             do {
                 let data = try await loader.thumbnail(tab.url)
                 guard !Task.isCancelled else { return }
                 image = NSImage(data: data)
-                if image == nil { error = "无法解码图片。" }
+                if image == nil { error = tr("无法解码图片。") }
             } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
         }
     }

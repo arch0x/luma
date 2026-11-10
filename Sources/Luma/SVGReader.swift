@@ -1,5 +1,6 @@
 import SwiftUI
 import WebKit
+import ReaderCore
 
 @Observable final class SVGRenderState {
     var loading = true
@@ -16,28 +17,28 @@ struct SVGReader: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                SVGWebView(source: source, zoom: tab.zoom, dark: colorScheme == .dark, state: state, actualSize: tab.imageActualSize)
+                SVGWebView(source: source, zoom: tab.zoom, dark: colorScheme == .dark, state: state, actualSize: tab.imageActualSize, language: AppLocalization.shared.language)
                     .opacity(state.error == nil ? 1 : 0)
-                if state.loading { ProgressView("正在打开 SVG…") }
+                if state.loading { ProgressView(tr("正在打开 SVG…")) }
                 if let error = state.error {
                     VStack(spacing: 12) {
-                        Text("暂时无法生成 SVG 预览").font(.headline)
+                        Text(tr("暂时无法生成 SVG 预览")).font(.headline)
                         Text(error).font(.callout).foregroundStyle(.secondary)
-                        Button("查看源码") { tab.showSource = true }
+                        Button(tr("查看源码")) { tab.showSource = true }
                             .buttonStyle(LumaButtonStyle(emphasis: .secondary))
                     }.padding(32)
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
             LumaRule()
             HStack(spacing: 6) {
-                Text("SVG · 矢量预览").font(.caption).foregroundStyle(LumaTheme.muted)
+                Text(tr("SVG · 矢量预览")).font(.caption).foregroundStyle(LumaTheme.muted)
                 Spacer()
                 Button { tab.zoom = max(0.25, tab.zoom / 1.25) } label: { Image(systemName: "minus.magnifyingglass") }
-                    .help("缩小").accessibilityLabel("缩小")
-                Button("适合窗口") { tab.imageActualSize = false; tab.zoom = 1 }
-                Button("按文字大小") { tab.imageActualSize = true; tab.zoom = 1 }
+                    .help(tr("缩小")).accessibilityLabel(tr("缩小"))
+                Button(tr("适合窗口")) { tab.imageActualSize = false; tab.zoom = 1 }
+                Button(tr("按文字大小")) { tab.imageActualSize = true; tab.zoom = 1 }
                 Button { tab.zoom = min(8, tab.zoom * 1.25) } label: { Image(systemName: "plus.magnifyingglass") }
-                    .help("放大").accessibilityLabel("放大")
+                    .help(tr("放大")).accessibilityLabel(tr("放大"))
             }.buttonStyle(LumaButtonStyle()).padding(.horizontal, 12).padding(.vertical, 4)
                 .background(LumaTheme.chrome)
         }
@@ -51,15 +52,16 @@ struct SVGWebView: NSViewRepresentable {
     let dark: Bool
     let state: SVGRenderState
     var actualSize = false
+    var language: AppLanguage = .simplifiedChinese
 
     func makeCoordinator() -> Coordinator { Coordinator(state: state) }
     func makeNSView(context: Context) -> WKWebView {
         let view = Self.makeWebView(coordinator: context.coordinator)
-        context.coordinator.update(source: source, zoom: zoom, dark: dark, actualSize: actualSize)
+        context.coordinator.update(source: source, zoom: zoom, dark: dark, actualSize: actualSize, language: language)
         return view
     }
     func updateNSView(_ view: WKWebView, context: Context) {
-        context.coordinator.update(source: source, zoom: zoom, dark: dark, actualSize: actualSize)
+        context.coordinator.update(source: source, zoom: zoom, dark: dark, actualSize: actualSize, language: language)
     }
     static func makeWebView(coordinator: Coordinator) -> WKWebView {
         let configuration = WKWebViewConfiguration()
@@ -84,19 +86,22 @@ struct SVGWebView: NSViewRepresentable {
         private var zoom = 1.0
         private var dark = false
         private var actualSize = false
+        private var language = AppLanguage.simplifiedChinese
         private var revision = ""
         private var navigation: WKNavigation?
 
         init(state: SVGRenderState) { self.state = state }
 
-        func update(source: String, zoom: Double, dark: Bool, actualSize: Bool = false) {
+        func update(source: String, zoom: Double, dark: Bool, actualSize: Bool = false, language: AppLanguage = .simplifiedChinese) {
             let changedAppearance = self.zoom != zoom || self.dark != dark || self.actualSize != actualSize
             self.zoom = zoom; self.dark = dark; self.actualSize = actualSize
-            if self.source != source {
+            let languageChanged = self.language != language
+            self.language = language
+            if self.source != source || languageChanged {
                 self.source = source
                 revision = UUID().uuidString
                 state.loading = true; state.error = nil; state.size = nil
-                navigation = webView?.loadHTMLString(Self.html(source: source, zoom: zoom, dark: dark, revision: revision, actualSize: actualSize), baseURL: nil)
+                navigation = webView?.loadHTMLString(Self.html(source: source, zoom: zoom, dark: dark, revision: revision, actualSize: actualSize, language: language), baseURL: nil)
             } else if changedAppearance { updateAppearance() }
         }
 
@@ -113,7 +118,7 @@ struct SVGWebView: NSViewRepresentable {
                 state.size = CGSize(width: width, height: height)
                 state.error = nil
             } else {
-                state.error = "SVG 无法显示，可以切换到源码检查文件内容。"
+                state.error = tr("SVG 无法显示，可以切换到源码检查文件内容。")
             }
         }
 
@@ -130,14 +135,14 @@ struct SVGWebView: NSViewRepresentable {
             state.loading = false; state.error = error.localizedDescription
         }
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-            state.loading = false; state.error = "预览进程已退出。请切换到源码，或重新载入文件。"
+            state.loading = false; state.error = tr("预览进程已退出。请切换到源码，或重新载入文件。")
         }
 
-        private static func html(source: String, zoom: Double, dark: Bool, revision: String, actualSize: Bool) -> String {
+        private static func html(source: String, zoom: Double, dark: Bool, revision: String, actualSize: Bool, language: AppLanguage) -> String {
             let encoded = Data(source.utf8).base64EncodedString()
             return #"""
             <!doctype html>
-            <html data-dark="\#(dark)"><head><meta charset="utf-8">
+            <html lang="\#(language.rawValue)" data-dark="\#(dark)"><head><meta charset="utf-8">
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-\#(revision)'; base-uri 'none'; form-action 'none'">
             <style>
               :root { color-scheme: light; background: #FCFCFA; }
@@ -148,7 +153,7 @@ struct SVGWebView: NSViewRepresentable {
               img { display: block; background-color: transparent;
                 background-image: conic-gradient(rgba(128,128,128,.16) 25%, transparent 0 50%, rgba(128,128,128,.16) 0 75%, transparent 0);
                 background-size: 16px 16px; }
-            </style></head><body><main><img alt="SVG 图像" src="data:image/svg+xml;base64,\#(encoded)"></main>
+            </style></head><body><main><img alt="\#(ReaderLocalization.text(key: "SVG 图像", language: language))" src="data:image/svg+xml;base64,\#(encoded)"></main>
             <script nonce="\#(revision)">
               const image = document.querySelector('img');
               let zoom = \#(zoom), actualSize = \#(actualSize);

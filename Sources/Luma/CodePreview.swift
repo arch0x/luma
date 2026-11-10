@@ -87,17 +87,17 @@ struct CodePreview: View {
         ZStack {
             MarkdownWebView(source: source, tab: tab, imageRoot: tab.url.deletingLastPathComponent(),
                             previewWidth: 0, typography: .init(), dark: colorScheme == .dark, state: state,
-                            navigationRequest: 0, findRequest: 0, bookmarkRequest: 0, onOpen: { _ in })
+                            navigationRequest: 0, findRequest: 0, bookmarkRequest: 0, onOpen: { _ in }, language: AppLocalization.shared.language)
                 .opacity(state.error == nil ? 1 : 0)
             if state.loading {
-                ProgressView(isJSON ? "正在格式化…" : "正在高亮…")
+                ProgressView(isJSON ? tr("正在格式化…") : tr("正在高亮…"))
                     .padding().background(LumaTheme.chrome, in: RoundedRectangle(cornerRadius: 8))
             }
             if let error = state.error {
                 VStack(spacing: 12) {
-                    Text(isJSON ? "\(tab.formatLabel) 预览暂时不可用" : "代码预览暂时不可用").font(.headline)
+                    Text(isJSON ? tr("\(tab.formatLabel) 预览暂时不可用") : tr("代码预览暂时不可用")).font(.headline)
                     Text(error).font(.caption).foregroundStyle(.secondary)
-                    Button("查看源码") { tab.showSource = true }
+                    Button(tr("查看源码")) { tab.showSource = true }
                 }.padding(24)
             }
         }

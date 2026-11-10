@@ -21,9 +21,9 @@ public enum SVGDocument {
         case invalid, externalDeclaration, tooLarge
         public var errorDescription: String? {
             switch self {
-            case .invalid: "SVG 格式不完整，或缺少 SVG 根元素与命名空间。可以继续编辑源码。"
-            case .externalDeclaration: "SVG 预览不支持 DOCTYPE 或实体声明。可以查看和编辑源码。"
-            case .tooLarge: "SVG 超过 1 MB 预览上限。可以查看和编辑源码。"
+            case .invalid: coreText("SVG 格式不完整，或缺少 SVG 根元素与命名空间。可以继续编辑源码。")
+            case .externalDeclaration: coreText("SVG 预览不支持 DOCTYPE 或实体声明。可以查看和编辑源码。")
+            case .tooLarge: coreText("SVG 超过 1 MB 预览上限。可以查看和编辑源码。")
             }
         }
     }

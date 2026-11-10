@@ -55,6 +55,7 @@ enum LoadState {
     var draft: String?
     var savedText: String?
     var diskSnapshot: TextFileSnapshot?
+    var loadFailure: (any Error)?
     var previewError: String?
     var previewPending = false
     var externalChange = false
@@ -68,7 +69,13 @@ enum LoadState {
     @ObservationIgnored var didEdit: ((DocumentTab) -> Void)?
     @ObservationIgnored var autoSaveTask: Task<Void, Never>?
     @ObservationIgnored var autoSaveGeneration = UUID()
-    var autoSaveError: String?
+    private var autoSaveMessage: InterfaceMessage?
+    var autoSaveError: String? {
+        get { autoSaveMessage.map { tr($0) } }
+        set { autoSaveMessage = newValue.map { InterfaceMessage(stringLiteral: $0) } }
+    }
+    func setAutoSaveMessage(_ message: InterfaceMessage) { autoSaveMessage = message }
+
     private let previewService = FileService()
 
     var isDirty: Bool { draft != nil && draft != savedText }
@@ -295,7 +302,13 @@ struct ReadFileResult: Sendable {
     var searching = false
     var searchError: String?
     var recent: [URL] = []
-    var notice: String?
+    private var noticeMessage: InterfaceMessage?
+    var notice: String? {
+        get { noticeMessage.map { tr($0) } }
+        set { noticeMessage = newValue.map { InterfaceMessage(stringLiteral: $0) } }
+    }
+    func showNotice(_ message: InterfaceMessage) { noticeMessage = message }
+
     var newItemRequest: NewItemRequest?
     var trashRequest: FileEntry?
     var renameRequest: FileEntry?
@@ -304,6 +317,14 @@ struct ReadFileResult: Sendable {
     @ObservationIgnored var draggedItem: SidebarDragItem?
     var isMutatingFiles: Bool { isTrashing || isRenaming }
     private(set) var isTrashing = false
+    var language: AppLanguage {
+        didSet {
+            preferences.set(language.rawValue, forKey: "appLanguage")
+            preferences.set([language.rawValue], forKey: "AppleLanguages")
+            AppLocalization.shared.language = language
+            for tab in tabs where tab.previewError != nil { tab.updatePreview() }
+        }
+    }
     var appearance: AppAppearance {
         didSet { preferences.set(appearance.rawValue, forKey: "appearance") }
     }
@@ -433,6 +454,7 @@ struct ReadFileResult: Sendable {
         moveItem = { url, folder in try await service.moveItem(at: url, into: folder) }
         self.preferences = preferences
         self.autoSaveDelay = autoSaveDelay
+        language = AppLanguage(rawValue: preferences.string(forKey: "appLanguage") ?? "") ?? .simplifiedChinese
         autoSaveEnabled = preferences.object(forKey: "autoSaveEnabled") as? Bool ?? false
         readingHistory = MarkdownReadingHistory(preferences: preferences)
         appearance = AppAppearance(rawValue: preferences.string(forKey: "appearance") ?? "") ?? .system
@@ -474,8 +496,8 @@ struct ReadFileResult: Sendable {
 
     func chooseFiles() {
         let panel = NSOpenPanel()
-        panel.title = "打开文件"
-        panel.prompt = "打开"
+        panel.title = tr("打开文件")
+        panel.prompt = tr("打开")
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = true
         if panel.runModal() == .OK { open(panel.urls) }
@@ -483,8 +505,8 @@ struct ReadFileResult: Sendable {
 
     func chooseFolder() {
         let panel = NSOpenPanel()
-        panel.title = "添加文件夹"
-        panel.prompt = "添加到工作区"
+        panel.title = tr("添加文件夹")
+        panel.prompt = tr("添加到工作区")
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         if panel.runModal() == .OK, let url = panel.url { addFolder(url) }
@@ -634,7 +656,7 @@ struct ReadFileResult: Sendable {
     }
 
     func open(_ urls: [URL]) {
-        guard !isRenaming else { notice = "正在更新文件路径，请完成后再打开文件。"; return }
+        guard !isRenaming else { showNotice("正在更新文件路径，请完成后再打开文件。"); return }
         for url in urls {
             let url = url.resolvingSymlinksInPath().standardizedFileURL
             if (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
@@ -651,7 +673,7 @@ struct ReadFileResult: Sendable {
 
     func load(_ tab: DocumentTab) {
         guard !tab.isDirty, !tab.isSaving, !tab.isLoading, !tab.isRenaming else {
-            notice = "\(tab.title) 有未保存的修改，请先保存或使用重新载入。"
+            showNotice("\(tab.title) 有未保存的修改，请先保存或使用重新载入。")
             return
         }
         readFromDisk(tab)
@@ -668,11 +690,12 @@ struct ReadFileResult: Sendable {
             do {
                 let result = try await files.read(tab.url, kind: tab.kind)
                 guard !Task.isCancelled else { return }
+                tab.loadFailure = nil
                 if let snapshot = result.snapshot { tab.acceptDisk(snapshot) }
                 tab.applyPreview(result.payload)
                 if case .invalidStructured(_, let message) = result.payload {
                     tab.showSource = true
-                    notice = "\(tab.title)：\(message) 已打开源码。"
+                    showNotice("\(tab.title)：\(message) 已打开源码。")
                 }
                 tab.isLoading = false
             } catch {
@@ -681,8 +704,11 @@ struct ReadFileResult: Sendable {
                 if tab.draft != nil {
                     tab.state = previous
                     tab.updatePreview()
-                    notice = "无法重新载入 \(tab.title)：\(error.localizedDescription) 编辑内容仍保留。"
-                } else { tab.state = .ready(.failed(error.localizedDescription)) }
+                    showNotice("无法重新载入 \(tab.title)：\(error.localizedDescription) 编辑内容仍保留。")
+                } else {
+                    tab.loadFailure = error
+                    tab.state = .ready(.failed(error.localizedDescription))
+                }
             }
         }
     }
@@ -718,7 +744,7 @@ struct ReadFileResult: Sendable {
         let originalIDs = targets.map(\.id)
         guard !targets.isEmpty else { return true }
         guard targets.allSatisfy({ !$0.isSaving && !$0.isLoading && !$0.isRenaming && $0.editor?.textView.hasMarkedText() != true }) else {
-            notice = "请先完成当前输入或文档读写，再关闭标签页。"
+            showNotice("请先完成当前输入或文档读写，再关闭标签页。")
             return false
         }
         reviewingUnsaved = true
@@ -742,7 +768,7 @@ struct ReadFileResult: Sendable {
             item.tab.editor?.textView.hasMarkedText() != true &&
             (!item.tab.isDirty || (item.discard && item.tab.editRevision == item.revision))
         }) else {
-            notice = "检查保存期间文档又有变化，已取消关闭，请检查最新修改。"
+            showNotice("检查保存期间文档又有变化，已取消关闭，请检查最新修改。")
             return false
         }
         let previous = tabs
@@ -872,7 +898,7 @@ struct ReadFileResult: Sendable {
         var reviewed: [(tab: DocumentTab, revision: Int, discard: Bool)] = []
         for tab in affected {
             guard !tab.isLoading, !tab.isSaving else {
-                notice = "文档正在读写，请稍后再移到废纸篓。"
+                showNotice("文档正在读写，请稍后再移到废纸篓。")
                 return false
             }
             switch await resolveUnsaved(tab) {
@@ -884,12 +910,12 @@ struct ReadFileResult: Sendable {
         guard affectedTabs().map(\.id) == affected.map(\.id), reviewed.allSatisfy({
             !$0.tab.isSaving && !$0.tab.isLoading && (!$0.tab.isDirty || ($0.discard && $0.tab.editRevision == $0.revision))
         }) else {
-            notice = "文档在确认期间又有变化，已取消移到废纸篓。"
+            showNotice("文档在确认期间又有变化，已取消移到废纸篓。")
             return false
         }
         do { try await recycleItem(entry.url) }
         catch {
-            notice = "无法将“\(entry.name)”移到废纸篓：\(error.localizedDescription)"
+            showNotice("无法将“\(entry.name)”移到废纸篓：\(error.localizedDescription)")
             return false
         }
         var keptNewEdits = false
@@ -912,7 +938,8 @@ struct ReadFileResult: Sendable {
             persistRoots()
         }
         refreshDirectories()
-        notice = keptNewEdits ? "已移到废纸篓；操作期间产生的新编辑仍保留在标签页中。" : nil
+        if keptNewEdits { showNotice("已移到废纸篓；操作期间产生的新编辑仍保留在标签页中。") }
+        else { notice = nil }
         return true
     }
 
@@ -955,7 +982,7 @@ struct ReadFileResult: Sendable {
         if automatically {
             guard autoSaveEnabled, tab.autoSaveError == nil, tabs.contains(where: { $0 === tab }) else { return false }
             if tab.externalChange {
-                pauseAutoSave(tab, reason: "磁盘版本已改变，请按 ⌘S 处理冲突。")
+                pauseAutoSave(tab, reason: tr("磁盘版本已改变，请按 ⌘S 处理冲突。"))
                 return false
             }
         }
@@ -982,7 +1009,7 @@ struct ReadFileResult: Sendable {
             } catch TextFileWriteError.changed(let current) {
                 tab.externalChange = true
                 if automatically {
-                    pauseAutoSave(tab, reason: "磁盘版本已改变，请按 ⌘S 处理冲突。")
+                    pauseAutoSave(tab, reason: tr("磁盘版本已改变，请按 ⌘S 处理冲突。"))
                     return false
                 }
                 switch await chooseConflict(tab) {
@@ -995,7 +1022,7 @@ struct ReadFileResult: Sendable {
                 }
             } catch {
                 if automatically { pauseAutoSave(tab, reason: error.localizedDescription) }
-                else { notice = "无法保存 \(tab.title)：\(error.localizedDescription) 编辑内容仍保留。" }
+                else { showNotice("无法保存 \(tab.title)：\(error.localizedDescription) 编辑内容仍保留。") }
                 return false
             }
         }
@@ -1041,7 +1068,7 @@ struct ReadFileResult: Sendable {
         guard tabs.map(\.id) == ids, reviewed.allSatisfy({ item in
             !item.tab.isSaving && !item.tab.isLoading && (!item.tab.isDirty || (item.discard && item.tab.editRevision == item.revision))
         }) else {
-            notice = "检查保存期间文档又有变化，已取消关闭，请检查最新修改。"
+            showNotice("检查保存期间文档又有变化，已取消关闭，请检查最新修改。")
             return false
         }
         let discarded = reviewed.filter { $0.discard && $0.tab.isDirty }.map { (tab: $0.tab, revision: $0.revision) }
@@ -1101,7 +1128,7 @@ struct ReadFileResult: Sendable {
             try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
             let editable = parent.appendingPathComponent(SampleWorkspace.folderName, isDirectory: true)
             try installAndOpenSamples(from: folder, at: editable)
-        } catch { notice = "无法创建可编辑的示例工作区：\(error.localizedDescription)" }
+        } catch { showNotice("无法创建可编辑的示例工作区：\(error.localizedDescription)") }
     }
 
     func installAndOpenSamples(from source: URL, at editable: URL) throws {
@@ -1169,8 +1196,8 @@ private extension Workspace {
     }
 
     func pauseAutoSave(_ tab: DocumentTab, reason: String) {
-        let message = "\(tab.title) 自动保存已暂停：\(reason) 未保存的修改仍保留。"
-        tab.autoSaveError = message
-        notice = message
+        let message: InterfaceMessage = "\(tab.title) 自动保存已暂停：\(reason) 未保存的修改仍保留。"
+        tab.setAutoSaveMessage(message)
+        showNotice(message)
     }
 }

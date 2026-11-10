@@ -13,10 +13,10 @@ import Observation
 
     var canMove: Bool { count > 0 && !busy && !query.isEmpty && error == nil }
     var status: String {
-        if error != nil { return "搜索不可用" }
-        if busy { return "查找中…" }
+        if error != nil { return tr("搜索不可用") }
+        if busy { return tr("查找中…") }
         if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "" }
-        if count == 0 { return "无匹配" }
+        if count == 0 { return tr("无匹配") }
         return "\(current) / \(count.formatted())\(truncated ? "+" : "")"
     }
 
@@ -58,19 +58,19 @@ struct MarkdownFindBar: View {
             HStack(spacing: 7) {
                 Image(systemName: "magnifyingglass").foregroundStyle(LumaTheme.muted).accessibilityHidden(true)
                 SearchTextField(text: Binding(get: { search.query }, set: search.setQuery),
-                                placeholder: "在 Markdown 正文中查找", accessibilityLabel: "Markdown 正文搜索",
+                                placeholder: tr("在 Markdown 正文中查找"), accessibilityLabel: tr("Markdown 正文搜索"),
                                 focusRequest: focusRequest, onFocusChange: { focused = $0 },
                                 onSubmit: { search.move($0 ? -1 : 1) }, onCancel: onClose)
             }.lumaField(focused: focused)
             Text(search.status).font(.system(size: 11).monospacedDigit()).foregroundStyle(LumaTheme.muted)
-                .lineLimit(1).fixedSize().help(search.error ?? (search.truncated ? "显示前 5,000 处匹配" : "匹配结果"))
+                .lineLimit(1).fixedSize().help(search.error ?? (search.truncated ? tr("显示前 5,000 处匹配") : tr("匹配结果")))
                 .accessibilityLabel(search.status)
             Button { search.move(-1) } label: { Image(systemName: "chevron.up") }
-                .disabled(!search.canMove).help("上一个匹配 ⇧↩ / ⇧⌘G").accessibilityLabel("上一个匹配")
+                .disabled(!search.canMove).help(tr("上一个匹配 ⇧↩ / ⇧⌘G")).accessibilityLabel(tr("上一个匹配"))
             Button { search.move(1) } label: { Image(systemName: "chevron.down") }
-                .disabled(!search.canMove).help("下一个匹配 ↩ / ⌘G").accessibilityLabel("下一个匹配")
+                .disabled(!search.canMove).help(tr("下一个匹配 ↩ / ⌘G")).accessibilityLabel(tr("下一个匹配"))
             Button(action: onClose) { Image(systemName: "xmark") }
-                .help("关闭查找 Esc").accessibilityLabel("关闭查找")
+                .help(tr("关闭查找 Esc")).accessibilityLabel(tr("关闭查找"))
         }
         .font(.system(size: 12)).buttonStyle(LumaButtonStyle())
         .padding(.horizontal, 16).padding(.vertical, 6).background(LumaTheme.chrome)

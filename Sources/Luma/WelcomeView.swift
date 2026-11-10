@@ -7,10 +7,10 @@ struct WelcomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 30) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("开始阅读")
+                    Text(tr("开始阅读"))
                         .font(.system(size: 34, weight: .semibold, design: .serif))
                         .accessibilityAddTraits(.isHeader)
-                    Text("打开文件，或把文件夹拖进资料库。")
+                    Text(tr("打开文件，或把文件夹拖进资料库。"))
                         .font(.callout).foregroundStyle(LumaTheme.muted)
                 }
 
@@ -38,17 +38,17 @@ struct WelcomeView: View {
 
     private var openingActions: some View {
         VStack(alignment: .leading, spacing: 0) {
-            actionRow("打开文件", symbol: "doc.badge.plus", detail: "⌘O", action: workspace.chooseFiles)
+            actionRow(tr("打开文件"), symbol: "doc.badge.plus", detail: "⌘O", action: workspace.chooseFiles)
             LumaRule()
-            actionRow("打开文件夹", symbol: "folder.badge.plus", detail: "⇧⌘O", action: workspace.chooseFolder)
+            actionRow(tr("打开文件夹"), symbol: "folder.badge.plus", detail: "⇧⌘O", action: workspace.chooseFolder)
             LumaRule()
-            actionRow("打开示例工作区", symbol: "books.vertical", action: workspace.openSamples)
+            actionRow(tr("打开示例工作区"), symbol: "books.vertical", action: workspace.openSamples)
         }
     }
 
     private var recentFolders: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("最近使用的文件夹")
+            Text(tr("最近使用的文件夹"))
                 .font(.caption.weight(.semibold)).foregroundStyle(LumaTheme.muted)
                 .accessibilityAddTraits(.isHeader)
                 .padding(.horizontal, 7)

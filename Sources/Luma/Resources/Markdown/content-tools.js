@@ -1,6 +1,7 @@
 /* Reading controls operate on rendered content; the source is never rewritten. */
 (() => {
   'use strict';
+  const ui = window.lumaUI.text;
   window.createLumaContentTools = root => {
     let dialog = null;
     let cloneID = 0;
@@ -30,11 +31,12 @@
     function expand(element, type) {
       close();
       const origin = document.activeElement;
+      const label = ui({table: '表格', diagram: '图表', cell: '单元格'}[type]);
       const modal = document.createElement('dialog'); modal.className = 'reading-dialog';
-      modal.setAttribute('aria-label', `${type}展开阅读`);
+      modal.setAttribute('aria-label', ui('{0}展开阅读', label));
       modal.dataset.contentType = type;
       const controls = document.createElement('div'); controls.className = 'reading-dialog-toolbar';
-      const title = document.createElement('strong'); title.textContent = `${type} · 展开阅读`;
+      const title = document.createElement('strong'); title.textContent = ui('{0} · 展开阅读', label);
       controls.append(title);
       const stage = document.createElement('div'); stage.className = 'reading-dialog-stage';
       const copy = element.cloneNode(true);
@@ -42,7 +44,7 @@
       uniqueSVGIDs(copy);
       stage.append(copy);
       let resize;
-      if (type === '图表') {
+      if (type === 'diagram') {
         const svg = copy.querySelector('svg');
         if (svg) {
           const natural = svg.viewBox?.baseVal.width || parseFloat(svg.getAttribute('width')) || 800;
@@ -53,13 +55,13 @@
             label.textContent = `${Math.round(scale * 100)}%`;
           };
           const zoom = factor => { fitting = false; scale = Math.max(.25, Math.min(8, scale * factor)); apply(); };
-          controls.append(button('缩小', () => zoom(1 / 1.25)), label, button('放大', () => zoom(1.25)),
-            button('适合窗口', () => { fitting = true; resize(); }), button('按文字大小', () => { fitting = false; scale = 1; apply(); }));
+          controls.append(button(ui('缩小'), () => zoom(1 / 1.25)), label, button(ui('放大'), () => zoom(1.25)),
+            button(ui('适合窗口'), () => { fitting = true; resize(); }), button(ui('按文字大小'), () => { fitting = false; scale = 1; apply(); }));
           resize = () => { if (fitting) scale = Math.max(.05, Math.min(1, (stage.clientWidth - 48) / natural)); apply(); };
           window.addEventListener('resize', resize);
         }
       }
-      controls.append(button('关闭 · Esc', () => modal.close(), 'reading-close'));
+      controls.append(button(ui('关闭 · Esc'), () => modal.close(), 'reading-close'));
       modal.append(controls, stage); document.body.append(modal); dialog = modal;
       modal.addEventListener('close', () => {
         if (resize) window.removeEventListener('resize', resize);
@@ -73,13 +75,13 @@
       close();
       root.querySelectorAll('.table-scroll').forEach(wrapper => {
         const toolbar = document.createElement('div'); toolbar.className = 'content-tools';
-        toolbar.append(button('展开表格', () => expand(wrapper, '表格'))); wrapper.prepend(toolbar);
+        toolbar.append(button(ui('展开表格'), () => expand(wrapper, 'table'))); wrapper.prepend(toolbar);
         wrapper.querySelectorAll('td').forEach(cell => {
-          cell.tabIndex = 0; cell.title = '双击或按 Return 查看完整单元格';
+          cell.tabIndex = 0; cell.title = ui('双击或按 Return 查看完整单元格');
           const show = () => {
             const content = document.createElement('div');
             const text = document.createElement('pre'); text.className = 'full-cell'; text.textContent = cell.textContent;
-            content.append(text); expand(content, '单元格');
+            content.append(text); expand(content, 'cell');
           };
           cell.addEventListener('dblclick', show);
           cell.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); show(); } });
@@ -87,7 +89,7 @@
       });
       root.querySelectorAll('.diagram').forEach(figure => {
         const toolbar = figure.querySelector('.diagram-toolbar');
-        if (figure.querySelector('svg')) toolbar.append(button('展开图表', () => expand(figure, '图表')));
+        if (figure.querySelector('svg')) toolbar.append(button(ui('展开图表'), () => expand(figure, 'diagram')));
       });
     }
     return {install, close};

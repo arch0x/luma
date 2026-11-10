@@ -44,7 +44,7 @@ struct SidebarNativeRow: NSViewRepresentable {
         view.toolTip = entry.url.path
         view.label.appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)
         view.label.rootView = SidebarRowLabel(entry: entry, depth: depth, expanded: isExpanded, selected: isSelected, colorScheme: colorScheme)
-        view.setAccessibilityLabel(entry.isDirectory ? "文件夹 \(entry.name)" : entry.name)
+        view.setAccessibilityLabel(entry.isDirectory ? tr("文件夹 \(entry.name)") : entry.name)
     }
 }
 
@@ -196,16 +196,16 @@ final class SidebarRowView: NSView, NSDraggingSource {
         }
         menu.autoenablesItems = false
         if entry.isDirectory {
-            add("新增文件…", .newFile, symbol: "doc.badge.plus", enabled: !workspace.isMutatingFiles)
-            add("新增文件夹…", .newFolder, symbol: "folder.badge.plus", enabled: !workspace.isMutatingFiles)
+            add(tr("新增文件…"), .newFile, symbol: "doc.badge.plus", enabled: !workspace.isMutatingFiles)
+            add(tr("新增文件夹…"), .newFolder, symbol: "folder.badge.plus", enabled: !workspace.isMutatingFiles)
             menu.addItem(.separator())
         }
-        add("重命名…", .rename, symbol: "pencil", enabled: !workspace.isMutatingFiles)
-        add("在 Finder 中显示", .reveal, symbol: "magnifyingglass")
-        if entry.isDirectory { add("刷新", .refresh, symbol: "arrow.clockwise") }
-        if isWorkspaceRoot { add("从工作区移除", .removeRoot, symbol: "minus.circle") }
+        add(tr("重命名…"), .rename, symbol: "pencil", enabled: !workspace.isMutatingFiles)
+        add(tr("在 Finder 中显示"), .reveal, symbol: "magnifyingglass")
+        if entry.isDirectory { add(tr("刷新"), .refresh, symbol: "arrow.clockwise") }
+        if isWorkspaceRoot { add(tr("从工作区移除"), .removeRoot, symbol: "minus.circle") }
         menu.addItem(.separator())
-        add("移到废纸篓…", .trash, symbol: "trash", enabled: !workspace.isMutatingFiles)
+        add(tr("移到废纸篓…"), .trash, symbol: "trash", enabled: !workspace.isMutatingFiles)
         return menu
     }
     override func rightMouseDown(with event: NSEvent) {

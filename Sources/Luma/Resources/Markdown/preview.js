@@ -2,6 +2,7 @@
 (() => {
   'use strict';
   const root = document.getElementById('document');
+  const ui = window.lumaUI.text;
   const MAX_HIGHLIGHT = 100000;
   const MAX_DIAGRAM = 50000;
   const MAX_DIAGRAMS = 40;
@@ -88,7 +89,7 @@
 
   function headingLabel(heading) {
     const clone = heading.cloneNode(true);
-    clone.querySelectorAll('.heading-anchor').forEach(node => node.remove());
+    clone.querySelectorAll('.heading-anchor,.content-tools,.code-toolbar,.diagram-toolbar').forEach(node => node.remove());
     clone.querySelectorAll('.math-inline,.math-display').forEach(node => node.replaceWith(document.createTextNode(node.dataset.mathSource || node.textContent)));
     clone.querySelectorAll('.local-image').forEach(node => node.replaceWith(document.createTextNode(node.dataset.alt || '')));
     return clone.textContent.replace(/\s+/g, ' ').trim();
@@ -125,10 +126,10 @@
       nextSuffix.set(base, suffix);
       used.add(id); heading.id = id; heading.tabIndex = -1;
       headingMap.set(id, heading);
-      const title = Array.from(label).slice(0, 240).join('') || '无标题';
+      const title = Array.from(label).slice(0, 240).join('') || ui('无标题');
       const anchor = document.createElement('a'); anchor.className = 'heading-anchor';
       anchor.href = `#${encodeURIComponent(id)}`;
-      anchor.setAttribute('aria-label', `定位标题：${title}`); anchor.title = '定位此标题';
+      anchor.setAttribute('aria-label', ui('定位标题：{0}', title)); anchor.title = '定位此标题';
       heading.prepend(anchor);
       if (outline.length < 2000) outline.push({id, title, level: Number(heading.tagName.slice(1))});
     });
@@ -188,10 +189,10 @@
     toolbar.className = 'code-toolbar';
     const label = document.createElement('span');
     label.className = 'code-language';
-    label.textContent = language || '代码';
+    label.textContent = language || ui('代码');
     const copy = document.createElement('button');
-    copy.type = 'button'; copy.textContent = '复制代码';
-    copy.addEventListener('click', () => { notify({kind: 'copy', text: code}); copy.textContent = '已复制'; });
+    copy.type = 'button'; copy.textContent = ui('复制代码');
+    copy.addEventListener('click', () => { notify({kind: 'copy', text: code}); copy.textContent = ui('已复制'); });
     toolbar.append(label, copy);
     const pre = document.createElement('pre');
     const content = document.createElement('code');
@@ -239,12 +240,12 @@
     const toolbar = document.createElement('div');
     toolbar.className = 'diagram-toolbar'; toolbar.textContent = 'MERMAID';
     const canvas = document.createElement('div');
-    canvas.className = 'diagram-canvas'; canvas.textContent = '正在绘制图表…';
+    canvas.className = 'diagram-canvas'; canvas.textContent = ui('正在绘制图表…');
     const details = document.createElement('details');
     details.className = 'diagram-source';
-    const summary = document.createElement('summary'); summary.textContent = '查看图表源码';
+    const summary = document.createElement('summary'); summary.textContent = ui('查看图表源码');
     const source = document.createElement('pre'); source.textContent = code;
-    const copy = document.createElement('button'); copy.textContent = '复制源码';
+    const copy = document.createElement('button'); copy.textContent = ui('复制源码');
     copy.addEventListener('click', () => notify({kind: 'copy', text: code}));
     toolbar.append(copy); details.append(summary, source); figure.append(toolbar, canvas, details);
     return {figure, canvas, details, code};
@@ -313,7 +314,7 @@
     image.alt = token.text || ''; image.decoding = 'async';
     if (token.title) image.title = token.title;
     const status = document.createElement('span'); status.className = 'image-status';
-    status.textContent = `正在加载图片：${token.text || token.href}`;
+    status.textContent = ui('正在加载图片：{0}', token.text || token.href);
     container.append(image, status);
     const ready = new Promise(resolve => {
       let finished = false;
@@ -323,7 +324,7 @@
         if (ok) { container.classList.add('image-loaded'); status.remove(); }
         else {
           image.remove(); container.classList.add('image-failed');
-          status.textContent = `图片无法显示：${token.text || '未命名'}（${token.href}）。请检查图片路径、格式及工作区范围。`;
+          status.textContent = ui('图片无法显示：{0}（{1}）。请检查图片路径、格式及工作区范围。', token.text || ui('未命名'), token.href);
         }
         resolve(ok);
       };
@@ -342,6 +343,9 @@
     restoring = true;
     clearTimeout(scrollTimer);
     clearTimeout(sectionTimer); sectionTimer = null;
+    window.lumaUI.setLanguage(options.language);
+    document.documentElement.lang = window.lumaUI.language;
+    root.style.setProperty('--empty-document-label', JSON.stringify(ui('这份文档还是空的。')));
     document.documentElement.dataset.theme = options.dark ? 'dark' : 'light';
     applyWidth(options.width);
     applyTypography(options.typography);
@@ -352,7 +356,7 @@
       html({text}) { return `<pre class="raw-html">${escape(text)}</pre>`; },
       image(token) {
         const index = images.push(token) - 1;
-        return `<span id="luma-image-${index}">[图片：${escape(token.text || '未命名')}]</span>`;
+        return `<span id="luma-image-${index}">${escape(ui('图片：{0}', token.text || ui('未命名')))}</span>`;
       }
     }});
     contentTools.close();
@@ -372,7 +376,7 @@
         html = `<p class="json-preview-note">${escape(preview.note)}</p>${codeHTML(preview.fallback, 'plaintext')}`;
       } else {
         html = preview.records.map((record, index) => `<section class="json-record">
-          <div class="json-record-title">记录 ${index + 1} · 源码第 ${record.sourceLine} 行</div>
+          <div class="json-record-title">${escape(ui('记录 {0} · 源码第 {1} 行', index + 1, record.sourceLine))}</div>
           ${record.error ? `<p class="json-record-error">${escape(record.error)}</p>` : ''}
           ${codeHTML(record.value, record.error ? 'plaintext' : 'json')}
           </section>`).join('') || '<p class="json-preview-note">没有可预览的记录。</p>';
@@ -381,7 +385,7 @@
     root.toggleAttribute('data-code-preview', !!codeLanguage);
     root.toggleAttribute('data-json-preview', jsonPreview);
     root.toggleAttribute('data-json-lines-preview', jsonLines);
-    root.setAttribute('aria-label', jsonPreview ? `${options.codeTitle || 'JSON'} 预览` : codeLanguage ? '代码预览' : 'Markdown 预览');
+    root.setAttribute('aria-label', jsonPreview ? ui('{0} 预览', options.codeTitle || 'JSON') : codeLanguage ? ui('代码预览') : ui('Markdown 预览'));
     search.reset();
     root.innerHTML = DOMPurify.sanitize(html, {
       USE_PROFILES: {html: true},
@@ -402,7 +406,7 @@
       if (!marker) return;
       marker.dataset.mathSource = token.text;
       try {
-        if (index >= MAX_MATH || token.text.length > MAX_MATH_LENGTH) throw new Error('公式超过预览限制。');
+        if (index >= MAX_MATH || token.text.length > MAX_MATH_LENGTH) throw new Error(ui('公式超过预览限制。'));
         const rendered = katex.renderToString(token.text, {
           displayMode: token.display, output: 'htmlAndMathml', throwOnError: true,
           trust: false, strict: 'warn', maxSize: 20, maxExpand: 1000, macros: {}
@@ -415,8 +419,8 @@
         formulas++;
       } catch (error) {
         marker.classList.add('math-error'); marker.textContent = token.raw.trim();
-        marker.title = `公式无法渲染，已保留源码：${String(error.message || error).slice(0, 400)}`;
-        const note = document.createElement('span'); note.className = 'math-error-note'; note.textContent = '（公式无法渲染，已保留源码）';
+        marker.title = ui('公式无法渲染，已保留源码：{0}', String(error.message || error).slice(0, 400));
+        const note = document.createElement('span'); note.className = 'math-error-note'; note.textContent = ui('（公式无法渲染，已保留源码）');
         marker.append(note); mathFailures++;
       }
     });
@@ -484,18 +488,18 @@
       if (request !== generation) return {cancelled: true};
       const diagram = diagrams[index];
       try {
-        if (index >= MAX_DIAGRAMS) throw new Error('此文档最多预览 40 个图表，后续图表保留源码。');
-        if (diagram.code.length > MAX_DIAGRAM) throw new Error('图表超过 50,000 字符，请精简后再试。');
+        if (index >= MAX_DIAGRAMS) throw new Error(ui('此文档最多预览 40 个图表，后续图表保留源码。'));
+        if (diagram.code.length > MAX_DIAGRAM) throw new Error(ui('图表超过 50,000 字符，请精简后再试。'));
         const {svg} = await mermaid.render(`luma-diagram-${request}-${index}`, diagram.code);
         if (request !== generation) return {cancelled: true};
         const clean = DOMPurify.sanitize(svg, {USE_PROFILES: {svg: true, svgFilters: true}, ADD_TAGS: ['style']});
         diagram.canvas.innerHTML = clean;
-        if (!diagram.canvas.querySelector('svg')) throw new Error('没有生成可显示的图表。');
+        if (!diagram.canvas.querySelector('svg')) throw new Error(ui('没有生成可显示的图表。'));
         rendered++;
       } catch (error) {
         if (request !== generation) return {cancelled: true};
         diagram.canvas.className = 'diagram-error';
-        diagram.canvas.textContent = `图表无法渲染，已保留源码。\n${String(error.message || error).slice(0, 600)}`;
+        diagram.canvas.textContent = ui('图表无法渲染，已保留源码。\n{0}', String(error.message || error).slice(0, 600));
         diagram.details.open = true; failed++;
         document.getElementById(`dluma-diagram-${request}-${index}`)?.remove();
       }

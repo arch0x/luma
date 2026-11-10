@@ -13,7 +13,7 @@ nonisolated struct SidebarDragItem: Codable, Equatable, Sendable {
 
 nonisolated enum WorkspaceMoveError: LocalizedError {
     case outsideWorkspace
-    var errorDescription: String? { "只能在当前工作区的文件夹之间移动项目。" }
+    var errorDescription: String? { readerText("只能在当前工作区的文件夹之间移动项目。") }
 }
 
 extension Workspace {
@@ -38,13 +38,13 @@ extension Workspace {
     @discardableResult func receiveDrop(_ item: SidebarDragItem, into folder: URL) async -> Bool {
         guard item.workspaceID == dragWorkspaceID, draggedItem == item else { return false }
         draggedItem = nil
-        notice = "正在移动“\(item.url.lastPathComponent)”…"
+        showNotice("正在移动“\(item.url.lastPathComponent)”…")
         do {
             _ = try await move(FileEntry(url: item.url, isDirectory: item.isDirectory), into: folder)
             notice = nil
             return true
         } catch {
-            notice = "无法移动“\(item.url.lastPathComponent)”：\(error.localizedDescription)"
+            showNotice("无法移动“\(item.url.lastPathComponent)”：\(error.localizedDescription)")
             return false
         }
     }

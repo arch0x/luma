@@ -129,7 +129,7 @@
       matches = []; rectangles = []; current = -1; truncated = false; error = null;
       layer.replaceChildren();
       if (!query.trim()) return result();
-      if (query.length > 1024) { error = '搜索词过长，请缩短关键词。'; return result(); }
+      if (query.length > 1024) { error = window.lumaUI.text('搜索词过长，请缩短关键词。'); return result(); }
       if (!groups) groups = buildIndex();
       const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const pattern = query.split(/(\s+)/).map(part => /^\s+$/.test(part) ? '\\s+' : escapeRegex(part)).join('');

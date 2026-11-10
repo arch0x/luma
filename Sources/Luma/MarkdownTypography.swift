@@ -6,9 +6,9 @@ enum MarkdownFont: String, CaseIterable, Identifiable {
     var id: Self { self }
     var title: String {
         switch self {
-        case .system: "系统字体"
-        case .songti: "宋体"
-        case .monospaced: "等宽字体"
+        case .system: tr("系统字体")
+        case .songti: tr("宋体")
+        case .monospaced: tr("等宽字体")
         }
     }
 }

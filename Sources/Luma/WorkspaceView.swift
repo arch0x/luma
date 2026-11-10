@@ -26,7 +26,7 @@ struct WorkspaceView: View {
                         Text(notice).font(.caption).lineLimit(3)
                         Spacer()
                         Button { workspace.notice = nil } label: { Image(systemName: "xmark") }
-                            .buttonStyle(LumaButtonStyle()).accessibilityLabel("关闭提示")
+                            .buttonStyle(LumaButtonStyle()).accessibilityLabel(tr("关闭提示"))
                     }
                     .padding(.horizontal, 12).padding(.vertical, 6).background(LumaTheme.chrome)
                 }
@@ -40,6 +40,7 @@ struct WorkspaceView: View {
                 }
             }
         }
+        .environment(\.locale, workspace.language.locale)
         .tint(LumaTheme.accent)
         .accentColor(LumaTheme.accent)
         .foregroundStyle(LumaTheme.ink)
@@ -49,13 +50,13 @@ struct WorkspaceView: View {
         .sheet(item: $workspace.renameRequest) { entry in
             RenameSheet(entry: entry, workspace: workspace)
         }
-        .confirmationDialog("将“\(workspace.trashRequest?.name ?? "")”移到废纸篓？",
+        .confirmationDialog(tr("将“\(workspace.trashRequest?.name ?? "")”移到废纸篓？"),
             isPresented: Binding(get: { workspace.trashRequest != nil }, set: { if !$0 { workspace.trashRequest = nil } }),
             titleVisibility: .visible, presenting: workspace.trashRequest) { entry in
-                Button("移到废纸篓", role: .destructive) { Task { await workspace.trash(entry) } }
-                Button("取消", role: .cancel) { }
+                Button(tr("移到废纸篓"), role: .destructive) { Task { await workspace.trash(entry) } }
+                Button(tr("取消"), role: .cancel) { }
             } message: { entry in
-                Text(entry.isDirectory ? "文件夹及其全部内容会移到废纸篓，可在 Finder 中恢复。" : "文件会移到废纸篓，可在 Finder 中恢复。")
+                Text(entry.isDirectory ? tr("文件夹及其全部内容会移到废纸篓，可在 Finder 中恢复。") : tr("文件会移到废纸篓，可在 Finder 中恢复。"))
             }
         .background(WorkspaceWindowBridge(workspace: workspace, hasUnsavedChanges: workspace.tabs.contains { $0.isDirty }))
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -91,7 +92,7 @@ struct WorkspaceView: View {
     private var sidebar: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
-                Text("资料库").font(.system(size: 14, weight: .semibold))
+                Text(tr("资料库")).font(.system(size: 14, weight: .semibold))
                     .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 0)
                 HStack(spacing: 2) {
@@ -102,12 +103,12 @@ struct WorkspaceView: View {
 
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass").foregroundStyle(LumaTheme.muted).accessibilityHidden(true)
-                SearchTextField(text: $workspace.query, placeholder: "搜索文件名",
-                                accessibilityLabel: "搜索工作区文件名", focusRequest: workspace.libraryFindFocusRequest,
+                SearchTextField(text: $workspace.query, placeholder: tr("搜索文件名"),
+                                accessibilityLabel: tr("搜索工作区文件名"), focusRequest: workspace.libraryFindFocusRequest,
                                 focusOnAppear: false, onFocusChange: { searchFocused = $0 })
                 if !workspace.query.isEmpty {
                     Button { workspace.query = ""; workspace.libraryFindFocusRequest += 1 } label: { Image(systemName: "xmark.circle.fill") }
-                        .buttonStyle(.plain).foregroundStyle(LumaTheme.muted).accessibilityLabel("清除搜索")
+                        .buttonStyle(.plain).foregroundStyle(LumaTheme.muted).accessibilityLabel(tr("清除搜索"))
                 }
             }
             .font(.system(size: 12)).lumaField(focused: searchFocused)
@@ -115,11 +116,11 @@ struct WorkspaceView: View {
 
             VStack(spacing: 0) {
                 if workspace.query.isEmpty {
-                    sidebarHeading("文件夹", count: workspace.roots.count)
+                    sidebarHeading(tr("文件夹"), count: workspace.roots.count)
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 2) {
                             if workspace.roots.isEmpty {
-                                Text("打开文件夹后，它会出现在这里。")
+                                Text(tr("打开文件夹后，它会出现在这里。"))
                                     .font(.caption).foregroundStyle(LumaTheme.muted)
                                     .padding(.horizontal, 8).padding(.vertical, 5)
                             } else {
@@ -130,7 +131,7 @@ struct WorkspaceView: View {
                         }.padding(.horizontal, 8).padding(.bottom, 8)
                     }
                 } else {
-                    sidebarHeading("搜索结果", count: workspace.searchResults.count)
+                    sidebarHeading(tr("搜索结果"), count: workspace.searchResults.count)
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 2) {
                             searchResults
@@ -141,10 +142,10 @@ struct WorkspaceView: View {
             LumaRule()
             HStack {
                 Image(systemName: "internaldrive").font(.caption)
-                Text(workspace.autoSaveEnabled ? "本地文件 · 自动保存" : "本地文件 · 手动保存").font(.system(size: 11))
+                Text(workspace.autoSaveEnabled ? tr("本地文件 · 自动保存") : tr("本地文件 · 手动保存")).font(.system(size: 11))
                 Spacer()
                 SettingsLink { Image(systemName: "gearshape") }
-                    .buttonStyle(LumaButtonStyle()).help("设置 ⌘,").accessibilityLabel("设置")
+                    .buttonStyle(LumaButtonStyle()).help(tr("设置 ⌘,")).accessibilityLabel(tr("设置"))
             }.foregroundStyle(LumaTheme.muted).padding(.horizontal, 12).padding(.vertical, 5)
         }
         .background(LumaTheme.chrome)
@@ -153,19 +154,19 @@ struct WorkspaceView: View {
 
     private var openFileButton: some View {
         Button(action: workspace.chooseFiles) { Image(systemName: "doc.badge.plus") }
-            .accessibilityLabel("打开文件").help("打开文件 ⌘O")
+            .accessibilityLabel(tr("打开文件")).help(tr("打开文件 ⌘O"))
     }
 
     private var openFolderButton: some View {
         Button(action: workspace.chooseFolder) { Image(systemName: "folder.badge.plus") }
-            .accessibilityLabel("打开文件夹").help("打开文件夹 ⇧⌘O")
+            .accessibilityLabel(tr("打开文件夹")).help(tr("打开文件夹 ⇧⌘O"))
     }
 
     @ViewBuilder private var searchResults: some View {
         if let error = workspace.searchError {
             Text(error).font(.caption).foregroundStyle(.secondary).padding(12)
         } else if workspace.searchResults.isEmpty && !workspace.searching {
-            Text(workspace.roots.isEmpty ? "请先添加文件夹。" : "没有找到匹配的文件。")
+            Text(workspace.roots.isEmpty ? tr("请先添加文件夹。") : tr("没有找到匹配的文件。"))
                 .font(.callout).foregroundStyle(.secondary).padding(12)
         }
         ForEach(workspace.searchResults) { entry in
@@ -178,7 +179,7 @@ struct WorkspaceView: View {
                 .contextMenu { FileItemContextMenu(entry: entry, workspace: workspace) }
         }
         if workspace.searchResults.count == 200 {
-            Text("最多显示 200 项，请缩小关键词。")
+            Text(tr("最多显示 200 项，请缩小关键词。"))
                 .font(.caption).foregroundStyle(.secondary).padding(8)
         }
     }
@@ -209,8 +210,8 @@ struct WorkspaceView: View {
                     Button(action: workspace.refresh) { Image(systemName: "arrow.clockwise") }
                         .buttonStyle(LumaButtonStyle())
                         .frame(width: 36, height: 38)
-                        .help("刷新目录与当前文件 ⌘R")
-                        .accessibilityLabel("刷新目录与当前文件")
+                        .help(tr("刷新目录与当前文件 ⌘R"))
+                        .accessibilityLabel(tr("刷新目录与当前文件"))
                 }
             }
             .background(WorkspaceToolbarAlignment(onTabViewportWidth: { width in
@@ -256,7 +257,7 @@ struct WorkspaceView: View {
         .frame(height: 31)
         .background(WorkspaceTabViewport())
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("已打开的文件")
+        .accessibilityLabel(tr("已打开的文件"))
     }
 
     private func openDocumentTab(_ tab: DocumentTab) -> some View {
@@ -269,7 +270,7 @@ struct WorkspaceView: View {
                     Text(tab.title).lineLimit(1).truncationMode(.middle)
                     if tab.isDirty {
                         Circle().fill(LumaTheme.warning).frame(width: 5, height: 5)
-                            .accessibilityLabel("未保存")
+                            .accessibilityLabel(tr("未保存"))
                     }
                 }.frame(maxWidth: 108, alignment: .leading)
             }
@@ -278,7 +279,7 @@ struct WorkspaceView: View {
             Button { workspace.close(tab.id) } label: {
                 Image(systemName: "xmark").imageScale(.small)
             }
-            .buttonStyle(LumaButtonStyle()).help("关闭 \(tab.title)").accessibilityLabel("关闭 \(tab.title)")
+            .buttonStyle(LumaButtonStyle()).help(tr("关闭 \(tab.title)")).accessibilityLabel(tr("关闭 \(tab.title)"))
         }
         .background(active ? LumaTheme.selected : .clear, in: RoundedRectangle(cornerRadius: LumaTheme.controlRadius))
         .contentShape(Rectangle())
@@ -296,22 +297,22 @@ private struct FileItemContextMenu: View {
         if entry.isDirectory {
             Button {
                 workspace.newItemRequest = NewItemRequest(folder: entry.url)
-            } label: { Label("新增文件…", systemImage: "doc.badge.plus") }
+            } label: { Label(tr("新增文件…"), systemImage: "doc.badge.plus") }
             .disabled(workspace.isMutatingFiles)
             Button {
                 workspace.newItemRequest = NewItemRequest(folder: entry.url, kind: .folder)
-            } label: { Label("新增文件夹…", systemImage: "folder.badge.plus") }
+            } label: { Label(tr("新增文件夹…"), systemImage: "folder.badge.plus") }
             .disabled(workspace.isMutatingFiles)
             Divider()
         }
-        Button { workspace.renameRequest = entry } label: { Label("重命名…", systemImage: "pencil") }
+        Button { workspace.renameRequest = entry } label: { Label(tr("重命名…"), systemImage: "pencil") }
             .disabled(workspace.isMutatingFiles)
-        Button("在 Finder 中显示") { NSWorkspace.shared.activateFileViewerSelecting([entry.url]) }
-        if entry.isDirectory { Button("刷新") { workspace.loadDirectory(entry.url, refresh: true) } }
-        if isWorkspaceRoot { Button("从工作区移除") { workspace.removeFolder(entry.url) } }
+        Button(tr("在 Finder 中显示")) { NSWorkspace.shared.activateFileViewerSelecting([entry.url]) }
+        if entry.isDirectory { Button(tr("刷新")) { workspace.loadDirectory(entry.url, refresh: true) } }
+        if isWorkspaceRoot { Button(tr("从工作区移除")) { workspace.removeFolder(entry.url) } }
         Divider()
         Button(role: .destructive) { workspace.trashRequest = entry }
-            label: { Label("移到废纸篓…", systemImage: "trash") }
+            label: { Label(tr("移到废纸篓…"), systemImage: "trash") }
             .disabled(workspace.isMutatingFiles)
     }
 }
@@ -333,7 +334,7 @@ private struct FileTreeRow: View {
                     ForEach(children) { child in
                         FileTreeRow(entry: child, depth: depth + 1, workspace: workspace)
                     }
-                    if children.isEmpty { Text("空文件夹").font(.caption).foregroundStyle(.tertiary).padding(.leading, CGFloat(depth + 1) * 12 + 24).padding(.vertical, 5) }
+                    if children.isEmpty { Text(tr("空文件夹")).font(.caption).foregroundStyle(.tertiary).padding(.leading, CGFloat(depth + 1) * 12 + 24).padding(.vertical, 5) }
                 } else { ProgressView().controlSize(.mini).padding(.leading, 30).padding(.vertical, 5) }
             }
         }

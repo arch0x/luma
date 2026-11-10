@@ -39,6 +39,8 @@ zsh scripts/test.sh --no-parallel --filter LumaTests
 
 CI 配置在 macOS 15、macOS 26 的 Apple Silicon runner 上使用 Xcode 26.3，执行核心测试、应用测试、release 构建和临时签名校验。原生测试需要正常的窗口服务；具体环境限制见[开发说明](docs/DEVELOPMENT.md#工程结构与测试)。
 
+新增或调整界面文案时，同步维护 `Localization/en.json`，运行 `python3 scripts/generate-localizations.py`，并检查中英文在窄窗口下的布局。
+
 ## 提交修改
 
 - 一次 PR 聚焦一个问题，说明触发场景、修改后的行为和验证结果。

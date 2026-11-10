@@ -33,11 +33,13 @@ cat > "$app_path/Contents/Info.plist" <<'PLIST'
   <key>CFBundleExecutable</key><string>Luma</string>
   <key>CFBundleIdentifier</key><string>local.luma.reader</string>
   <key>CFBundleName</key><string>Luma</string>
+  <key>CFBundleDevelopmentRegion</key><string>zh-Hans</string>
+  <key>CFBundleLocalizations</key><array><string>zh-Hans</string><string>en</string></array>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundleDisplayName</key><string>Luma · 澄览</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>0.9.0</string>
-  <key>CFBundleVersion</key><string>14</string>
+  <key>CFBundleVersion</key><string>15</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSHumanReadableCopyright</key><string>Copyright © 2026 Luma contributors</string>

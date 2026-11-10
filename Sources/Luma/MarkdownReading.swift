@@ -82,7 +82,7 @@ private struct MarkdownReadingRecord: Codable {
             return abs($0.location.blockProgress - value.blockProgress) < 0.01 && abs($0.location.offset - value.offset) < 24
         }) { return existing.id }
         guard bookmarks.count < 500 else { return nil }
-        let bookmark = MarkdownBookmark(id: UUID(), title: label.isEmpty ? "阅读位置" : label, location: value, createdAt: Date())
+        let bookmark = MarkdownBookmark(id: UUID(), title: label.isEmpty ? tr("阅读位置") : label, location: value, createdAt: Date())
         bookmarks.append(bookmark)
         save(immediately: true)
         return bookmark.id
