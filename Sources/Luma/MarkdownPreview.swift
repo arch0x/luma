@@ -91,7 +91,7 @@ struct MarkdownPreview: View {
 enum MarkdownResources {
     static let entryURL = URL(string: "luma-preview://reader/index.html")!
     static let allowedFiles: Set<String> = [
-        "index.html", "preview.css", "preview.js", "search.js", "reading.js", "json.js", "languages.js", "vendor/marked.umd.js", "vendor/purify.min.js",
+        "index.html", "preview.css", "preview.js", "content-tools.js", "search.js", "reading.js", "json.js", "languages.js", "vendor/marked.umd.js", "vendor/purify.min.js",
         "vendor/highlight.min.js", "vendor/swift.min.js", "vendor/rust.min.js", "vendor/typescript.min.js", "vendor/mermaid.min.js",
         "vendor/katex/katex.min.js", "vendor/katex/katex.min.css"
     ]

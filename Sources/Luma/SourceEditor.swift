@@ -114,6 +114,35 @@ final class SourceEditor: NSObject, NSTextViewDelegate {
         tab?.edit(textView.string)
     }
 
+    func textViewDidChangeSelection(_ notification: Notification) {
+        let range = textView.selectedRange()
+        if tab?.sourceSelection != range { tab?.sourceSelection = range }
+    }
+
+    func selectedValue() -> SourceValueSelection? {
+        guard let tab, !textView.hasMarkedText(), textView.string == tab.draft else { return nil }
+        let range = textView.selectedRange(), text = textView.string as NSString
+        guard range.length > 0, range.length <= 4096, range.location <= text.length,
+              range.length <= text.length - range.location else { return nil }
+        return .init(range: range, revision: tab.editRevision, source: text.substring(with: range))
+    }
+
+    @discardableResult func replaceValue(_ selection: SourceValueSelection, with replacement: String) -> Bool {
+        guard let tab, tab.canEdit, !tab.isLoading, !tab.isRenaming, !textView.hasMarkedText(),
+              tab.editRevision == selection.revision, textView.string == tab.draft,
+              textView.selectedRange() == selection.range else { return false }
+        let source = textView.string as NSString, range = selection.range
+        guard range.location <= source.length, range.length <= source.length - range.location,
+              source.substring(with: range) == selection.source,
+              textView.shouldChangeText(in: range, replacementString: replacement) else { return false }
+        textView.breakUndoCoalescing()
+        textView.insertText(replacement, replacementRange: range)
+        textView.breakUndoCoalescing()
+        textView.undoManager?.setActionName("替换所选值")
+        textView.scrollRangeToVisible(textView.selectedRange())
+        return true
+    }
+
     func updateFind() {
         guard let tab, lastFindRequest != tab.findRequest || query != tab.sourceQuery else { return }
         let changed = query != tab.sourceQuery

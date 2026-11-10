@@ -116,7 +116,7 @@ import Testing
         #expect(info.selected, "The information must also be available through the button's keyboard action")
     }
 
-    @Test(arguments: ["欢迎.md", "项目.json", "阅读空间.pdf", "留白.png", "图片资源/阅读 流程.svg", "__long_navigation__"])
+    @Test(arguments: ["欢迎.md", "项目.json", "阅读空间.pdf", "留白.png", "图片资源/阅读 流程.svg", "阅读清单.csv", "__long_navigation__"])
     func everyReaderHasExactlyOnePairOfRailActions(path: String) async throws {
         _ = NSApplication.shared
         let domain = "local.luma.rail-readers.\(UUID())"
@@ -145,6 +145,10 @@ import Testing
             #expect(tab.markdownRenderState.headings.count == 600)
             host.view.layoutSubtreeIfNeeded()
             try snapshot(host.view, name: "long-navigation")
+        }
+        if tab.kind != .markdown {
+            let pair = controls.map { $0.convert($0.bounds, to: host.view) }.reduce(NSRect.null) { $0.union($1) }
+            #expect(abs(pair.midY - host.view.bounds.midY) < 3, "Reader actions must be centered: \(pair)")
         }
         #expect(Set(controls.compactMap { $0.identifier?.rawValue }) == ["documentInformation", "revealDocumentInFinder"])
         for control in controls {

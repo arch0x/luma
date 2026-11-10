@@ -5,13 +5,20 @@ Run generate-assets.swift with --refresh-samples first. This maintenance script
 uses Pillow for WebP encoding; ordinary app builds only require Apple tools.
 """
 from pathlib import Path
+from argparse import ArgumentParser
 import json
 import os
 import textwrap
 
+parser = ArgumentParser(description=__doc__)
+parser.add_argument("--text-only", action="store_true", help="Refresh text samples and catalog without re-encoding WebP")
+options = parser.parse_args()
+
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "Sources/Luma/Resources/Samples"
 CATALOG = ROOT / "Sources/Luma/Resources/SampleCatalog.json"
+SAMPLE_EDITION = "2026.11.2"
+APP_VERSION = "0.9.0"
 entries = []
 
 
@@ -26,7 +33,33 @@ def sample(name, extensions, path, section, body=None):
 sample("Markdown", "md markdown mdown", "欢迎.md", "文档与数据")
 sample("PDF", "pdf", "阅读空间.pdf", "文档与数据")
 sample("SVG", "svg", "图片资源/阅读 流程.svg", "文档与数据")
-sample("JSON", "json", "项目.json", "文档与数据")
+project = {
+    "name": "Luma · 澄览",
+    "appVersion": APP_VERSION,
+    "sampleEdition": SAMPLE_EDITION,
+    "platform": "macOS",
+    "localFirst": True,
+    "workspace": {
+        "tabs": True,
+        "manualSave": True,
+        "formats": ["Markdown", "PDF", "SVG", "Images", "JSON", "JSONC", "JSONL", "NDJSON", "CSV", "TSV", "Code", "Text"],
+        "representativeFormats": 67,
+        "tableFilters": True,
+        "valueInspector": True,
+        "expandedReading": True,
+        "theme": {"accent": "#3A6095", "paper": "#FCFCFA", "ink": "#1A202B"},
+    },
+    "inspectionExamples": {
+        "colorWithAlpha": "#3A609580",
+        "timestampSeconds": 1794268800,
+        "timestampMilliseconds": 1794268800123,
+        "byteCount": 1572864,
+        "sizeWithUnit": "1.5 MiB",
+        "escapedText": "第一行\n第二行\t你好🙂",
+    },
+    "next": None,
+}
+sample("JSON", "json", "项目.json", "文档与数据", json.dumps(project, ensure_ascii=False, indent=2))
 sample("GeoJSON", "geojson", "格式示例/阅读位置.geojson", "文档与数据", '''
     {
       "type": "FeatureCollection",
@@ -40,7 +73,15 @@ sample("GeoJSON", "geojson", "格式示例/阅读位置.geojson", "文档与数�
 sample("JSONC", "jsonc", "格式示例/阅读设置.jsonc", "文档与数据")
 sample("JSONL", "jsonl", "格式示例/阅读记录.jsonl", "文档与数据")
 sample("NDJSON", "ndjson", "格式示例/文件事件.ndjson", "文档与数据")
-sample("CSV", "csv", "阅读清单.csv", "文档与数据")
+sample("CSV", "csv", "阅读清单.csv", "文档与数据", '''
+    标题,类型,状态,页数,备注
+    产品构想,Markdown,已阅读,12,"这是一段较长的阅读备注。窄窗口里可以先拖动列宽，再双击单元格查看完整内容。
+    筛选和排序只改变视图，不会改写这份 CSV；多行单元格的行号仍对应源码起始行。"
+    实验记录,CSV,阅读中,2,"包含逗号、换行和双引号：""先读懂，再修改"""
+    接口示例,JSON,待阅读,120,"先重置筛选，再按页数升序，确认 2、5、12、120 按数值排序。"
+    设计参考,图片,待阅读,,"页数为空；在页数列的筛选面板中可以查看空值数量。"
+    给明天的自己,文本,已阅读,5,"点击表头或列操作进行筛选，最后用重置恢复完整记录。"
+''')
 sample("TSV", "tsv", "格式示例/阅读进度.tsv", "文档与数据", '''
     文档\t状态\t进度\t备注
     欢迎.md\t已阅读\t100\t从这里开始
@@ -544,16 +585,19 @@ for obsolete in ["代码与配置/阅读任务.mk", "格式示例/阅读卡片.s
 
 CATALOG.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-intro = '''# 文件格式导览
+intro = f'''# 文件格式导览
 
-这是 **2026.11 蓝色主题示例集**。每种格式或语言保留一份代表文件；同格式的别名扩展名合并展示。
+这是 **{SAMPLE_EDITION} 蓝色主题示例集**。每种格式或语言保留一份代表文件；同格式的别名扩展名合并展示。
 
 ## 从这里体验
 
-- [独立 SVG](<../图片资源/阅读 流程.svg>)：缩放、适合窗口、源码与图形切换。
+- [Markdown 增强预览](../Markdown增强预览.md)：表格与图表展开阅读、代码语法高亮。
+- [源码值解释](../源码编辑.md)：选中颜色、时间戳、字节大小与转义字符串，解释后明确替换。
+
+- [独立 SVG](<../图片资源/阅读 流程.svg>)：缩放、适合窗口、按文字大小、源码与图形切换。
 - [JSONC](阅读设置.jsonc)：格式化保留注释和尾逗号。
 - [JSONL](阅读记录.jsonl) / [NDJSON](文件事件.ndjson)：逐条展开，标出源码行号；错误行单独提示。
-- [CSV](../阅读清单.csv) / [TSV](阅读进度.tsv)：两种分隔符的表格。
+- [CSV](../阅读清单.csv) / [TSV](阅读进度.tsv)：点击表头筛选、排序、查看空值和数值范围；双击长单元格查看全文。
 - [Vue](阅读卡片.vue) / [Svelte](阅读卡片.svelte)：模板、脚本与样式分区高亮。
 - [.gitignore](../代码与配置/.gitignore) / [.env](../代码与配置/.env)：规则与键值高亮，各保留一份。
 - [自定义扩展名](工作区.luma-note)：按内容识别 UTF-8 文本，保存时保留扩展名。
@@ -577,15 +621,16 @@ for section in dict.fromkeys(entry["section"] for entry in entries):
         label = Path(entry["path"]).name
         lines.append(f"| {entry['name']} | {suffixes} | [{label}](<{relative}>) |")
     lines.append("")
-lines += ["## 继续阅读", "", "[欢迎页](../欢迎.md)提供搜索、图片与公式、长文导航、书签和源码编辑的功能示例。", ""]
+lines += ["## 继续阅读", "", "[欢迎页](../欢迎.md)提供表格筛读、值解释、展开阅读、搜索、书签和源码编辑的功能示例。", ""]
 (SAMPLES / "格式示例/格式导览.md").write_text("\n".join(lines), encoding="utf-8")
 
 # ImageIO has no WebP encoder. Store a genuine lossless WebP derived from the same cover.
-try:
-    from PIL import Image
-except ImportError as error:
-    raise SystemExit("Refreshing WebP requires Pillow; normal Luma builds do not. Use a Python environment with Pillow installed.") from error
-with Image.open(SAMPLES / "留白.png") as image:
-    image.save(SAMPLES / "图片格式/阅读封面.webp", format="WEBP", lossless=True)
+if not options.text_only:
+    try:
+        from PIL import Image
+    except ImportError as error:
+        raise SystemExit("Refreshing WebP requires Pillow; normal Luma builds do not. Use a Python environment with Pillow installed.") from error
+    with Image.open(SAMPLES / "留白.png") as image:
+        image.save(SAMPLES / "图片格式/阅读封面.webp", format="WEBP", lossless=True)
 
 print(f"Updated {len(entries)} representative formats; covered {sum(len(entry['extensions']) for entry in entries)} extensions.")

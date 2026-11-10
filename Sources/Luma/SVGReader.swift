@@ -16,7 +16,7 @@ struct SVGReader: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                SVGWebView(source: source, zoom: tab.zoom, dark: colorScheme == .dark, state: state)
+                SVGWebView(source: source, zoom: tab.zoom, dark: colorScheme == .dark, state: state, actualSize: tab.imageActualSize)
                     .opacity(state.error == nil ? 1 : 0)
                 if state.loading { ProgressView("正在打开 SVG…") }
                 if let error = state.error {
@@ -34,7 +34,8 @@ struct SVGReader: View {
                 Spacer()
                 Button { tab.zoom = max(0.25, tab.zoom / 1.25) } label: { Image(systemName: "minus.magnifyingglass") }
                     .help("缩小").accessibilityLabel("缩小")
-                Button("适合窗口") { tab.zoom = 1 }
+                Button("适合窗口") { tab.imageActualSize = false; tab.zoom = 1 }
+                Button("按文字大小") { tab.imageActualSize = true; tab.zoom = 1 }
                 Button { tab.zoom = min(8, tab.zoom * 1.25) } label: { Image(systemName: "plus.magnifyingglass") }
                     .help("放大").accessibilityLabel("放大")
             }.buttonStyle(LumaButtonStyle()).padding(.horizontal, 12).padding(.vertical, 4)
@@ -49,15 +50,16 @@ struct SVGWebView: NSViewRepresentable {
     let zoom: Double
     let dark: Bool
     let state: SVGRenderState
+    var actualSize = false
 
     func makeCoordinator() -> Coordinator { Coordinator(state: state) }
     func makeNSView(context: Context) -> WKWebView {
         let view = Self.makeWebView(coordinator: context.coordinator)
-        context.coordinator.update(source: source, zoom: zoom, dark: dark)
+        context.coordinator.update(source: source, zoom: zoom, dark: dark, actualSize: actualSize)
         return view
     }
     func updateNSView(_ view: WKWebView, context: Context) {
-        context.coordinator.update(source: source, zoom: zoom, dark: dark)
+        context.coordinator.update(source: source, zoom: zoom, dark: dark, actualSize: actualSize)
     }
     static func makeWebView(coordinator: Coordinator) -> WKWebView {
         let configuration = WKWebViewConfiguration()
@@ -81,24 +83,25 @@ struct SVGWebView: NSViewRepresentable {
         private var source: String?
         private var zoom = 1.0
         private var dark = false
+        private var actualSize = false
         private var revision = ""
         private var navigation: WKNavigation?
 
         init(state: SVGRenderState) { self.state = state }
 
-        func update(source: String, zoom: Double, dark: Bool) {
-            let changedAppearance = self.zoom != zoom || self.dark != dark
-            self.zoom = zoom; self.dark = dark
+        func update(source: String, zoom: Double, dark: Bool, actualSize: Bool = false) {
+            let changedAppearance = self.zoom != zoom || self.dark != dark || self.actualSize != actualSize
+            self.zoom = zoom; self.dark = dark; self.actualSize = actualSize
             if self.source != source {
                 self.source = source
                 revision = UUID().uuidString
                 state.loading = true; state.error = nil; state.size = nil
-                navigation = webView?.loadHTMLString(Self.html(source: source, zoom: zoom, dark: dark, revision: revision), baseURL: nil)
+                navigation = webView?.loadHTMLString(Self.html(source: source, zoom: zoom, dark: dark, revision: revision, actualSize: actualSize), baseURL: nil)
             } else if changedAppearance { updateAppearance() }
         }
 
         private func updateAppearance() {
-            webView?.evaluateJavaScript("window.setView?.(\(zoom), \(dark ? "true" : "false"))", completionHandler: nil)
+            webView?.evaluateJavaScript("window.setView?.(\(zoom), \(dark ? "true" : "false"), \(actualSize ? "true" : "false"))", completionHandler: nil)
         }
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -130,7 +133,7 @@ struct SVGWebView: NSViewRepresentable {
             state.loading = false; state.error = "预览进程已退出。请切换到源码，或重新载入文件。"
         }
 
-        private static func html(source: String, zoom: Double, dark: Bool, revision: String) -> String {
+        private static func html(source: String, zoom: Double, dark: Bool, revision: String, actualSize: Bool) -> String {
             let encoded = Data(source.utf8).base64EncodedString()
             return #"""
             <!doctype html>
@@ -148,14 +151,14 @@ struct SVGWebView: NSViewRepresentable {
             </style></head><body><main><img alt="SVG 图像" src="data:image/svg+xml;base64,\#(encoded)"></main>
             <script nonce="\#(revision)">
               const image = document.querySelector('img');
-              let zoom = \#(zoom);
+              let zoom = \#(zoom), actualSize = \#(actualSize);
               function resize() {
                 if (!image.naturalWidth || !image.naturalHeight) return;
                 const fit = Math.max(.01, Math.min((innerWidth - 64) / image.naturalWidth, (innerHeight - 64) / image.naturalHeight, 1));
-                image.style.width = (image.naturalWidth * fit * zoom) + 'px';
-                image.style.height = (image.naturalHeight * fit * zoom) + 'px';
+                image.style.width = (image.naturalWidth * (actualSize ? 1 : fit) * zoom) + 'px';
+                image.style.height = (image.naturalHeight * (actualSize ? 1 : fit) * zoom) + 'px';
               }
-              window.setView = (value, dark) => { zoom = value; document.documentElement.dataset.dark = dark; resize(); };
+              window.setView = (value, dark, actual = false) => { zoom = value; actualSize = actual; document.documentElement.dataset.dark = dark; resize(); };
               function report() {
                 resize();
                 window.webkit.messageHandlers.svg.postMessage({revision: '\#(revision)', width: image.naturalWidth, height: image.naturalHeight});

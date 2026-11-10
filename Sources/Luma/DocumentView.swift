@@ -103,7 +103,7 @@ struct DocumentView: View {
 
     @ViewBuilder private func reader(_ content: LoadedContent) -> some View {
         if let source = tab.draft ?? content.source, tab.showSource || (tab.kind == .text && tab.codeLanguage == nil) {
-            SourceView(text: source, tab: tab, fontSize: workspace.editorFontSize)
+            SourceReader(text: source, tab: tab, fontSize: workspace.editorFontSize)
         } else if tab.previewPending {
             ProgressView("正在更新预览…").frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = tab.previewError {
@@ -123,10 +123,10 @@ struct DocumentView: View {
                                 state: reading, workspace: workspace, showingInformation: $showingInformation, onOpen: workspace.open)
             case .svg(let source): SVGReader(source: source, tab: tab)
             case .json(let source, _): CodePreview(source: tab.draft ?? source, tab: tab)
-            case .table(_, let table): TableReader(table: table)
+            case .table: TableReader(state: tab.tableReading)
             case .text(let text):
                 if tab.codeLanguage != nil { CodePreview(source: tab.draft ?? text, tab: tab) }
-                else { SourceView(text: text, tab: tab, fontSize: workspace.editorFontSize) }
+                else { SourceReader(text: text, tab: tab, fontSize: workspace.editorFontSize) }
             case .failed(let message):
                 FilePlaceholder(symbol: "doc.badge.ellipsis", title: "暂时无法预览", message: message, url: tab.url) {
                     workspace.load(tab)
@@ -218,45 +218,5 @@ struct FilePlaceholder: View {
                 Button("在默认应用中打开") { NSWorkspace.shared.open(url) }
             }.buttonStyle(LumaButtonStyle(emphasis: .secondary)).padding(.top, 6)
         }.padding(36).frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-private struct TableReader: View {
-    let table: CSVDocument
-    var body: some View {
-        if table.rows.isEmpty {
-            ContentUnavailableView("空表格", systemImage: "tablecells", description: Text("这个文件没有可显示的数据。"))
-        } else {
-            VStack(alignment: .leading, spacing: 0) {
-                Text("\(table.rows.count.formatted()) 行 · \(table.columnCount) 列 · 第一行为表头")
-                    .font(.caption).foregroundStyle(.secondary).padding(16)
-                ScrollView([.horizontal, .vertical]) {
-                    LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Section {
-                            ForEach(1..<table.rows.count, id: \.self) { index in
-                                tableRow(table.rows[index], index: index, header: false)
-                            }
-                        } header: {
-                            tableRow(table.rows[0], index: 0, header: true)
-                        }
-                    }.padding(.horizontal, 16).padding(.bottom, 16)
-                }
-            }
-        }
-    }
-
-    private func tableRow(_ row: [String], index: Int, header: Bool) -> some View {
-        HStack(spacing: 0) {
-            Text(header ? "#" : "\(index)").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary).frame(width: 42, alignment: .trailing).padding(.trailing, 12)
-            ForEach(0..<table.columnCount, id: \.self) { column in
-                Text(column < row.count ? row[column] : "")
-                    .font(.system(size: 12, weight: header ? .semibold : .regular))
-                    .textSelection(.enabled).lineLimit(4)
-                    .frame(width: 170, alignment: .leading).padding(.horizontal, 12).padding(.vertical, 11)
-            }
-        }
-        .frame(minHeight: 38)
-        .background(header || index.isMultiple(of: 2) ? LumaTheme.chrome : LumaTheme.paper)
-        .overlay(alignment: .bottom) { LumaRule() }
     }
 }

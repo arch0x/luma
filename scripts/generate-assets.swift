@@ -5,6 +5,7 @@ import ImageIO
 // Fit the checked-in icon's blue tile to the canvas and generate sample documents.
 let root = URL(fileURLWithPath: CommandLine.arguments[1])
 let refreshSamples = CommandLine.arguments.contains("--refresh-samples")
+let refreshPDF = refreshSamples || CommandLine.arguments.contains("--refresh-pdf")
 let iconset = root.appendingPathComponent("dist/AppIcon.iconset")
 let iconSource = root.appendingPathComponent("Sources/Luma/Resources/Brand/AppIcon.png")
 guard let iconImageSource = CGImageSourceCreateWithURL(iconSource as CFURL, nil),
@@ -116,7 +117,7 @@ if refreshSamples || !FileManager.default.fileExists(atPath: pngURL.path) {
 }
 
 let pdfURL = samples.appendingPathComponent("阅读空间.pdf")
-if refreshSamples || !FileManager.default.fileExists(atPath: pdfURL.path) {
+if refreshPDF || !FileManager.default.fileExists(atPath: pdfURL.path) {
     var page = CGRect(x: 0, y: 0, width: 600, height: 800)
     guard let context = CGContext(pdfURL as CFURL, mediaBox: &page, nil) else { throw NSError(domain: "Assets", code: 3) }
     context.beginPDFPage(nil)
@@ -142,7 +143,7 @@ if refreshSamples || !FileManager.default.fileExists(atPath: pdfURL.path) {
     text("JSON, JSONC, JSON Lines, CSV and TSV.", x: 48, y: 296, size: 19, color: ink)
     text("EDIT", x: 48, y: 222, size: 12, color: blue, weight: .semibold)
     text("Preview your draft, then save when ready.", x: 48, y: 188, size: 19, color: ink)
-    text("02 / LUMA / BLUE EDITION 2026.11", x: 48, y: 48, size: 10, color: blue)
+    text("02 / LUMA / BLUE EDITION 2026.11.2", x: 48, y: 48, size: 10, color: blue)
     NSGraphicsContext.restoreGraphicsState()
     context.endPDFPage()
     context.closePDF()

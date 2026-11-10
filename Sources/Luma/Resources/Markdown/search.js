@@ -35,7 +35,7 @@
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
         acceptNode(node) {
           const parent = node.parentElement;
-          if (!node.nodeValue || !parent || parent.closest('script,style,button,summary,.heading-anchor,.code-toolbar,.diagram-toolbar,.katex-mathml,[hidden],details:not([open])')) return NodeFilter.FILTER_REJECT;
+          if (!node.nodeValue || !parent || parent.closest('script,style,button,summary,.heading-anchor,.code-toolbar,.diagram-toolbar,.content-tools,.katex-mathml,[hidden],details:not([open])')) return NodeFilter.FILTER_REJECT;
           if (parent.closest('svg') && !parent.closest('text,tspan')) return NodeFilter.FILTER_REJECT;
           return visible(parent) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
         }

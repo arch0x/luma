@@ -32,6 +32,15 @@ struct WorkspaceToolbarAlignment: NSViewRepresentable {
         }
     }
 
+    /// The item hosts many file tabs; only those tabs own a selected appearance.
+    static func keepFileTabsNeutral(_ item: NSToolbarItem, in toolbar: NSToolbar) {
+        if toolbar.selectedItemIdentifier == item.itemIdentifier { toolbar.selectedItemIdentifier = nil }
+        if #available(macOS 26.0, *) {
+            if item.style != .plain { item.style = .plain }
+            if item.backgroundTintColor != nil { item.backgroundTintColor = nil }
+        }
+    }
+
     final class Anchor: NSView {
         var onTabViewportWidth: ((CGFloat) -> Void)?
         private var lastReportedWidth: CGFloat?
@@ -88,6 +97,7 @@ struct WorkspaceToolbarAlignment: NSViewRepresentable {
             for (index, item) in toolbar.items.enumerated() {
                 guard let view = item.view, let viewport = WorkspaceTabViewport.find(in: view),
                       viewport.bounds.width > 0 else { continue }
+                WorkspaceToolbarAlignment.keepFileTabsNeutral(item, in: toolbar)
                 let precedingEdge = toolbar.items.prefix(index).compactMap { item -> CGFloat? in
                     guard let view = item.view, view.window === window else { return nil }
                     return view.convert(view.bounds, to: nil).maxX

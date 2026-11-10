@@ -1,7 +1,8 @@
 import Foundation
 
 nonisolated enum SampleWorkspace {
-    static let folderName = "Samples-2026.11"
+    static let edition = "2026.11.2"
+    static let folderName = "Samples-\(edition)"
 
     nonisolated struct Format: Decodable {
         let name: String

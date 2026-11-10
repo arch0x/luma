@@ -43,8 +43,11 @@ enum LoadState {
     var markdownCollapsedHeadings: Set<String> = []
     let markdownFind = MarkdownFindState()
     let markdownRenderState = MarkdownRenderState()
+    let tableReading = TableReadingState()
+    var sourceSelection = NSRange(location: 0, length: 0)
     var pdfPage = 0
     var zoom = 1.0
+    var imageActualSize = false
     var sourceQuery = ""
     var findRequest = 0
     var matchCase = false
@@ -118,7 +121,9 @@ enum LoadState {
         case .markdown(let text): state = .ready(.markdown(text))
         case .svg(let text): state = .ready(.svg(text))
         case .json(let text, let root): state = .ready(.json(text, root))
-        case .table(let text, let table): state = .ready(.table(text, table))
+        case .table(let text, let table):
+            tableReading.update(table)
+            state = .ready(.table(text, table))
         case .invalidStructured(let text, let error): state = .ready(.text(text)); previewError = error
         case .native: state = .ready(.native)
         }
@@ -278,7 +283,9 @@ struct ReadFileResult: Sendable {
     var directories: [URL: [FileEntry]] = [:]
     var directoryErrors: [URL: String] = [:]
     var loadingDirectories: Set<URL> = []
-    var expanded: Set<URL> = []
+    var expanded: Set<URL> = [] {
+        didSet { if expanded != oldValue { persistDirectoryExpansion() } }
+    }
     var tabs: [DocumentTab] = [] {
         didSet { updateAutoSaveBindings(previous: oldValue); persistSession() }
     }
@@ -450,8 +457,10 @@ struct ReadFileResult: Sendable {
         restoring = true
         for path in preferences.stringArray(forKey: "workspaceFolders") ?? [] {
             let url = URL(fileURLWithPath: path)
-            if FileManager.default.fileExists(atPath: path) { addFolder(url) }
+            var isDirectory: ObjCBool = false
+            if FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory), isDirectory.boolValue { addFolder(url) }
         }
+        restoreDirectoryExpansion()
         let paths = preferences.stringArray(forKey: "openFileTabs") ?? []
         let selected = preferences.string(forKey: "activeFileTab")
         open(paths.filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) })
@@ -459,6 +468,7 @@ struct ReadFileResult: Sendable {
         restoring = false
         // addFolder has already scheduled fresh directory reads for this launch.
         if !roots.isEmpty { lastAutomaticDirectoryRefresh = .now }
+        persistDirectoryExpansion()
         persistSession()
     }
 
@@ -484,7 +494,8 @@ struct ReadFileResult: Sendable {
         let normalized = url.resolvingSymlinksInPath().standardizedFileURL
         guard !roots.contains(normalized) else { return }
         roots.append(normalized)
-        expanded.insert(normalized)
+        // User-added folders open immediately; launch restoration keeps the saved state.
+        if !restoring { expanded.insert(normalized) }
         loadDirectory(normalized)
         if !restoring {
             recent.removeAll { $0 == normalized }
@@ -497,13 +508,40 @@ struct ReadFileResult: Sendable {
     func removeFolder(_ url: URL) {
         let normalized = url.resolvingSymlinksInPath().standardizedFileURL
         roots.removeAll { $0 == normalized }
-        expanded.remove(normalized)
+        let scope = roots.map(WorkspacePath.normalized)
+        expanded = Set(expanded.filter { url in scope.contains { WorkspacePath.contains($0, WorkspacePath.normalized(url)) } })
         persistRoots()
     }
 
     private func persistRoots() {
         preferences.set(roots.map(\.path), forKey: "workspaceFolders")
         preferences.set(recent.map(\.path), forKey: "recentFolders")
+        persistDirectoryExpansion()
+    }
+
+    private func persistDirectoryExpansion() {
+        guard !restoring else { return }
+        let scope = roots.map(WorkspacePath.normalized)
+        let paths = Set(expanded.map(WorkspacePath.normalized)).filter { path in
+            scope.contains { WorkspacePath.contains($0, path) }
+        }
+        preferences.set(paths.sorted(), forKey: "expandedWorkspaceDirectories")
+    }
+
+    private func restoreDirectoryExpansion() {
+        let scope = roots.map(WorkspacePath.normalized)
+        let saved = preferences.stringArray(forKey: "expandedWorkspaceDirectories") ?? []
+        expanded = Set(saved.compactMap { path -> URL? in
+            guard path.hasPrefix("/"), !path.contains("\0") else { return nil }
+            let url = URL(fileURLWithPath: path)
+            guard let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey]),
+                  values.isDirectory == true, values.isSymbolicLink != true else { return nil }
+            let normalized = url.resolvingSymlinksInPath().standardizedFileURL
+            guard scope.contains(where: { WorkspacePath.contains($0, normalized.path) }) else { return nil }
+            return normalized
+        })
+        // Load only remembered branches. This does not expand their collapsed parents.
+        for directory in expanded { loadDirectory(directory) }
     }
 
     private func persistSession() {
@@ -516,6 +554,7 @@ struct ReadFileResult: Sendable {
         for tab in tabs { await tab.captureMarkdownPosition?() }
         for task in Array(pendingCaptures.values) { await task.value }
         readingHistory.flush()
+        persistDirectoryExpansion()
         persistSession()
     }
 

@@ -20,6 +20,8 @@
   let lastReadingLocation;
   let readingViewportWidth;
 
+  const contentTools = window.createLumaContentTools(root);
+
   function notify(body) {
     window.webkit?.messageHandlers?.luma?.postMessage(body);
   }
@@ -34,6 +36,9 @@
   const reading = window.createLumaReading(root, {label: headingLabel, headings: () => headingElements});
   function publishPosition() {
     if (restoring) return;
+    // A resize can dispatch a scroll before the semantic layout cache refreshes.
+    // Keep the last stable anchor until the resize handler restores it.
+    if (lastReadingLocation && readingViewportWidth !== window.innerWidth && !root.matches('[data-code-preview]')) return;
     const location = reading.capture();
     lastReadingLocation = location;
     readingViewportWidth = window.innerWidth;
@@ -350,6 +355,7 @@
         return `<span id="luma-image-${index}">[图片：${escape(token.text || '未命名')}]</span>`;
       }
     }});
+    contentTools.close();
     const codeLanguage = /^[a-z0-9-]+$/.test(options.codeLanguage || '') ? options.codeLanguage : '';
     const jsonPreview = ['json', 'jsonc', 'jsonl', 'ndjson'].includes(codeLanguage);
     const jsonLines = codeLanguage === 'jsonl' || codeLanguage === 'ndjson';
@@ -495,6 +501,7 @@
       }
     }
     if (request !== generation) return {cancelled: true};
+    contentTools.install();
     const imageResults = await Promise.all(imagePromises);
     await Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 2000))]);
     if (request !== generation) return {cancelled: true};
@@ -505,6 +512,7 @@
     if (!codeLanguage && options.location && Number.isFinite(options.location.offset)) reading.restore(options.location);
     else window.scrollTo(0, Number(options.offset) || 0);
     restoring = false;
+    readingViewportWidth = window.innerWidth;
     notify({kind: 'outline', headings: outline, truncated: headingElements.length > outline.length});
     refreshHeadingOffsets();
     publishPosition();
@@ -549,20 +557,26 @@
     clearTimeout(scrollTimer);
     scrollTimer = setTimeout(publishPosition, 80);
   }, {passive: true});
-  const resizeObserver = new ResizeObserver(() => {
+  function restoreViewportPosition() {
     if (!restoring && lastReadingLocation && readingViewportWidth !== window.innerWidth &&
         !root.matches('[data-code-preview]')) {
       reading.restore(lastReadingLocation);
+      readingViewportWidth = window.innerWidth;
       forcedHeading = null;
       publishPosition();
     }
+  }
+  // Also handle wide windows whose capped article width does not resize.
+  window.addEventListener('resize', restoreViewportPosition, {passive: true});
+  const resizeObserver = new ResizeObserver(() => {
+    restoreViewportPosition();
     clearTimeout(outlineFrame);
     outlineFrame = setTimeout(() => { syncJSONLineNumbers(); refreshHeadingOffsets(); reading.refresh(); search.relayout(); }, 60);
   });
   resizeObserver.observe(root);
   document.addEventListener('visibilitychange', () => { if (document.hidden) publishPosition(); });
   window.addEventListener('pagehide', publishPosition);
-  window.luma = {render, navigateToHeading, findText: search.findText, moveSearch: search.move,
+  window.luma = {render, closeExpandedContent: contentTools.close, navigateToHeading, findText: search.findText, moveSearch: search.move,
     getReadingPosition: () => reading.capture(true), getHeadingReadingPosition: reading.captureHeading,
     restoreReadingPosition, setPreviewWidth, setReadingLayout, lastResult: null};
 })();

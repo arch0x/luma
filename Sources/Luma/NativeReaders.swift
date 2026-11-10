@@ -119,7 +119,7 @@ struct ImageReader: View {
         VStack(spacing: 0) {
             if let image {
                 GeometryReader { geometry in
-                    let fit = min((geometry.size.width - 64) / max(image.size.width, 1), (geometry.size.height - 64) / max(image.size.height, 1), 1)
+                    let fit = tab.imageActualSize ? 1 : max(0.01, min((geometry.size.width - 64) / max(image.size.width, 1), (geometry.size.height - 64) / max(image.size.height, 1), 1))
                     ScrollView([.horizontal, .vertical]) {
                         Image(nsImage: image).resizable().interpolation(.high)
                             .frame(width: image.size.width * fit * tab.zoom, height: image.size.height * fit * tab.zoom)
@@ -135,7 +135,8 @@ struct ImageReader: View {
                     Spacer()
                     Button { tab.zoom = max(0.25, tab.zoom / 1.25) } label: { Image(systemName: "minus.magnifyingglass") }
                         .help("缩小").accessibilityLabel("缩小")
-                    Button("适合窗口") { tab.zoom = 1 }
+                    Button("适合窗口") { tab.imageActualSize = false; tab.zoom = 1 }
+                    Button("原始大小") { tab.imageActualSize = true; tab.zoom = 1 }
                     Button { tab.zoom = min(8, tab.zoom * 1.25) } label: { Image(systemName: "plus.magnifyingglass") }
                         .help("放大").accessibilityLabel("放大")
                 }.buttonStyle(LumaButtonStyle()).padding(.horizontal, 12).padding(.vertical, 4)

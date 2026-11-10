@@ -36,9 +36,10 @@ struct DocumentReaderRail<Navigation: View>: View {
     var body: some View {
         GeometryReader { geometry in
             let actionsHeight: CGFloat = 62
-            let separation: CGFloat = 20
+            let separation: CGFloat = navigationHeight == nil ? 0 : 20
             let height = navigationHeight.map { min($0, max(0, geometry.size.height - actionsHeight - separation - 32)) }
-            let top = height.map { max(16, (geometry.size.height - actionsHeight - separation - $0) / 2) } ?? 8
+            let top = height.map { max(16, (geometry.size.height - actionsHeight - separation - $0) / 2) }
+                ?? max(8, (geometry.size.height - actionsHeight) / 2)
             VStack(spacing: separation) {
                 VStack(spacing: 2) {
                     DocumentRailButton(symbol: "info.circle", label: "文件信息", identifier: "documentInformation",
@@ -53,8 +54,6 @@ struct DocumentReaderRail<Navigation: View>: View {
                 .frame(height: actionsHeight)
                 if let height {
                     navigation().frame(width: 38, height: height)
-                } else {
-                    navigation().frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .padding(.top, top)

@@ -3,6 +3,7 @@ import Foundation
 public struct CSVDocument: Sendable {
     public let rows: [[String]]
     public let columnCount: Int
+    public let sourceLines: [Int]
 
     /// Handles quoted delimiters, escaped quotes, CRLF and multiline fields.
     public init(_ text: String, delimiter: Character = ",") throws {
@@ -10,6 +11,9 @@ public struct CSVDocument: Sendable {
         var state = State.field
         var rows: [[String]] = []
         var row: [String] = []
+        var sourceLines: [Int] = []
+        var line = 1
+        var rowStartLine = 1
         var field = ""
         var endedRow = false
         var previousCR = false
@@ -23,6 +27,8 @@ public struct CSVDocument: Sendable {
             try appendField()
             guard rows.count < 10_000 else { throw ReaderError.tooManyRows }
             rows.append(row)
+            sourceLines.append(rowStartLine)
+            rowStartLine = line
             row = []
         }
 
@@ -30,6 +36,7 @@ public struct CSVDocument: Sendable {
             if previousCR && character == "\n" { previousCR = false; continue }
             previousCR = false
             endedRow = false
+            if character == "\n" || character == "\r" || character == "\r\n" { line += 1 }
             if state == .quoted {
                 if character == "\"" { state = .afterQuote }
                 else { field.append(character) }
@@ -58,6 +65,7 @@ public struct CSVDocument: Sendable {
         guard state != .quoted else { throw ReaderError.invalidCSV("引号未闭合") }
         if !endedRow && (!text.isEmpty || !row.isEmpty || !field.isEmpty) { try appendRow() }
         self.rows = rows
+        self.sourceLines = sourceLines
         columnCount = rows.map(\.count).max() ?? 0
     }
 }

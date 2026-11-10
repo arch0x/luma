@@ -69,29 +69,11 @@ struct WorkspaceView: View {
                     openFolderButton
                 }
             }
-            ToolbarItem(id: "openDocumentTabs", placement: .navigation) {
-                if !workspace.tabs.isEmpty { openDocumentTabs }
-            }
-            ToolbarItem(id: "documentActions", placement: .primaryAction) {
-                Group {
-                    if let tab = workspace.activeTab {
-                        DocumentToolbar(tab: tab, workspace: workspace)
-                            .fixedSize()
-                            .layoutPriority(1)
-                    } else {
-                        Button(action: workspace.refresh) { Image(systemName: "arrow.clockwise") }
-                            .buttonStyle(LumaButtonStyle())
-                            .frame(width: 36, height: 38)
-                            .help("刷新目录与当前文件 ⌘R")
-                            .accessibilityLabel("刷新目录与当前文件")
-                    }
-                }
-                .background(WorkspaceToolbarAlignment(onTabViewportWidth: { width in
-                    if abs(tabViewportWidth - width) > 0.5 { tabViewportWidth = width }
-                }).frame(width: 0, height: 0))
-            }
+            fileTabsToolbar
+            documentActionsToolbar
         }
-        .toolbarBackground(.hidden, for: .windowToolbar)
+        .toolbarBackground(LumaTheme.paper, for: .windowToolbar)
+        .toolbarBackground(.visible, for: .windowToolbar)
         .dropDestination(for: URL.self) { urls, _ in
             let files = urls.filter(\.isFileURL)
             guard !files.isEmpty else { return false }
@@ -216,6 +198,43 @@ struct WorkspaceView: View {
         .padding(.horizontal, 8).padding(.vertical, 5)
     }
 
+    @ToolbarContentBuilder private var documentActionsToolbar: some ToolbarContent {
+        let item = ToolbarItem(id: "documentActions", placement: .primaryAction) {
+            Group {
+                if let tab = workspace.activeTab {
+                    DocumentToolbar(tab: tab, workspace: workspace)
+                        .fixedSize()
+                        .layoutPriority(1)
+                } else {
+                    Button(action: workspace.refresh) { Image(systemName: "arrow.clockwise") }
+                        .buttonStyle(LumaButtonStyle())
+                        .frame(width: 36, height: 38)
+                        .help("刷新目录与当前文件 ⌘R")
+                        .accessibilityLabel("刷新目录与当前文件")
+                }
+            }
+            .background(WorkspaceToolbarAlignment(onTabViewportWidth: { width in
+                if abs(tabViewportWidth - width) > 0.5 { tabViewportWidth = width }
+            }).frame(width: 0, height: 0))
+        }
+        if #available(macOS 26.0, *) {
+            item.sharedBackgroundVisibility(.hidden)
+        } else {
+            item
+        }
+    }
+
+    @ToolbarContentBuilder private var fileTabsToolbar: some ToolbarContent {
+        let item = ToolbarItem(id: "openDocumentTabs", placement: .navigation) {
+            if !workspace.tabs.isEmpty { openDocumentTabs }
+        }
+        if #available(macOS 26.0, *) {
+            item.sharedBackgroundVisibility(.hidden)
+        } else {
+            item
+        }
+    }
+
     private var openDocumentTabs: some View {
         ScrollViewReader { scroll in
             ScrollView(.horizontal) {
@@ -263,12 +282,6 @@ struct WorkspaceView: View {
         }
         .background(active ? LumaTheme.selected : .clear, in: RoundedRectangle(cornerRadius: LumaTheme.controlRadius))
         .contentShape(Rectangle())
-        .overlay(alignment: .bottom) {
-            if active {
-                Capsule().fill(LumaTheme.accent).frame(width: 19, height: 2)
-                    .allowsHitTesting(false)
-            }
-        }
         .help(tab.url.path)
         .background(DocumentTabContextMenu(tab: tab, workspace: workspace))
     }

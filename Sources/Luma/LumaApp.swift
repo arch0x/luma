@@ -125,7 +125,7 @@ private struct SettingsView: View {
                         .pickerStyle(.segmented)
                 }
                 Section("关于 Luma") {
-                    LabeledContent("版本", value: "0.8.4")
+                    LabeledContent("版本", value: "0.9.0")
                     Text("文件在本机读取。支持 ⌘S 保存，可在「编辑模式」中开启自动保存。")
                         .font(.caption).foregroundStyle(LumaTheme.muted)
                 }

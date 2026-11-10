@@ -127,7 +127,8 @@ import Testing
         let project = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: samples.appendingPathComponent("项目.json"))) as? [String: Any])
         let workspace = try #require(project["workspace"] as? [String: Any])
         #expect(workspace["representativeFormats"] as? Int == formats.count)
-        #expect(SampleWorkspace.folderName != "Samples-0.8", "The blue edition must not reuse an old editable copy")
+        #expect(project["sampleEdition"] as? String == SampleWorkspace.edition)
+        #expect(SampleWorkspace.folderName != "Samples-0.8" && SampleWorkspace.folderName != "Samples-2026.11" && SampleWorkspace.folderName != "Samples-2026.11.1", "The new edition must not reuse an old editable copy")
     }
 
     @Test func everyImageExampleUsesItsRealCodecAndCanProduceAPreview() throws {
@@ -176,4 +177,63 @@ import Testing
         #expect(!FileManager.default.fileExists(atPath: samples.appendingPathComponent("格式示例/阅读卡片.svg").path))
         #expect(!FileManager.default.fileExists(atPath: samples.appendingPathComponent("格式示例/设置调整.patch").path))
     }
+    @Test func newEditionLeavesOldFilesAndOpenDraftsUntouched() async throws {
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let domain = "local.luma.edition.\(UUID())"
+        let preferences = try #require(UserDefaults(suiteName: domain))
+        defer { preferences.removePersistentDomain(forName: domain) }
+        let workspace = Workspace(preferences: preferences)
+        let source = try #require(workspace.samplesURL)
+        let oldFolder = directory.appendingPathComponent("Samples-2026.11.1")
+        let newFolder = directory.appendingPathComponent(SampleWorkspace.folderName)
+        try FileManager.default.createDirectory(at: oldFolder, withIntermediateDirectories: true)
+        let oldWelcome = oldFolder.appendingPathComponent("欢迎.md")
+        try "旧版已保存的笔记".write(to: oldWelcome, atomically: true, encoding: .utf8)
+        workspace.open([oldWelcome])
+        let oldTab = try #require(workspace.activeTab)
+        await oldTab.loadTask?.value
+        oldTab.edit("旧版尚未保存的草稿")
+        try workspace.installAndOpenSamples(from: source, at: newFolder)
+        #expect(try String(contentsOf: oldWelcome, encoding: .utf8) == "旧版已保存的笔记")
+        #expect(workspace.tabs.contains { $0 === oldTab } && oldTab.isDirty && oldTab.draft == "旧版尚未保存的草稿")
+        let newWelcome = newFolder.appendingPathComponent("欢迎.md")
+        let newText = try String(contentsOf: newWelcome, encoding: .utf8)
+        #expect(newText.contains(SampleWorkspace.edition) && newText.contains("解释所选值"))
+        try "新版用户自己的笔记".write(to: newWelcome, atomically: true, encoding: .utf8)
+        try SampleWorkspace.install(from: source, to: newFolder)
+        #expect(try String(contentsOf: newWelcome, encoding: .utf8) == "新版用户自己的笔记")
+    }
+
+    @Test func newExamplesExerciseFiltersNumericSortAndValueInterpretation() throws {
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let source = try #require(Workspace().samplesURL)
+        let csvURL = source.appendingPathComponent("阅读清单.csv")
+        let before = try Data(contentsOf: csvURL)
+        let table = try CSVDocument(String(decoding: before, as: UTF8.self))
+        let columns = try #require(table.rows.first)
+        let status = try #require(columns.firstIndex(of: "状态"))
+        let pages = try #require(columns.firstIndex(of: "页数"))
+        let reading = TableReadingState(); reading.update(table)
+        reading.setFilter(.init(values: ["待阅读"]), column: status)
+        #expect(reading.visibleRows.count == 2)
+        reading.reset(); reading.sort(column: pages, ascending: true)
+        #expect(reading.visibleRows.map { reading.value(row: $0, column: pages) } == ["2", "5", "12", "120", ""])
+        #expect(table.rows[1].last?.contains("\n") == true && table.sourceLines[2] == 4)
+        #expect(try Data(contentsOf: csvURL) == before)
+
+        let project = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: source.appendingPathComponent("项目.json"))) as? [String: Any])
+        let examples = try #require(project["inspectionExamples"] as? [String: Any])
+        let color = try #require(examples["colorWithAlpha"] as? String)
+        #expect(try #require(ReadableValue.color(color)).alpha < 1)
+        let seconds = try #require(examples["timestampSeconds"] as? NSNumber)
+        let milliseconds = try #require(examples["timestampMilliseconds"] as? NSNumber)
+        let first = try #require(ReadableValue.date(seconds.stringValue, unit: .seconds))
+        let second = try #require(ReadableValue.date(milliseconds.stringValue, unit: .milliseconds))
+        #expect(abs(second.timeIntervalSince(first) - 0.123) < 0.001)
+        #expect(ReadableValue.byteCount(try #require(examples["sizeWithUnit"] as? String)) == (examples["byteCount"] as? NSNumber)?.doubleValue)
+        let text = try #require(examples["escapedText"] as? String)
+        #expect(text.contains("\n") && text.contains("\t"))
+        #expect(ReadableValue.decodedString(ReadableValue.encodeString(text)) == text)
+    }
+
 }

@@ -135,3 +135,26 @@ main[data-json-preview] .hljs-punctuation { color: var(--muted); }
 .json-record-title { padding: 0 24px; margin-bottom: 10px; font: 12px/1.6 -apple-system, sans-serif; color: var(--muted); }
 .json-record-error { margin: 0 24px 12px; padding-left: 10px; border-left: 2px solid var(--danger); color: var(--danger); font: 12px/1.6 -apple-system, sans-serif; }
 .json-preview-note { padding: 0 24px; color: var(--muted); font: 13px/1.8 -apple-system, sans-serif; }
+
+/* Object controls are separate from the document's typography and reading width. */
+.content-tools { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 10px; background: var(--panel); font: 12px/1.5 -apple-system, sans-serif; }
+.reading-dialog { position: fixed; inset: 16px; width: calc(100vw - 32px); height: calc(100vh - 32px); max-width: none; max-height: none; padding: 0; margin: auto; border: 1px solid var(--control-border); border-radius: var(--group-radius); background: var(--paper); color: var(--ink); }
+.reading-dialog[open] { display: flex; flex-direction: column; }
+.reading-dialog::backdrop { background: rgba(0,0,0,.35); }
+.reading-dialog-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--panel); font: 12px/1.5 -apple-system, sans-serif; }
+.reading-dialog-toolbar strong { margin-right: auto; }
+.reading-dialog-toolbar .reading-close { margin-left: auto; }
+.reading-dialog-stage { flex: 1; min-height: 0; overflow: auto; padding: 16px; overscroll-behavior: contain; }
+.reading-dialog-stage .table-scroll,.reading-dialog-stage .diagram { margin: 0; overflow: visible; }
+.reading-dialog-stage table { width: max-content; min-width: 100%; }
+.reading-dialog-stage td,.reading-dialog-stage th { max-width: none; min-width: 140px; }
+.reading-dialog-stage pre { font-size: 13px; }
+.reading-dialog-stage .full-cell { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.reading-dialog-stage .diagram-canvas { padding: 8px; overflow: visible; }
+.reading-dialog-stage .diagram-canvas svg { max-width: none; }
+.reading-scale { min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
+.table-scroll td:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (max-width: 540px) {
+  .reading-dialog { inset: 6px; width: calc(100vw - 12px); height: calc(100vh - 12px); }
+  .reading-dialog-toolbar { gap: 4px; }
+}

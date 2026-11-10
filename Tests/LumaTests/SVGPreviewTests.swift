@@ -71,6 +71,25 @@ import Testing
         try await preview.snapshot("svg-narrow")
     }
 
+    @Test func naturalTextSizeCanBeRestoredAfterFittingNarrowWindow() async throws {
+        let preview = try await render(source)
+        defer { preview.close() }
+        preview.view.frame = NSRect(x: 0, y: 0, width: 240, height: 400)
+        _ = try await preview.value("window.setView(1, false, false)")
+        #expect(try await preview.value("document.querySelector('img').clientWidth") as? Int == 176)
+        preview.coordinator.update(source: source, zoom: 1, dark: false, actualSize: true)
+        let deadline = ContinuousClock.now + .seconds(3)
+        while ContinuousClock.now < deadline {
+            if try await preview.value("document.querySelector('img').clientWidth") as? Int == 400 { break }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(try await preview.value("document.querySelector('img').clientWidth") as? Int == 400)
+        #expect(try await preview.value("document.documentElement.scrollWidth > innerWidth") as? Bool == true)
+        preview.coordinator.update(source: source, zoom: 1, dark: false, actualSize: false)
+        _ = try await preview.value("window.setView(1, false, false)")
+        #expect(try await preview.value("document.querySelector('img').clientWidth") as? Int == 176)
+    }
+
     @Test(arguments: [("图片资源/阅读 流程.svg", 760, 180)])
     func bundledSVGAlsoWorksAsAnIndependentDocument(path: String, width: Int, height: Int) async throws {
         let domain = "local.luma.svg-sample.\(UUID())"

@@ -89,7 +89,11 @@ python3 scripts/refresh-samples.py
 
 WebP 使用真实无损编码；普通应用构建直接打包已提交的资源，仍只需要 Apple 工具链。`Sources/Luma/Resources/SampleCatalog.json` 是示例清单，测试会对照 `DocumentKind.extensionsByKind` 检查覆盖并验证真实文件。
 
-示例安装目录为 `~/Library/Application Support/Luma/Samples-2026.11`，旧版 `Samples-0.8` 保留。修改示例版本时同步检查 `SampleWorkspace.swift`、示例清单和相关测试。
+仅更新文本、JSON / CSV 与格式清单时，可运行 `python3 scripts/refresh-samples.py --text-only`，无需 Pillow，也不会重编码 WebP。
+
+仅更新 PDF 页脚或内容时，可运行 `swift -module-cache-path "$PWD/.build/module-cache" scripts/generate-assets.swift "$PWD" --refresh-pdf`，避免重生成其他图片编码。
+
+示例安装目录为 `~/Library/Application Support/Luma/Samples-2026.11.2`，旧版 `Samples-2026.11.1`、`Samples-2026.11` 与 `Samples-0.8` 保留。修改示例版本时同步检查 `SampleWorkspace.swift`、示例清单和相关测试。
 
 ## 图标与界面资源
 
