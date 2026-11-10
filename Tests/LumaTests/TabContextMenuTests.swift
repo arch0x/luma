@@ -12,10 +12,43 @@ import Testing
         window.toolbar?.items.compactMap(\.view).flatMap { regions(in: $0) } ?? []
     }
 
+    private func visibleBounds(of region: DocumentTabMenuRegion) -> NSRect {
+        var visible = region.bounds.intersection(region.visibleRect)
+        if let item = region.window?.toolbar?.items.compactMap(\.view).first(where: { region.isDescendant(of: $0) }),
+           let viewport = WorkspaceTabViewport.find(in: item) {
+            visible = visible.intersection(region.convert(viewport.bounds, from: viewport))
+        }
+        return visible
+    }
+
+    private func visibleRegion(for tab: DocumentTab, in window: NSWindow, count: Int) async throws -> DocumentTabMenuRegion {
+        let deadline = ContinuousClock.now + .seconds(8)
+        while ContinuousClock.now < deadline {
+            window.displayIfNeeded()
+            window.contentView?.superview?.layoutSubtreeIfNeeded()
+            let views = toolbarRegions(window)
+            if views.count == count, let region = views.first(where: { $0.tab === tab && $0.window === window && $0.isMonitoring }),
+               !region.isHiddenOrHasHiddenAncestor {
+                if visibleBounds(of: region).width >= 30 { return region }
+                region.scrollToVisible(region.bounds)
+            }
+            // Layout may replace the representable: reacquire it rather than retaining
+            // a detached native view across a SwiftUI toolbar update.
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        let geometry = window.toolbar?.items.map { item in
+            "\(item.itemIdentifier.rawValue): frame=\(String(describing: item.view?.frame)), attached=\(item.view?.window === window)"
+        }.joined(separator: "; ") ?? "No toolbar"
+        Issue.record("Target tab did not become visible: window=\(window.frame), toolbar=\(geometry)")
+        throw URLError(.timedOut)
+    }
+
     private func event(_ type: NSEvent.EventType, in region: DocumentTabMenuRegion,
                        flags: NSEvent.ModifierFlags = []) throws -> NSEvent {
         let window = try #require(region.window)
-        let point = region.convert(NSPoint(x: region.bounds.midX, y: region.bounds.midY), to: nil)
+        let visible = visibleBounds(of: region)
+        try #require(!visible.isEmpty, "A real click must fall inside the clipped tab viewport")
+        let point = region.convert(NSPoint(x: visible.midX, y: visible.midY), to: nil)
         return try #require(NSEvent.mouseEvent(with: type, location: point, modifierFlags: flags,
             timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
             context: nil, eventNumber: 1, clickCount: 1, pressure: 1))
@@ -42,25 +75,15 @@ import Testing
         let window = ReaderTestWindow(contentRect: NSRect(x: 0, y: 0, width: 1320, height: 600),
                               styleMask: [.titled, .resizable], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
+        // Match the app Scene rather than AppKit's platform-dependent automatic style.
+        window.toolbarStyle = .unified
         window.contentView = host
         window.makeKeyAndOrderFront(nil)
         defer { window.delegate = nil; window.close() }
-        let deadline = ContinuousClock.now + .seconds(8)
-        var views: [DocumentTabMenuRegion] = []
-        while ContinuousClock.now < deadline {
-            window.displayIfNeeded()
-            window.contentView?.superview?.layoutSubtreeIfNeeded()
-            views = toolbarRegions(window)
-            if views.count == 3, views.allSatisfy({ $0.isMonitoring && $0.visibleRect.intersection($0.bounds).width > 70 }) { break }
-            try await Task.sleep(for: .milliseconds(20))
-        }
+        let middle = try await visibleRegion(for: tabs[1], in: window, count: 3)
+        let views = toolbarRegions(window)
         #expect(views.count == 3)
-        let middle = try #require(views.first { $0.tab === tabs[1] })
-        let geometry = window.toolbar?.items.map { item in
-            "\(item.itemIdentifier.rawValue): frame=\(String(describing: item.view?.frame)), attached=\(item.view?.window === window)"
-        }.joined(separator: "; ") ?? "No toolbar"
-        #expect(middle.isMonitoring && middle.window === window,
-                "window=\(window.frame), visible=\(window.isVisible), key=\(window.isKeyWindow), toolbar=\(geometry)")
+        #expect(middle.isMonitoring && middle.window === window)
         #expect(middle.hitTest(.zero) == nil, "The native menu bridge must not block normal tab buttons")
         var captured: NSMenu?
         var presentations = 0
@@ -90,16 +113,7 @@ import Testing
         while workspace.tabs.count != 2 && ContinuousClock.now < closingDeadline { try await Task.sleep(for: .milliseconds(20)) }
         #expect(workspace.tabs.map(\.id) == [tabs[0].id, tabs[1].id])
         #expect(workspace.activeID == tabs[0].id)
-        let reattachmentDeadline = ContinuousClock.now + .seconds(3)
-        var reattached: DocumentTabMenuRegion?
-        while ContinuousClock.now < reattachmentDeadline {
-            window.displayIfNeeded()
-            window.contentView?.superview?.layoutSubtreeIfNeeded()
-            reattached = toolbarRegions(window).first { $0.tab === tabs[1] && $0.window === window && $0.isMonitoring }
-            if reattached != nil { break }
-            try await Task.sleep(for: .milliseconds(20))
-        }
-        let currentMiddle = try #require(reattached)
+        let currentMiddle = try await visibleRegion(for: tabs[1], in: window, count: 2)
         let lastMenu = try #require(currentMiddle.menu(for: try event(.rightMouseDown, in: currentMiddle)))
         #expect(lastMenu.items.first { $0.title == TabCloseScope.right.title }?.isEnabled == false)
         let removalDeadline = ContinuousClock.now + .seconds(3)
