@@ -161,16 +161,22 @@ struct SVGWebView: NSViewRepresentable {
             (() => {
               const image = document.querySelector('img');
               const view = {zoom: \#(zoom), actualSize: \#(actualSize)};
+              const intrinsic = {width: 0, height: 0};
               function resize() {
-                if (!image.naturalWidth || !image.naturalHeight) return;
-                const fit = Math.max(.01, Math.min((innerWidth - 64) / image.naturalWidth, (innerHeight - 64) / image.naturalHeight, 1));
-                image.style.width = (image.naturalWidth * (view.actualSize ? 1 : fit) * view.zoom) + 'px';
-                image.style.height = (image.naturalHeight * (view.actualSize ? 1 : fit) * view.zoom) + 'px';
+                if (!intrinsic.width || !intrinsic.height) return;
+                const fit = Math.max(.01, Math.min((innerWidth - 64) / intrinsic.width, (innerHeight - 64) / intrinsic.height, 1));
+                image.style.width = (intrinsic.width * (view.actualSize ? 1 : fit) * view.zoom) + 'px';
+                image.style.height = (intrinsic.height * (view.actualSize ? 1 : fit) * view.zoom) + 'px';
               }
               window.setView = (value, dark, actual = false) => { view.zoom = value; view.actualSize = actual; document.documentElement.dataset.dark = dark; resize(); };
               function report() {
+                // Older WebKit can report SVG natural dimensions using its CSS size.
+                // Capture them once, before applying any fitted or zoomed dimensions.
+                if (!intrinsic.width && image.naturalWidth && image.naturalHeight) {
+                  intrinsic.width = image.naturalWidth; intrinsic.height = image.naturalHeight;
+                }
                 resize();
-                window.webkit.messageHandlers.svg.postMessage({revision: '\#(revision)', width: image.naturalWidth, height: image.naturalHeight});
+                window.webkit.messageHandlers.svg.postMessage({revision: '\#(revision)', width: intrinsic.width, height: intrinsic.height});
               }
               image.addEventListener('load', report);
               image.addEventListener('error', report);

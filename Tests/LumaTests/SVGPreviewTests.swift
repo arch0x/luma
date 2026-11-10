@@ -104,6 +104,25 @@ import Testing
         #expect(try await preview.value("document.querySelector('img').clientWidth") as? Int == 176)
     }
 
+    @Test func zoomRemainsStableWhenWebKitReportsRenderedNaturalDimensions() async throws {
+        let preview = try await render(source)
+        defer { preview.close() }
+        let dimensions = try await preview.value("""
+        (() => {
+          const image = document.querySelector('img');
+          Object.defineProperties(image, {
+            naturalWidth: {get() { return this.clientWidth; }},
+            naturalHeight: {get() { return this.clientHeight; }}
+          });
+          window.setView(1.5, false, true);
+          for (let index = 0; index < 5; index++) window.dispatchEvent(new Event('resize'));
+          return [image.clientWidth, image.clientHeight];
+        })();
+        """) as? [Int]
+        #expect(dimensions == [600, 360])
+        #expect(preview.state.size == CGSize(width: 400, height: 240))
+    }
+
     @Test(arguments: [("图片资源/阅读 流程.svg", 760, 180)])
     func bundledSVGAlsoWorksAsAnIndependentDocument(path: String, width: Int, height: Int) async throws {
         let domain = "local.luma.svg-sample.\(UUID())"
