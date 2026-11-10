@@ -217,9 +217,6 @@ struct WorkspaceView: View {
                         .accessibilityLabel(tr("刷新目录与当前文件"))
                 }
             }
-            .background(WorkspaceToolbarAlignment(onTabViewportWidth: { width in
-                if abs(tabViewportWidth - width) > 0.5 { tabViewportWidth = width }
-            }).frame(width: 0, height: 0))
         }
         if #available(macOS 26.0, *) {
             item.sharedBackgroundVisibility(.hidden)

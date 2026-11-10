@@ -37,9 +37,9 @@ import Testing
             try await Task.sleep(for: .milliseconds(20))
         }
         let geometry = window.toolbar?.items.map { item in
-            "\(item.itemIdentifier.rawValue): frame=\(String(describing: item.view?.frame)), attached=\(item.view?.window === window)"
+            "\(item.itemIdentifier.rawValue): frame=\(String(describing: item.view?.frame)), windowFrame=\(String(describing: item.view.map { $0.convert($0.bounds, to: nil) })), attached=\(item.view?.window === window)"
         }.joined(separator: "; ") ?? "No toolbar"
-        Issue.record("Target tab did not become visible: window=\(window.frame), toolbar=\(geometry)")
+        Issue.record("Target tab did not become visible: window=\(window.frame), mode=\(String(describing: window.toolbar?.displayMode)), toolbar=\(geometry)")
         throw URLError(.timedOut)
     }
 

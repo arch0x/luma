@@ -21,6 +21,9 @@ struct WorkspaceToolbarAlignment: NSViewRepresentable {
 
     static func pin(_ actions: NSToolbarItem, in toolbar: NSToolbar) {
         guard let index = toolbar.items.firstIndex(where: { $0 === actions }) else { return }
+        // Custom controls already include labels; native captions can force them
+        // into overflow on older AppKit versions.
+        if toolbar.displayMode != .iconOnly { toolbar.displayMode = .iconOnly }
         if !toolbar.centeredItemIdentifiers.isEmpty { toolbar.centeredItemIdentifiers = [] }
         if actions.visibilityPriority != .high { actions.visibilityPriority = .high }
         // Flexible space after the actions would share the spare width and center the group.
