@@ -71,15 +71,18 @@ import Testing
         let tabs = workspace.tabs
         for tab in tabs { await tab.loadTask?.value }
         workspace.activeID = tabs[0].id
-        let host = NSHostingView(rootView: WorkspaceView(workspace: workspace))
-        let window = ReaderTestWindow(contentRect: NSRect(x: 0, y: 0, width: 1320, height: 600),
-                              styleMask: [.titled, .resizable], backing: .buffered, defer: false)
+        let controller = NSHostingController(rootView: WorkspaceView(workspace: workspace))
+        controller.sizingOptions = []
+        let host = controller.view
+        let window = ReaderTestWindow(contentRect: NSRect(x: 0, y: 0, width: 960, height: 480),
+                              styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         // Match the app Scene rather than AppKit's platform-dependent automatic style.
         window.toolbarStyle = .unified
-        window.contentView = host
+        window.contentViewController = controller
+        window.setContentSize(NSSize(width: 960, height: 480))
         window.makeKeyAndOrderFront(nil)
-        defer { window.delegate = nil; window.close() }
+        defer { window.delegate = nil; window.contentViewController = nil; window.toolbar = nil; window.close() }
         let middle = try await visibleRegion(for: tabs[1], in: window, count: 3)
         let views = toolbarRegions(window)
         #expect(views.count == 3)

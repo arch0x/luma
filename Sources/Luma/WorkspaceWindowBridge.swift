@@ -4,11 +4,9 @@ import AppKit
 struct WorkspaceWindowBridge: NSViewRepresentable {
     let workspace: Workspace
     let hasUnsavedChanges: Bool
-    var onTabViewportWidth: ((CGFloat) -> Void)? = nil
 
     func makeNSView(context: Context) -> WindowAttachment { WindowAttachment(workspace: workspace) }
     func updateNSView(_ view: WindowAttachment, context: Context) {
-        view.alignment.onTabViewportWidth = onTabViewportWidth
         view.installIfNeeded()
         view.window?.isDocumentEdited = hasUnsavedChanges
     }
@@ -19,7 +17,6 @@ struct WorkspaceWindowBridge: NSViewRepresentable {
     final class WindowAttachment: NSView {
         let guardDelegate: WindowCloseGuard
         private let workspace: Workspace
-        let alignment = WorkspaceToolbarAlignment.Anchor()
         private var focusMonitor: Any?
         init(workspace: Workspace) {
             self.workspace = workspace
@@ -41,9 +38,6 @@ struct WorkspaceWindowBridge: NSViewRepresentable {
             window.titlebarAppearsTransparent = true
             window.titlebarSeparatorStyle = .none
             window.backgroundColor = LumaTheme.nativePaper
-            // Older AppKit can omit the zero-sized anchor inside a SwiftUI toolbar.
-            // The content attachment supplies the same alignment from a stable window.
-            alignment.track(window)
             if focusMonitor == nil {
                 focusMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self, weak window] event in
                     if let self, let window, event.window === window {
@@ -58,7 +52,6 @@ struct WorkspaceWindowBridge: NSViewRepresentable {
         }
 
         func removeFocusMonitor() {
-            alignment.stopObserving()
             if let focusMonitor { NSEvent.removeMonitor(focusMonitor) }
             focusMonitor = nil
         }

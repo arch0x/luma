@@ -58,10 +58,7 @@ struct WorkspaceView: View {
             } message: { entry in
                 Text(entry.isDirectory ? tr("文件夹及其全部内容会移到废纸篓，可在 Finder 中恢复。") : tr("文件会移到废纸篓，可在 Finder 中恢复。"))
             }
-        .background(WorkspaceWindowBridge(workspace: workspace, hasUnsavedChanges: workspace.tabs.contains { $0.isDirty },
-            onTabViewportWidth: { width in
-                if abs(tabViewportWidth - width) > 0.5 { tabViewportWidth = width }
-            }))
+        .background(WorkspaceWindowBridge(workspace: workspace, hasUnsavedChanges: workspace.tabs.contains { $0.isDirty }))
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             workspace.refreshDirectoriesAutomatically()
             Task { await workspace.checkExternalChanges() }
@@ -217,6 +214,9 @@ struct WorkspaceView: View {
                         .accessibilityLabel(tr("刷新目录与当前文件"))
                 }
             }
+            .background(WorkspaceToolbarAlignment(onTabViewportWidth: { width in
+                if abs(tabViewportWidth - width) > 0.5 { tabViewportWidth = width }
+            }).frame(width: 0, height: 0))
         }
         if #available(macOS 26.0, *) {
             item.sharedBackgroundVisibility(.hidden)

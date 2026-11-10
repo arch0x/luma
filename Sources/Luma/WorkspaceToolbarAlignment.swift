@@ -21,9 +21,6 @@ struct WorkspaceToolbarAlignment: NSViewRepresentable {
 
     static func pin(_ actions: NSToolbarItem, in toolbar: NSToolbar) {
         guard let index = toolbar.items.firstIndex(where: { $0 === actions }) else { return }
-        // Custom controls already include labels; native captions can force them
-        // into overflow on older AppKit versions.
-        if toolbar.displayMode != .iconOnly { toolbar.displayMode = .iconOnly }
         if !toolbar.centeredItemIdentifiers.isEmpty { toolbar.centeredItemIdentifiers = [] }
         if actions.visibilityPriority != .high { actions.visibilityPriority = .high }
         // Flexible space after the actions would share the spare width and center the group.
@@ -60,11 +57,6 @@ struct WorkspaceToolbarAlignment: NSViewRepresentable {
             // AppKit detaches item views while moving them into overflow. Keep tracking
             // the original window so a subsequent resize can bring the tabs back.
             if let toolbarWindow, toolbarWindow !== window, window.toolbar == nil { return }
-            track(window)
-        }
-
-        func track(_ window: NSWindow) {
-            guard toolbarWindow !== window else { scheduleAlignment(); return }
             stopObserving()
             toolbarWindow = window
             for name in [NSWindow.didUpdateNotification, NSWindow.didResizeNotification] {
@@ -90,7 +82,7 @@ struct WorkspaceToolbarAlignment: NSViewRepresentable {
                 guard let window = toolbarWindow ?? window, let toolbar = window.toolbar,
                       let actions = toolbar.items.first(where: { item in
                           item.view.map { self.isDescendant(of: $0) } ?? false
-                      }) ?? toolbar.items.first(where: { $0.itemIdentifier.rawValue == "documentActions" }) else { return }
+                      }) else { return }
                 WorkspaceToolbarAlignment.pin(actions, in: toolbar)
                 updateTabViewport(in: toolbar, before: actions, window: window)
             }
