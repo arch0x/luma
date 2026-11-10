@@ -15,7 +15,7 @@ nonisolated enum SampleWorkspace {
         let section: String
     }
 
-    static func formats(language: InterfaceLanguage = .english) throws -> [Format] {
+    @MainActor static func formats(language: InterfaceLanguage = .english) throws -> [Format] {
         guard let url = Bundle.module.url(forResource: "SampleCatalog-\(language.rawValue)", withExtension: "json") else {
             throw CocoaError(.fileReadNoSuchFile)
         }
