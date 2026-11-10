@@ -43,7 +43,7 @@ import Testing
                               styleMask: [.titled, .resizable], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.contentView = host
-        window.orderBack(nil)
+        window.makeKeyAndOrderFront(nil)
         defer { window.delegate = nil; window.close() }
         let deadline = ContinuousClock.now + .seconds(8)
         var views: [DocumentTabMenuRegion] = []
@@ -56,7 +56,11 @@ import Testing
         }
         #expect(views.count == 3)
         let middle = try #require(views.first { $0.tab === tabs[1] })
-        #expect(middle.isMonitoring && middle.window === window)
+        let geometry = window.toolbar?.items.map { item in
+            "\(item.itemIdentifier.rawValue): frame=\(String(describing: item.view?.frame)), attached=\(item.view?.window === window)"
+        }.joined(separator: "; ") ?? "No toolbar"
+        #expect(middle.isMonitoring && middle.window === window,
+                "window=\(window.frame), visible=\(window.isVisible), key=\(window.isKeyWindow), toolbar=\(geometry)")
         #expect(middle.hitTest(.zero) == nil, "The native menu bridge must not block normal tab buttons")
         var captured: NSMenu?
         var presentations = 0
