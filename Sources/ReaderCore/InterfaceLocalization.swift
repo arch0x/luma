@@ -51,13 +51,27 @@ public enum ReaderLocalization {
         var language = InterfaceLanguage.english
     }
     private static let storage = Storage()
+    private static let languageBundles = Dictionary(uniqueKeysWithValues: InterfaceLanguage.allCases.map {
+        ($0, localizedBundle(for: $0, in: .module))
+    })
+
+    static func localizedBundle(for language: InterfaceLanguage, in bundle: Bundle) -> Bundle {
+        // SwiftPM versions differ in whether they lowercase language directory names.
+        guard let resources = bundle.resourceURL,
+              let directories = try? FileManager.default.contentsOfDirectory(at: resources, includingPropertiesForKeys: nil),
+              let directory = directories.first(where: {
+                  $0.lastPathComponent.caseInsensitiveCompare("\(language.rawValue).lproj") == .orderedSame
+              }), let localized = Bundle(url: directory) else { return bundle }
+        return localized
+    }
+
     public static var language: InterfaceLanguage {
         get { storage.lock.lock(); defer { storage.lock.unlock() }; return storage.language }
         set { storage.lock.lock(); defer { storage.lock.unlock() }; storage.language = newValue }
     }
     public static func text(_ message: InterfaceMessage, language: InterfaceLanguage? = nil) -> String {
         let language = language ?? self.language
-        let bundle = Bundle.module.path(forResource: language.rawValue, ofType: "lproj").flatMap(Bundle.init(path:)) ?? .module
+        let bundle = languageBundles[language] ?? .module
         let template = bundle.localizedString(forKey: message.key, value: message.key, table: nil)
         return message.rendered(template: template)
     }

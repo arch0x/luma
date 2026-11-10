@@ -3,6 +3,26 @@ import Testing
 @testable import ReaderCore
 
 @Suite(.serialized) struct InterfaceLocalizationTests {
+    @Test(arguments: ["zh-Hans", "zh-hans"])
+    func requestedLanguageUsesActualResourceDirectorySpelling(chineseDirectory: String) throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).bundle")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let resources = directory.appendingPathComponent("Contents/Resources")
+        for (name, translation) in [("en", "Save"), (chineseDirectory, "保存")] {
+            let folder = resources.appendingPathComponent("\(name).lproj")
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            try "\"保存\" = \"\(translation)\";\n".write(to: folder.appendingPathComponent("Localizable.strings"), atomically: true, encoding: .utf8)
+        }
+        let info: [String: String] = ["CFBundleIdentifier": "local.luma.localization.\(UUID())", "CFBundleDevelopmentRegion": "en"]
+        try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+            .write(to: directory.appendingPathComponent("Contents/Info.plist"))
+        let bundle = try #require(Bundle(url: directory))
+        for (language, expected) in [(InterfaceLanguage.english, "Save"), (.simplifiedChinese, "保存")] {
+            let localized = ReaderLocalization.localizedBundle(for: language, in: bundle)
+            #expect(localized.localizedString(forKey: "保存", value: nil, table: nil) == expected)
+        }
+    }
+
     @Test func rendersUserValuesWithoutTreatingThemAsTemplateTokens() {
         let name = "中文{1}%s🙂.md"
         let message: InterfaceMessage = "将“\(name)”移到废纸篓？"
