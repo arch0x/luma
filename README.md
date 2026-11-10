@@ -8,6 +8,16 @@ macOS 本地文件阅读与源码编辑工具。把 Markdown、代码、PDF、�
 
 使用 SwiftUI + AppKit 构建。Markdown 图表、公式和语法高亮随应用打包，可离线使用。
 
+## 界面预览
+
+浅色外观下的 Markdown 阅读：
+
+![Luma 浅色外观：资料库、文件标签和 Markdown 阅读](docs/assets/luma-light.png)
+
+深色外观下的同一阅读工作区：
+
+![Luma 深色外观：章节导航与 Markdown 阅读](docs/assets/luma-dark.png)
+
 ## 核心功能
 
 - **阅读 Markdown**：表格、本地图片、Mermaid 图表、LaTeX 数学公式和代码高亮。
@@ -68,6 +78,9 @@ swift run Luma
 - [使用指南](docs/USAGE.md)：详细功能、快捷键与示例。
 - [开发说明](docs/DEVELOPMENT.md)：工程结构、构建与测试、资源维护及渲染边界。
 - [变更记录](CHANGELOG.md)：历史阶段的开发与验证记录。
+- [参与贡献](CONTRIBUTING.md)：反馈问题、提出建议和提交修改。
+
+欢迎在仓库的 Issues 中使用「问题反馈」或「功能建议」模板。CI 会在 push、pull request 和手动触发时执行测试与构建，配置见 [.github/workflows/ci.yml](.github/workflows/ci.yml)。
 
 ## 许可证
 

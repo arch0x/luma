@@ -45,12 +45,27 @@ zsh scripts/build-app.sh release
 - `Tests/LumaTests/MarkdownPreviewTests.swift`：实际 WebKit 排版 / 图表 / 高亮 / 公式 / 图片结果、离线字体、路径编码、目录边界、深浅色切换、错误回退与内容隔离。测试创建独立预览视图，不读取桌面，也不需要屏幕录制权限；运行环境须允许启动系统 WebKit 子进程。
 
 ```sh
-zsh scripts/test.sh
+zsh scripts/test.sh --no-parallel
 ```
 
 `ViewState.swift` 和测试脚本兼容部分 Command Line Tools 的宏加载差异。若在不支持嵌套沙盒的 CI 中构建，可给打包或测试脚本追加 `--disable-sandbox`；这只影响 SwiftPM 构建过程，不授予应用额外权限。
 
-测试包含真实 AppKit 窗口、系统粘贴板和 WebKit 预览，需要运行环境允许这些系统服务。`--disable-sandbox` 仅关闭 SwiftPM 的构建沙盒，不能解除宿主环境对这些服务的限制。历史阶段的验证结果保存在[变更记录](../CHANGELOG.md)，不代表当前工作区测试状态。
+测试包含真实 AppKit 窗口、系统粘贴板和 WebKit 预览，需要运行环境允许这些系统服务。外观测试显式给 AppKit 测试窗口提供与 SwiftUI Window 场景相同的外观呈现边界；应用的外观实现保持不变。`--disable-sandbox` 仅关闭 SwiftPM 的构建沙盒，不能解除宿主环境对这些服务的限制。历史阶段的验证结果保存在[变更记录](../CHANGELOG.md)，不代表当前工作区测试状态。
+
+## 持续集成
+
+[CI 工作流](../.github/workflows/ci.yml)在 push、pull request 和手动触发时运行，权限仅为读取仓库内容。配置使用 macOS 15、macOS 26 的 Apple Silicon runner，并通过 `DEVELOPER_DIR` 固定选择 Xcode 26.3。
+
+每个环境依次执行：
+
+1. 记录系统、Xcode、Swift 和芯片架构。
+2. 运行 `ReaderCoreTests`。
+3. 串行运行全部 `LumaTests`，包括 AppKit 与 WebKit 验证。
+4. 构建 release 应用，校验本地临时签名，并打包 ZIP。
+
+构建通过后保留 ZIP 产物 7 天，测试／构建日志也保留 7 天，失败时仍上传已生成的日志。CI 不需要 Developer ID、签名证书或仓库 Secrets；产物未经过 Apple 公证。
+
+运行最低版本仍由 `Package.swift` 声明为 macOS 14；CI 的两个环境不替代 macOS 14 或 Intel 实机验证。GitHub 端的实际执行结果将在仓库配置并推送后产生。
 
 ## 原生交互
 

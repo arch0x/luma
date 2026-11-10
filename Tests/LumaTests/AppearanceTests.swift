@@ -42,11 +42,10 @@ import Testing
                 SchemeProbe(probe: probe).frame(height: 1)
             }
             .frame(width: 400, height: 300)
-            .preferredColorScheme(workspace.appearance.colorScheme)
         }
     }
 
-    @Test func liveSwitchUpdatesSwiftUIAndNativeEditorWithoutLosingDraftOrSelection() async throws {
+    @Test func hostingWindowAppearanceUpdatesSwiftUIAndEditorWithoutLosingDraftOrSelection() async throws {
         _ = NSApplication.shared
         let domain = "local.luma.appearance-live.\(UUID().uuidString)"
         let preferences = try #require(UserDefaults(suiteName: domain))
@@ -58,13 +57,22 @@ import Testing
         let controller = NSHostingController(rootView: Content(workspace: workspace, tab: tab, probe: probe))
         let window = NSWindow(contentViewController: controller)
         window.isReleasedWhenClosed = false
-        defer { window.close() }
+        window.orderFront(nil)
+        window.displayIfNeeded()
+        defer { window.orderOut(nil); window.close() }
         controller.view.layoutSubtreeIfNeeded()
         let editor = tab.sourceEditor()
         editor.textView.setSelectedRange(NSRange(location: 1, length: 2))
         let undo = editor.textView.undoManager
         for choice in [AppAppearance.dark, .light, .system] {
             workspace.appearance = choice
+            // This AppKit-owned window has no SwiftUI Window scene to consume the
+            // preferredColorScheme preference. Provide that presentation boundary.
+            switch choice.colorScheme {
+            case .dark: window.appearance = NSAppearance(named: .darkAqua)
+            case .light: window.appearance = NSAppearance(named: .aqua)
+            default: window.appearance = nil
+            }
             let systemDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             let expected: ColorScheme = choice.colorScheme ?? (systemDark ? .dark : .light)
             let deadline = ContinuousClock.now + .seconds(2)

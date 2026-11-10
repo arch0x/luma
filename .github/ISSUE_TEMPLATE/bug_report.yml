@@ -1,0 +1,56 @@
+name: 问题反馈
+description: 报告文件阅读、编辑或界面中的异常。
+title: '[Bug] '
+body:
+  - type: input
+    id: app-version
+    attributes:
+      label: Luma 版本
+      placeholder: 例如 0.9.0（build 14），或源码提交号
+    validations:
+      required: true
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS 版本
+      placeholder: 例如 macOS 15.7
+    validations:
+      required: true
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: 芯片架构
+      options:
+        - Apple Silicon（M 系列）
+        - Intel
+        - 不确定
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 涉及文件时，请注明格式、大小和使用的预览／源码模式。
+      placeholder: |
+        1. 打开……
+        2. 点击或输入……
+        3. 观察到……
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 样例、截图或日志（可选）
+      description: 可附不含私人信息的最小样例。请先移除凭据、私人路径和敏感文档内容。

@@ -1,0 +1,74 @@
+name: CI
+
+'on':
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} · Xcode 26.3 · arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-26]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Record build environment
+        run: |
+          mkdir -p "$RUNNER_TEMP/luma-ci-logs"
+          test -d "$DEVELOPER_DIR"
+          {
+            sw_vers
+            xcodebuild -version
+            swift --version
+            uname -m
+          } 2>&1 | tee "$RUNNER_TEMP/luma-ci-logs/environment.log"
+
+      - name: Test ReaderCore
+        run: zsh scripts/test.sh --disable-sandbox --no-parallel -j 2 --filter ReaderCoreTests 2>&1 | tee "$RUNNER_TEMP/luma-ci-logs/core-tests.log"
+
+      - name: Test AppKit and WebKit readers
+        run: zsh scripts/test.sh --disable-sandbox --no-parallel -j 2 --filter LumaTests 2>&1 | tee "$RUNNER_TEMP/luma-ci-logs/app-tests.log"
+
+      - name: Build and verify the release app
+        run: |
+          zsh scripts/build-app.sh release --disable-sandbox -j 2 2>&1 | tee "$RUNNER_TEMP/luma-ci-logs/release-build.log"
+          codesign --verify --deep --strict dist/Luma.app
+          ditto -c -k --sequesterRsrc --keepParent dist/Luma.app "dist/Luma-${{ matrix.os }}-arm64-adhoc.zip"
+
+      - name: Upload locally signed build
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Luma-${{ matrix.os }}-arm64-adhoc
+          path: dist/Luma-${{ matrix.os }}-arm64-adhoc.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+      - name: Upload build and test logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: logs-${{ matrix.os }}
+          path: ${{ runner.temp }}/luma-ci-logs/*.log
+          if-no-files-found: ignore
+          retention-days: 7

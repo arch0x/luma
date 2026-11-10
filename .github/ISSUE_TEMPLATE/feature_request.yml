@@ -1,0 +1,23 @@
+name: 功能建议
+description: 描述你想完成的阅读或编辑任务。
+title: '[Feature] '
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: 想完成什么任务？
+      description: 请描述具体使用场景。
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: 当前哪里不方便？
+      description: 可以说明现在的操作步骤、受影响的格式或界面位置。
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: 你的建议（可选）
+      description: 可提供交互想法、可公开的样例或草图。
