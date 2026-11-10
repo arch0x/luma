@@ -125,7 +125,10 @@ struct SVGWebView: NSViewRepresentable {
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction) async -> WKNavigationActionPolicy {
             action.navigationType == .other && action.request.url?.absoluteString == "about:blank" ? .allow : .cancel
         }
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { updateAppearance() }
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            guard navigation === self.navigation else { return }
+            updateAppearance()
+        }
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: any Error) {
             guard navigation === self.navigation else { return }
             state.loading = false; state.error = error.localizedDescription
@@ -155,15 +158,16 @@ struct SVGWebView: NSViewRepresentable {
                 background-size: 16px 16px; }
             </style></head><body><main><img alt="\#(ReaderLocalization.text(key: "SVG 图像", language: language))" src="data:image/svg+xml;base64,\#(encoded)"></main>
             <script nonce="\#(revision)">
+            (() => {
               const image = document.querySelector('img');
-              let zoom = \#(zoom), actualSize = \#(actualSize);
+              const view = {zoom: \#(zoom), actualSize: \#(actualSize)};
               function resize() {
                 if (!image.naturalWidth || !image.naturalHeight) return;
                 const fit = Math.max(.01, Math.min((innerWidth - 64) / image.naturalWidth, (innerHeight - 64) / image.naturalHeight, 1));
-                image.style.width = (image.naturalWidth * (actualSize ? 1 : fit) * zoom) + 'px';
-                image.style.height = (image.naturalHeight * (actualSize ? 1 : fit) * zoom) + 'px';
+                image.style.width = (image.naturalWidth * (view.actualSize ? 1 : fit) * view.zoom) + 'px';
+                image.style.height = (image.naturalHeight * (view.actualSize ? 1 : fit) * view.zoom) + 'px';
               }
-              window.setView = (value, dark, actual = false) => { zoom = value; actualSize = actual; document.documentElement.dataset.dark = dark; resize(); };
+              window.setView = (value, dark, actual = false) => { view.zoom = value; view.actualSize = actual; document.documentElement.dataset.dark = dark; resize(); };
               function report() {
                 resize();
                 window.webkit.messageHandlers.svg.postMessage({revision: '\#(revision)', width: image.naturalWidth, height: image.naturalHeight});
@@ -172,6 +176,7 @@ struct SVGWebView: NSViewRepresentable {
               image.addEventListener('error', report);
               window.addEventListener('resize', resize);
               if (image.complete) report();
+            })();
             </script></body></html>
             """#
         }

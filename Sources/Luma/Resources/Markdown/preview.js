@@ -76,6 +76,7 @@
   function restoreReadingPosition(location) {
     if (restoring) return false;
     reading.restore(location);
+    readingViewportWidth = window.innerWidth;
     const heading = headingMap.get(location.headingID);
     forcedHeading = heading && !location.blockProgress && !location.headingProgress
       ? {id: heading.id, offset: window.scrollY} : null;
@@ -164,6 +165,9 @@
     if (restoring) return false;
     const heading = id ? headingMap.get(id) : null;
     if (id && !heading) return false;
+    // An explicit jump supersedes the anchor saved before a pending resize.
+    reading.refresh();
+    readingViewportWidth = window.innerWidth;
     const top = heading ? Math.max(0, heading.getBoundingClientRect().top + window.scrollY - 24) : 0;
     window.scrollTo({top, behavior: 'auto'});
     if (heading) {

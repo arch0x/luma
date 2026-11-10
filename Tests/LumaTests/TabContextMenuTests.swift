@@ -39,7 +39,7 @@ import Testing
         for tab in tabs { await tab.loadTask?.value }
         workspace.activeID = tabs[0].id
         let host = NSHostingView(rootView: WorkspaceView(workspace: workspace))
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1320, height: 600),
+        let window = ReaderTestWindow(contentRect: NSRect(x: 0, y: 0, width: 1320, height: 600),
                               styleMask: [.titled, .resizable], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.contentView = host

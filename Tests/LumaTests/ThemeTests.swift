@@ -17,7 +17,7 @@ import WebKit
         let tab = try #require(workspace.activeTab)
         try #require(tab.title == "长文档导航.md")
         let host = NSHostingView(rootView: WorkspaceView(workspace: workspace))
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1_240, height: 740),
+        let window = ReaderTestWindow(contentRect: NSRect(x: 0, y: 0, width: 1_240, height: 740),
                               styleMask: [.titled, .resizable], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.appearance = NSAppearance(named: .aqua)
@@ -144,7 +144,7 @@ import WebKit
         .frame(width: 1200, height: 800)
         .background(Color(nsColor: .windowBackgroundColor))
         let hosting = NSHostingView(rootView: content)
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1200, height: 800),
+        let window = ReaderTestWindow(contentRect: NSRect(x: 0, y: 0, width: 1200, height: 800),
                               styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)

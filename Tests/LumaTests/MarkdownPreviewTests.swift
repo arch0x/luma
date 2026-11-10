@@ -469,6 +469,21 @@ import Testing
         #expect(try await preview.value("document.documentElement.scrollWidth <= document.documentElement.clientWidth") as? Bool == true)
     }
 
+    @Test func explicitHeadingJumpWinsOverPendingResizeRestoration() async throws {
+        let paragraphs = String(repeating: "A paragraph to keep the page scrollable.\n\n", count: 40)
+        let preview = try await render("# Start\n\n\(paragraphs)\n## Target\n\n\(paragraphs)", width: 840)
+        defer { preview.close() }
+        let jumped = try await preview.value("""
+        Object.defineProperty(window, 'innerWidth', {value: innerWidth - 100, configurable: true});
+        window.luma.navigateToHeading('target');
+        window.dispatchEvent(new Event('resize'));
+        window.luma.getReadingPosition().headingID;
+        """) as? String
+        #expect(jumped == "target")
+        try await waitForSection(preview, id: "target")
+        #expect(try await preview.value("Math.abs(document.getElementById('target').getBoundingClientRect().top - 24) < 2") as? Bool == true)
+    }
+
     @Test func hugeOutlineIsBoundedAndRepeatedHeadingAnchorsStayUnique() async throws {
         let preview = try await render(String(repeating: "## Same\n\n", count: 2005))
         defer { preview.close() }

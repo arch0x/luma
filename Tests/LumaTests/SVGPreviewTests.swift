@@ -18,7 +18,7 @@ import Testing
             window.contentView = nil; window.close()
         }
         func dimensions() async throws -> String {
-            try await value("JSON.stringify({width: image.clientWidth, style: image.style.width, zoom, actualSize, viewport: innerWidth})") as? String ?? "No dimensions"
+            try await value("JSON.stringify({width: document.querySelector('img').clientWidth, naturalWidth: document.querySelector('img').naturalWidth, style: document.querySelector('img').style.width, viewport: innerWidth})") as? String ?? "No dimensions"
         }
         func snapshot(_ name: String) async throws {
             guard let path = ProcessInfo.processInfo.environment["LUMA_SVG_PREVIEW_DIR"] else { return }
@@ -40,7 +40,7 @@ import Testing
         // A live window lets older WebKit versions deliver viewport and drawing updates.
         let host = NSView(frame: view.frame)
         host.addSubview(view)
-        let window = NSWindow(contentRect: host.bounds, styleMask: [.borderless], backing: .buffered, defer: false)
+        let window = ReaderTestWindow(contentRect: host.bounds, styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false; window.contentView = host
         window.orderBack(nil)
         let preview = Preview(view: view, window: window, coordinator: coordinator, state: state)
@@ -167,7 +167,7 @@ import Testing
         let tab = try #require(workspace.activeTab)
         await tab.loadTask?.value
         let host = NSHostingController(rootView: DocumentView(tab: tab, workspace: workspace).frame(width: 800, height: 600))
-        let window = NSWindow(contentViewController: host)
+        let window = ReaderTestWindow(contentViewController: host)
         window.isReleasedWhenClosed = false
         defer { window.close() }
         func webView(in view: NSView) -> WKWebView? {
