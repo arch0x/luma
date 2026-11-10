@@ -4,6 +4,37 @@ import Testing
 @testable import Luma
 
 @MainActor @Suite(.serialized) struct TabContextMenuTests {
+    @MainActor private final class ToolbarDelegate: NSObject, NSToolbarDelegate {
+        let files = NSToolbarItem(itemIdentifier: .init("files"))
+        let actions = NSToolbarItem(itemIdentifier: .init("actions"))
+        let filesView: NSHostingView<WorkspaceFileTabs>
+
+        init(workspace: Workspace, tab: DocumentTab) {
+            filesView = NSHostingView(rootView: WorkspaceFileTabs(workspace: workspace, width: 420))
+            super.init()
+            let actionsView = NSHostingView(rootView: DocumentToolbar(tab: tab, workspace: workspace)
+                .background(WorkspaceToolbarAlignment().frame(width: 0, height: 0)))
+            files.view = filesView; actions.view = actionsView
+            for (view, width) in [(filesView as NSView, CGFloat(420)), (actionsView, DocumentToolbar.width)] {
+                view.translatesAutoresizingMaskIntoConstraints = false
+                NSLayoutConstraint.activate([
+                    view.widthAnchor.constraint(equalToConstant: width),
+                    view.heightAnchor.constraint(equalToConstant: 38)
+                ])
+            }
+        }
+        func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+            [files.itemIdentifier, .flexibleSpace, actions.itemIdentifier]
+        }
+        func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+            toolbarDefaultItemIdentifiers(toolbar)
+        }
+        func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier identifier: NSToolbarItem.Identifier,
+                     willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+            identifier == files.itemIdentifier ? files : identifier == actions.itemIdentifier ? actions : nil
+        }
+    }
+
     private func regions(in view: NSView) -> [DocumentTabMenuRegion] {
         (view as? DocumentTabMenuRegion).map { [$0] } ?? view.subviews.flatMap { regions(in: $0) }
     }
@@ -71,18 +102,18 @@ import Testing
         let tabs = workspace.tabs
         for tab in tabs { await tab.loadTask?.value }
         workspace.activeID = tabs[0].id
-        let controller = NSHostingController(rootView: WorkspaceView(workspace: workspace))
-        controller.sizingOptions = []
-        let host = controller.view
-        let window = ReaderTestWindow(contentRect: NSRect(x: 0, y: 0, width: 960, height: 480),
-                              styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        window.isReleasedWhenClosed = false
-        // Match the app Scene rather than AppKit's platform-dependent automatic style.
-        window.toolbarStyle = .unified
-        window.contentViewController = controller
-        window.setContentSize(NSSize(width: 960, height: 480))
+        // Use the production tabs inside a real native toolbar. A SwiftUI Scene's
+        // toolbar preference lifecycle is not reproduced by a manually hosted workspace.
+        let delegate = ToolbarDelegate(workspace: workspace, tab: tabs[0])
+        let toolbar = NSToolbar(identifier: "tab-menu-\(UUID())")
+        toolbar.delegate = delegate; toolbar.displayMode = .iconOnly
+        let host = delegate.filesView
+        let window = ReaderTestWindow(contentRect: NSRect(x: 0, y: 0, width: 960, height: 160),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false; window.toolbarStyle = .unified
+        window.titleVisibility = .hidden; window.toolbar = toolbar
         window.makeKeyAndOrderFront(nil)
-        defer { window.delegate = nil; window.contentViewController = nil; window.toolbar = nil; window.close() }
+        defer { window.toolbar = nil; window.close() }
         let middle = try await visibleRegion(for: tabs[1], in: window, count: 3)
         let views = toolbarRegions(window)
         #expect(views.count == 3)
