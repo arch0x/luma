@@ -77,13 +77,12 @@
         const toolbar = document.createElement('div'); toolbar.className = 'content-tools';
         toolbar.append(button(ui('展开表格'), () => expand(wrapper, 'table'))); wrapper.prepend(toolbar);
         wrapper.querySelectorAll('td').forEach(cell => {
-          cell.tabIndex = 0; cell.title = ui('双击或按 Return 查看完整单元格');
+          cell.tabIndex = 0; cell.title = ui('按 Return 查看完整单元格');
           const show = () => {
             const content = document.createElement('div');
             const text = document.createElement('pre'); text.className = 'full-cell'; text.textContent = cell.textContent;
             content.append(text); expand(content, 'cell');
           };
-          cell.addEventListener('dblclick', show);
           cell.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); show(); } });
         });
       });

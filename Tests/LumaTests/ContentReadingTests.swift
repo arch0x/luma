@@ -23,6 +23,10 @@ import Testing
         defer { preview.close() }
         let before = try await preview.value("document.querySelector('main').innerHTML") as? String
         let y = try await preview.value("window.scrollY") as? Double
+        #expect(try await preview.value("""
+            document.querySelector('td strong').dispatchEvent(new MouseEvent('dblclick', {bubbles: true, detail: 2}));
+            document.querySelector('dialog[open]') === null
+            """) as? Bool == true)
         #expect(try await preview.value("document.querySelector('.table-scroll .content-tools button').click(); document.querySelector('dialog').open") as? Bool == true)
         #expect(try await preview.value("document.querySelector('dialog').getBoundingClientRect().width > 450") as? Bool == true)
         #expect(try await preview.value("document.querySelector('dialog td strong').textContent") as? String == "全文")

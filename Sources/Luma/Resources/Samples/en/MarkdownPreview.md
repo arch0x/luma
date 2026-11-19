@@ -4,7 +4,7 @@ Try **tables, Mermaid, highlighted code and expanded diagrams**. Their engines s
 
 ## Expand a table or diagram
 
-- Choose **Expand Table** for a wider view. Double-click a cell, or focus it and press Return, to read all its content.
+- Choose **Expand Table** for a wider view. Focus a cell and press Return to read its full text.
 - Choose **Expand Diagram**, then **Fit to Window** for an overview or **Natural Text Size** for readable labels. Zoom in or out as needed.
 - Press Esc or close the expanded view to return to your place. Expanding never changes the file.
 

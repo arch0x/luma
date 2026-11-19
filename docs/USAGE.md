@@ -54,7 +54,7 @@ Drag header separators to resize columns. Fit to Window distributes widths acros
 
 The source editor soft-wraps without inserting newlines. Code previews retain long lines with horizontal scrolling.
 
-Markdown tables offer Expand Table; double-click a cell or focus it and press Return for its full text. Mermaid offers Expand Diagram, zoom, Fit to Window and Natural Text Size. Esc or Close returns to the original reading position. Standalone SVG and bitmap images provide natural / original sizing and Fit to Window.
+Choose Expand Table for a wider view, or focus a cell and press Return to read its full text. Mermaid offers Expand Diagram, zoom, Fit to Window and Natural Text Size. Esc or Close returns to the original reading position. Standalone SVG and bitmap images provide natural / original sizing and Fit to Window.
 
 ## Inspect a source value
 
